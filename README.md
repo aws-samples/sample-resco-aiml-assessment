@@ -25,28 +25,34 @@ This repo focus on performing security assessment for your workloads using [Amaz
 ![Architecture](./generated-diagrams/ArchitectureDiagram.png)
 
 ## Single-Account Deployment
-1. Download [2-resco-assessment-codebuild.yaml](deployment/2-resco-assessment-codebuild.yaml) Cfn template.
+1. Download [aiml-security-assessment-single-account.yaml](deployment/aiml-security-assessment-single-account.yaml) CloudFormation template.
 2. 🚀 **[Deploy to AWS CloudFormation](https://console.aws.amazon.com/cloudformation/home#/stacks/create/template?stackName=resco-aiml-single-account)** 
-3. Upload Cfn template from step 1.
-4. Provide a stack name on the next screen and specify your email address to receive the generated report.
-4. Leave all other parameters as default.
-5. Navigate to the next page, read and acknowledge the notice, and click **Next**.
-6. Review the information and click on **Submit**.
-7. Wait for CloudFormation stack to complete.
-8. Once the CloudFormation stack is completed, get the S3 bucket name from the Outputs tab.
-9. Navigate to the S3 bucket and open security_assessment...html file.
-8. Review the findings and the suggestions. 
+3. Upload CloudFormation template from step 1.
+4. Provide a stack name and optionally specify your email address to receive notifications.
+5. Leave all other parameters as default.
+6. Navigate to the next page, read and acknowledge the notice, and click **Next**.
+7. Review the information and click on **Submit**.
+8. Wait for CloudFormation stack to complete.
+9. Once complete, CodeBuild will automatically deploy the assessment stack and run the assessment.
+10. To view results:
+    - Navigate to CloudFormation console
+    - Open the `resco-aiml-security` stack (created by SAM)
+    - Go to the **Outputs** tab
+    - Copy the `AssessmentBucketName` value
+    - Navigate to that S3 bucket and open the `security_assessment_*.html` file 
 
 ## Multi-Account Deployment
-The deployment follows a two-step approach:
+
+### Prerequisites
+- AWS Organizations setup with management account access or delegated administrator member account.
+- StackSets service-linked roles configured
+
+### The deployment follows a two-step approach:
+
 
 ### Step 1: Deploy Member Roles (StackSets)
 
 Deploy [1-resco-member-roles.yaml](deployment/1-resco-member-roles.yaml) to all target accounts using CloudFormation StackSets.
-
-#### Prerequisites
-- AWS Organizations setup with management account access or delegated administrator member account.
-- StackSets service-linked roles configured
 
 #### AWS Console Deployment
 1. Navigate to **CloudFormation** > **StackSets**
