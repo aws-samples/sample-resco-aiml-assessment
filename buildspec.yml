@@ -61,7 +61,7 @@ phases:
         else
           echo "Single account deployment"
           STACK_NAME="resco-aiml-security-${AWS_ACCOUNT_ID}"
-          sam deploy --template-file .aws-sam/build/template.yaml --stack-name $STACK_NAME --capabilities CAPABILITY_IAM --no-confirm-changeset --s3-bucket $BUCKET_REPORT
+          sam deploy --template-file .aws-sam/build/template.yaml --stack-name $STACK_NAME --capabilities CAPABILITY_IAM --no-confirm-changeset --resolve-s3
           STATE_MACHINE_ARN=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query 'Stacks[0].Outputs[?OutputKey==`AIMLAssessmentStateMachineArn`].OutputValue' --output text)
           aws stepfunctions start-execution --state-machine-arn $STATE_MACHINE_ARN --input "{\"accountId\":\"$AWS_ACCOUNT_ID\"}"
         fi
