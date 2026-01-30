@@ -15,6 +15,7 @@ Resources:
         IAMPermissionCachingFunction: !GetAtt IAMPermissionCachingFunction.Arn
         BedrockSecurityAssessmentFunction: !GetAtt BedrockSecurityAssessmentFunction.Arn
         SagemakerSecurityAssessmentFunction: !GetAtt SagemakerSecurityAssessmentFunction.Arn
+        AgentCoreSecurityAssessmentFunction: !GetAtt AgentCoreSecurityAssessmentFunction.Arn
         GenerateConsolidatedReportFunction: !GetAtt GenerateConsolidatedReportFunction.Arn
         AIMLAssessmentBucketName: !Ref AIMLAssessmentBucket
       Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
@@ -26,6 +27,8 @@ Resources:
             FunctionName: !Ref IAMPermissionCachingFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref SagemakerSecurityAssessmentFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref AgentCoreSecurityAssessmentFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref GenerateConsolidatedReportFunction
         #Add S3 Read Write policy
@@ -256,6 +259,92 @@ Resources:
                 - ec2:DescribeVpcEndpoints
                 - ec2:DescribeVpcs  # Added this permission
               Resource: '*'
+
+  AgentCoreSecurityAssessmentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/security/agentcore_assessments/
+      Handler: app.lambda_handler
+      Runtime: python3.12
+      Architectures:
+        - x86_64
+      Timeout: 600  # 10 minutes
+      MemorySize: 1024
+      Environment:
+        Variables:
+          AIML_ASSESSMENT_BUCKET_NAME: !Ref AIMLAssessmentBucket
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref AIMLAssessmentBucket
+        - Statement:
+            - Sid: IAMPermissions
+              Effect: Allow
+              Action:
+                - iam:ListRoles
+                - iam:ListUsers
+                - iam:ListAttachedRolePolicies
+                - iam:ListAttachedUserPolicies
+                - iam:ListRolePolicies
+                - iam:ListUserPolicies
+                - iam:GetRolePolicy
+                - iam:GetUserPolicy
+                - iam:GetPolicy
+                - iam:GetPolicyVersion
+                - iam:GenerateServiceLastAccessedDetails
+                - iam:GetServiceLastAccessedDetails
+                - sts:GetCallerIdentity
+              Resource: '*'
+            - Sid: AgentCorePermissions
+              Effect: Allow
+              Action:
+                - bedrock-agentcore:*
+              Resource: 
+                - '*'
+                - 'arn:aws:bedrock-agentcore:*:*:runtime/*'
+                - 'arn:aws:bedrock-agentcore:*:*:memory/*'
+                - 'arn:aws:bedrock-agentcore:*:*:gateway/*'
+            - Sid: EC2Permissions
+              Effect: Allow
+              Action:
+                - ec2:DescribeSubnets
+                - ec2:DescribeRouteTables
+                - ec2:DescribeVpcEndpoints
+                - ec2:DescribeNatGateways
+                - ec2:DescribeVpcs
+              Resource: '*'
+            - Sid: ECRPermissions
+              Effect: Allow
+              Action:
+                - ecr:DescribeRepositories
+                - ecr:GetRepositoryPolicy
+              Resource: '*'
+            - Sid: LogsPermissions
+              Effect: Allow
+              Action:
+                - logs:DescribeLogGroups
+                - logs:DescribeLogStreams
+              Resource: '*'
+            - Sid: XRayPermissions
+              Effect: Allow
+              Action:
+                - xray:GetTraceSummaries
+              Resource: '*'
+            - Sid: CloudWatchPermissions
+              Effect: Allow
+              Action:
+                - cloudwatch:ListMetrics
+                - cloudwatch:PutMetricData
+              Resource: '*'
+            - Sid: S3BucketPermissions
+              Effect: Allow
+              Action:
+                - s3:ListBucket
+                - s3:GetBucketEncryption
+                - s3:GetBucketVersioning
+                - s3:GetBucketTagging
+                - s3:HeadBucket
+              Resource: 'arn:aws:s3:::*'
+
 # Add a S3 bucket to store the AIML assessment results
   AIMLAssessmentBucket:
     Type: AWS::S3::Bucket

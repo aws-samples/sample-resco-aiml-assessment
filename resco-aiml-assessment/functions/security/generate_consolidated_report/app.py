@@ -66,12 +66,20 @@ def get_assessment_results(execution_id: str, account_id: str = None) -> Dict[st
             Prefix=f'sagemaker_security_report_{execution_id}'
         )
         
-        # Combine both responses
+        # Also check for AgentCore reports
+        agentcore_response = s3_client.list_objects_v2(
+            Bucket=s3_bucket,
+            Prefix=f'agentcore_security_report_{execution_id}'
+        )
+        
+        # Combine all responses
         all_objects = []
         if 'Contents' in response:
             all_objects.extend(response['Contents'])
         if 'Contents' in sagemaker_response:
             all_objects.extend(sagemaker_response['Contents'])
+        if 'Contents' in agentcore_response:
+            all_objects.extend(agentcore_response['Contents'])
         if not all_objects:
             logger.warning(f"No assessment files found for execution {execution_id}")
             return {}
@@ -81,7 +89,8 @@ def get_assessment_results(execution_id: str, account_id: str = None) -> Dict[st
             'account_id': account_id,
             'timestamp': datetime.now().isoformat(),
             'bedrock': {},
-            'sagemaker': {}
+            'sagemaker': {},
+            'agentcore': {}
         }
 
         # Process each CSV file
@@ -118,6 +127,8 @@ def get_assessment_results(execution_id: str, account_id: str = None) -> Dict[st
                     category = 'bedrock'
                 elif 'sagemaker' in s3_key.lower():
                     category = 'sagemaker'
+                elif 'agentcore' in s3_key.lower():
+                    category = 'agentcore'
                 else:
                     logger.warning(f"Unknown assessment type for file: {s3_key}")
                     continue
@@ -135,15 +146,17 @@ def get_assessment_results(execution_id: str, account_id: str = None) -> Dict[st
         # Add summary information
         assessment_results['summary'] = {
             'total_files_processed': len(assessment_results['bedrock']) + 
-                                   len(assessment_results['sagemaker']),
+                                   len(assessment_results['sagemaker']) +
+                                   len(assessment_results['agentcore']),
             'categories_found': [
-                cat for cat in ['bedrock', 'sagemaker'] 
+                cat for cat in ['bedrock', 'sagemaker', 'agentcore'] 
                 if assessment_results[cat]
             ],
             'rows': assessment_results['bedrock'],
             'assessment_types': {
                 'bedrock': list(assessment_results['bedrock'].keys()),
-                'sagemaker': list(assessment_results['sagemaker'].keys())
+                'sagemaker': list(assessment_results['sagemaker'].keys()),
+                'agentcore': list(assessment_results['agentcore'].keys())
             }
         }
         
@@ -336,6 +349,24 @@ def generate_html_report(assessment_results):
                     rows.append(row)
         if 'sagemaker' in assessment_results:
             for report_type, findings in assessment_results['sagemaker'].items():
+                for finding in findings:
+                    severity_class = f"severity-{finding.get('Severity', '').lower()}"
+                    row = f"""
+                    <tr>
+                        <td>{finding.get('Account_ID', '')}</td>
+                        <td>{finding.get('Finding', '')}</td>
+                        <td>{finding.get('Finding_Details', '')}</td>
+                        <td>{finding.get('Resolution', '')}</td>
+                        <td><a href="{finding.get('Reference', '')}" target="_blank">{finding.get('Reference', '')}</a></td>
+                        <td class="{severity_class}">{finding.get('Severity', '')}</td>
+                        <td>{finding.get('Status', '')}</td>
+                    </tr>
+                    """
+                    rows.append(row)
+        
+        # Handle AgentCore findings
+        if 'agentcore' in assessment_results:
+            for report_type, findings in assessment_results['agentcore'].items():
                 for finding in findings:
                     severity_class = f"severity-{finding.get('Severity', '').lower()}"
                     row = f"""
