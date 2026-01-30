@@ -1,0 +1,8 @@
+# Kiro IDE files
+.kiro/
+
+# Git directory
+.git/
+
+# AWS SAM build artifacts
+resco-aiml-assessment/.aws-sam/

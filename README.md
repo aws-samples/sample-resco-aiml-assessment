@@ -8,13 +8,13 @@ ReSCO assessments help organizations evaluate and improve their:
 - **Security**: Security posture, compliance, and risk management
 - **Cost Optimization**: Resource utilization, cost efficiency, and optimization opportunities
 
-This repo focus on performing security assessment for your workloads using [Amazon Bedrock](https://aws.amazon.com/bedrock/) or [Amazon Sagemaker AI](https://aws.amazon.com/sagemaker/ai/).
+This repo focus on performing security assessment for your workloads using [Amazon Bedrock](https://aws.amazon.com/bedrock/), [Amazon Bedrock AgentCore](https://aws.github.io/bedrock-agentcore-starter-toolkit/), or [Amazon Sagemaker AI](https://aws.amazon.com/sagemaker/ai/).
 
 ## Assessment Modules 
 
 | Module | Description | Lambda Functions | Status |
 |--------|-------------|------------------|--------|
-| [resco-aiml-assessment](./resco-aiml-assessment) | AI/ML workload assessments | Bedrock Lambda, SageMaker Lambda | ✅ Active |
+| [resco-aiml-assessment](./resco-aiml-assessment) | AI/ML workload assessments | Bedrock Lambda, SageMaker Lambda, AgentCore Lambda | ✅ Active |
 
 ## Prerequisites
 - Python 3.12+ - [Install Python](https://www.python.org/downloads/)
@@ -102,7 +102,7 @@ Deploy [2-resco-assessment-codebuild.yaml](deployment/2-resco-assessment-codebui
 1. **Account Discovery**: CodeBuild queries AWS Organizations for active accounts
 2. **Role Assumption**: Assumes `ReSCOAIMLMemberRole` in each target account
 3. **Module Deployment**: Conditionally deploys selected assessment modules:
-   - AI/ML Assessment (Bedrock Lambda, SageMaker Lambda)
+   - AI/ML Assessment (Bedrock Lambda, SageMaker Lambda, AgentCore Lambda)
    - Security Assessment (EC2 Lambda, RDS Lambda, Lambda Lambda, VPC Lambda)
    - Resilience Assessment (Backup Lambda, HA Lambda, DR Lambda, FT Lambda)
    - Cost Assessment (Utilization Lambda, Optimization Lambda, Rightsizing Lambda, Waste Lambda)
@@ -122,10 +122,11 @@ Deploy [2-resco-assessment-codebuild.yaml](deployment/2-resco-assessment-codebui
 - Write to S3 bucket
 
 ### Member Account Role (`ReSCOAIMLMemberRole`)
-- Read-only access to AIML services (Bedrock, SageMaker)
+- Read-only access to AIML services (Bedrock, SageMaker, AgentCore)
 - IAM read permissions for security assessment
 - CloudTrail, GuardDuty, Lambda read permissions
 - VPC and EC2 read permissions
+- ECR, CloudWatch Logs, X-Ray read permissions (for AgentCore)
 
 ## Monitoring and Results
 
@@ -169,6 +170,7 @@ You can check CodeBuild service to ensure that the assessmnt run has completed s
   - `aiml/` - AI/ML assessment results
     - `bedrock_assessment_*.csv` - Bedrock Lambda results
     - `sagemaker_assessment_*.csv` - SageMaker Lambda results
+    - `agentcore_assessment_*.csv` - AgentCore Lambda results
   - `security/` - Security assessment results
     - `ec2_security_*.csv` - EC2 Lambda results
     - `rds_security_*.csv` - RDS Lambda results
@@ -187,6 +189,8 @@ The consolidated report provides a comprehensive view of security findings acros
 | 3183XXXX3611 | Bedrock Model Invocation Logging Check | Model invocation logging is not enabled | Enable logging to S3 or CloudWatch for audit tracking | [Model Invocation Logging](https://docs.aws.amazon.com/bedrock/latest/userguide/model-invocation-logging.html) | Medium | Failed |
 | 3183XXXX3611 | Bedrock Guardrails Check | No Guardrails configured | Configure content filters and safety measures | [Bedrock Guardrails](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails.html) | Medium | Failed |
 | 3183XXXX3611 | Bedrock CloudTrail Logging Check | CloudTrail not configured for Bedrock API calls | Enable CloudTrail logging for audit compliance | [CloudTrail Logging](https://docs.aws.amazon.com/bedrock/latest/userguide/logging-using-cloudtrail.html) | High | Failed |
+| 3183XXXX3611 | AgentCore Runtime VPC Configuration | Runtime not configured with VPC | Configure VPC with private subnets and required VPC endpoints | [AgentCore VPC](https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/security/agentcore-vpc.md) | High | Failed |
+| 3183XXXX3611 | AgentCore Memory Encryption | Memory without customer-managed encryption | Enable encryption with customer-managed KMS keys | [AgentCore Memory](https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/memory/) | Medium | Failed |
 | 3183XXXX3611 | SageMaker Model Registry Issue | No model package groups found | Implement model versioning and lifecycle management | [MLOps Guide](https://docs.aws.amazon.com/sagemaker/latest/dg/mlops.html) | Medium | Failed |
 
 ### Understanding Results
