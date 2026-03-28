@@ -78,19 +78,7 @@
                             "Arguments": {
                                 "FunctionName": "${BedrockSecurityAssessmentFunction}",
                                 "Payload": "{% $states.context %}"
-                            },
-                            "Catch": [
-                                {
-                                    "ErrorEquals": ["States.ALL"],
-                                    "ResultPath": "$.error",
-                                    "Next": "Bedrock Assessment Failed"
-                                }
-                            ]
-                        },
-                        "Bedrock Assessment Failed": {
-                            "Type": "Pass",
-                            "Result": {"status": "FAILED", "assessment": "Bedrock"},
-                            "End": true
+                            }
                         }
                     }
                 },
@@ -119,19 +107,7 @@
                             "Arguments": {
                                 "FunctionName": "${SagemakerSecurityAssessmentFunction}",
                                 "Payload": "{% $states.context %}"
-                            },
-                            "Catch": [
-                                {
-                                    "ErrorEquals": ["States.ALL"],
-                                    "ResultPath": "$.error",
-                                    "Next": "Sagemaker Assessment Failed"
-                                }
-                            ]
-                        },
-                        "Sagemaker Assessment Failed": {
-                            "Type": "Pass",
-                            "Result": {"status": "FAILED", "assessment": "Sagemaker"},
-                            "End": true
+                            }
                         }
                     }
                 },
@@ -160,25 +136,20 @@
                             "Arguments": {
                                 "FunctionName": "${AgentCoreSecurityAssessmentFunction}",
                                 "Payload": "{% $states.context %}"
-                            },
-                            "Catch": [
-                                {
-                                    "ErrorEquals": ["States.ALL"],
-                                    "ResultPath": "$.error",
-                                    "Next": "AgentCore Assessment Failed"
-                                }
-                            ]
-                        },
-                        "AgentCore Assessment Failed": {
-                            "Type": "Pass",
-                            "Result": {"status": "FAILED", "assessment": "AgentCore"},
-                            "End": true
+                            }
                         }
                     }
                 }
             ],
             "QueryLanguage": "JSONata",
-            "Next": "Generate Consolidated Report"
+            "Next": "Generate Consolidated Report",
+            "Catch": [
+                {
+                    "ErrorEquals": ["States.ALL"],
+                    "ResultPath": "$.parallelError",
+                    "Next": "Generate Consolidated Report"
+                }
+            ]
         },
         "Generate Consolidated Report": {
             "Type": "Task",
