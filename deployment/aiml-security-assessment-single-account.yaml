@@ -347,7 +347,7 @@ Outputs:
   CodeBuildProject:
     Description: CodeBuild project for running assessments
     Value: !Ref ReSCOCodeBuild
-  
+
   SAMStackName:
     Description: Name of the SAM stack containing assessment resources and bucket
     Value: resco-aiml-security
