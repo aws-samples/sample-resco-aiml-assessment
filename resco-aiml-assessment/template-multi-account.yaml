@@ -357,6 +357,80 @@ Resources:
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
 
+  # Custom resource to empty the bucket before CloudFormation deletes it
+  EmptyBucketOnDeleteRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: EmptyBucketPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                  - s3:ListBucketVersions
+                  - s3:DeleteObject
+                  - s3:DeleteObjectVersion
+                  - s3:GetBucketVersioning
+                Resource:
+                  - !GetAtt AIMLAssessmentBucket.Arn
+                  - !Sub '${AIMLAssessmentBucket.Arn}/*'
+
+  EmptyBucketOnDeleteFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: index.handler
+      Runtime: python3.12
+      Timeout: 300
+      Role: !GetAtt EmptyBucketOnDeleteRole.Arn
+      Code:
+        ZipFile: |
+          import boto3
+          import cfnresponse
+          import logging
+
+          logger = logging.getLogger()
+          logger.setLevel(logging.INFO)
+
+          def handler(event, context):
+              try:
+                  if event['RequestType'] == 'Delete':
+                      bucket = event['ResourceProperties']['BucketName']
+                      logger.info(f'Emptying bucket: {bucket}')
+                      s3 = boto3.client('s3')
+                      paginator = s3.get_paginator('list_object_versions')
+                      count = 0
+                      for page in paginator.paginate(Bucket=bucket):
+                          objects = []
+                          for v in page.get('Versions', []):
+                              objects.append({'Key': v['Key'], 'VersionId': v['VersionId']})
+                          for d in page.get('DeleteMarkers', []):
+                              objects.append({'Key': d['Key'], 'VersionId': d['VersionId']})
+                          if objects:
+                              s3.delete_objects(Bucket=bucket, Delete={'Objects': objects})
+                              count += len(objects)
+                      logger.info(f'Deleted {count} object versions from {bucket}')
+                  cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
+              except Exception as e:
+                  logger.error(f'Error: {e}')
+                  cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
+
+  EmptyBucketOnDelete:
+    Type: Custom::EmptyBucket
+    Properties:
+      ServiceToken: !GetAtt EmptyBucketOnDeleteFunction.Arn
+      BucketName: !Ref AIMLAssessmentBucket
+
   AssessmentBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
