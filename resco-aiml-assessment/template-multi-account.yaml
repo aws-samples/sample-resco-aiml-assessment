@@ -24,6 +24,7 @@ Resources:
         IAMPermissionCachingFunction: !GetAtt IAMPermissionCachingFunction.Arn
         BedrockSecurityAssessmentFunction: !GetAtt BedrockSecurityAssessmentFunction.Arn
         SagemakerSecurityAssessmentFunction: !GetAtt SagemakerSecurityAssessmentFunction.Arn
+        AgentCoreSecurityAssessmentFunction: !GetAtt AgentCoreSecurityAssessmentFunction.Arn
         GenerateConsolidatedReportFunction: !GetAtt GenerateConsolidatedReportFunction.Arn
         AIMLAssessmentBucketName: !Ref AIMLAssessmentBucket
       Policies:
@@ -36,6 +37,8 @@ Resources:
         - LambdaInvokePolicy:
             FunctionName: !Ref SagemakerSecurityAssessmentFunction
         - LambdaInvokePolicy:
+            FunctionName: !Ref AgentCoreSecurityAssessmentFunction
+        - LambdaInvokePolicy:
             FunctionName: !Ref GenerateConsolidatedReportFunction
         - S3CrudPolicy:
             BucketName: !Ref AIMLAssessmentBucket
@@ -43,7 +46,7 @@ Resources:
   CleanupBucketFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: CleanupBucketFunction
+      FunctionName: !Sub 'resco-aiml-CleanupBucket'
       CodeUri: functions/security/cleanup_bucket/
       Handler: app.lambda_handler
       Runtime: python3.12
@@ -61,7 +64,7 @@ Resources:
   IAMPermissionCachingFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: IAMPermissionCachingFunction
+      FunctionName: !Sub 'resco-aiml-IAMPermissionCaching'
       CodeUri: functions/security/iam_permission_caching/
       Handler: app.lambda_handler
       Runtime: python3.12
@@ -97,7 +100,7 @@ Resources:
   GenerateConsolidatedReportFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: GenerateConsolidatedReportFunction
+      FunctionName: !Sub 'resco-aiml-GenerateReport'
       CodeUri: functions/security/generate_consolidated_report/
       Handler: app.lambda_handler
       Runtime: python3.12
@@ -115,7 +118,7 @@ Resources:
   BedrockSecurityAssessmentFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: BedrockSecurityAssessment
+      FunctionName: !Sub 'resco-aiml-BedrockAssessment'
       CodeUri: functions/security/bedrock_assessments/
       Handler: app.lambda_handler
       Runtime: python3.12
@@ -188,7 +191,7 @@ Resources:
   SagemakerSecurityAssessmentFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: SagemakerSecurityAssessment
+      FunctionName: !Sub 'resco-aiml-SagemakerAssessment'
       CodeUri: functions/security/sagemaker_assessments/
       Handler: app.lambda_handler
       Runtime: python3.12
@@ -269,6 +272,74 @@ Resources:
               Action:
                 - ec2:DescribeVpcEndpoints
                 - ec2:DescribeVpcs
+              Resource: '*'
+
+  AgentCoreSecurityAssessmentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub 'resco-aiml-AgentCoreAssessment'
+      CodeUri: functions/security/agentcore_assessments/
+      Handler: app.lambda_handler
+      Runtime: python3.12
+      Architectures:
+        - x86_64
+      Timeout: 600
+      MemorySize: 1024
+      Environment:
+        Variables:
+          AIML_ASSESSMENT_BUCKET_NAME: !Ref AIMLAssessmentBucket
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref AIMLAssessmentBucket
+        - Statement:
+            - Sid: IAMPermissions
+              Effect: Allow
+              Action:
+                - iam:ListRoles
+                - iam:ListUsers
+                - iam:ListAttachedRolePolicies
+                - iam:ListAttachedUserPolicies
+                - iam:ListRolePolicies
+                - iam:ListUserPolicies
+                - iam:GetRolePolicy
+                - iam:GetUserPolicy
+                - iam:GetPolicy
+                - iam:GetPolicyVersion
+                - iam:GenerateServiceLastAccessedDetails
+                - iam:GetServiceLastAccessedDetails
+                - sts:GetCallerIdentity
+              Resource: '*'
+            - Sid: AgentCorePermissions
+              Effect: Allow
+              Action:
+                - bedrock-agentcore:*
+              Resource: '*'
+            - Sid: EC2Permissions
+              Effect: Allow
+              Action:
+                - ec2:DescribeSubnets
+                - ec2:DescribeRouteTables
+                - ec2:DescribeVpcEndpoints
+                - ec2:DescribeNatGateways
+                - ec2:DescribeVpcs
+              Resource: '*'
+            - Sid: ECRPermissions
+              Effect: Allow
+              Action:
+                - ecr:DescribeRepositories
+                - ecr:GetRepositoryPolicy
+              Resource: '*'
+            - Sid: LogsPermissions
+              Effect: Allow
+              Action:
+                - logs:DescribeLogGroups
+                - logs:DescribeLogStreams
+              Resource: '*'
+            - Sid: CloudWatchPermissions
+              Effect: Allow
+              Action:
+                - cloudwatch:ListMetrics
+                - cloudwatch:PutMetricData
               Resource: '*'
 
   # S3 bucket (always created for local storage)
