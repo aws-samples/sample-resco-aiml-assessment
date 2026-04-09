@@ -27,12 +27,12 @@ phases:
       - |
         # Validate required environment variables
         missing_vars=()
-        [[ -z "$BUCKET_REPORT" ]] && missing_vars+=("BUCKET_REPORT")
-        [[ -z "$AWS_PARTITION" ]] && missing_vars+=("AWS_PARTITION")
-        [[ -z "$AWS_ACCOUNT_ID" ]] && missing_vars+=("AWS_ACCOUNT_ID")
         [[ -z "$AWS_DEFAULT_REGION" ]] && missing_vars+=("AWS_DEFAULT_REGION")
 
         if [[ $MULTI_ACCOUNT_SCAN == 'true' ]]; then
+          [[ -z "$BUCKET_REPORT" ]] && missing_vars+=("BUCKET_REPORT")
+          [[ -z "$AWS_PARTITION" ]] && missing_vars+=("AWS_PARTITION")
+          [[ -z "$AWS_ACCOUNT_ID" ]] && missing_vars+=("AWS_ACCOUNT_ID")
           [[ -z "$RESCO_ROLE" ]] && missing_vars+=("RESCO_ROLE")
         fi
 
