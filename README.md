@@ -11,7 +11,7 @@ This assessment framework is designed for workloads using [Amazon Bedrock](https
 
 - Python 3.12+ - [Install Python](https://www.python.org/downloads/)
 - AWS SAM CLI - [Install the AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html)
-- Docker - [Install Docker community edition](https://hub.docker.com/search/?type=edition&offering=community) [Only for local development and testing]
+- Docker (optional) - [Install Docker community edition](https://hub.docker.com/search/?type=edition&offering=community) - Only required for local development and testing, not for AWS deployment
 
 ## Architecture
 
@@ -148,10 +148,10 @@ You can check the AWS CodeBuild console to ensure that the assessment has comple
 
 1. **Find the S3 Bucket Name**:
    - Navigate to **CloudFormation** > **Stacks** in the AWS Console
-   - For single-account deployments, select the `aiml-sec-{account_id}` stack (e.g., `aiml-sec-123456789012`)
-   - For multi-account deployments, select the `resco-aiml-multi-account` stack created in [Step 2: Deploy Central Infrastructure](#step-2-deploy-central-infrastructure)
+   - For single-account deployments, select the `aiml-sec-{account_id}` stack (e.g., `aiml-sec-123456789012`) and find the `AssessmentBucketName` output
+   - For multi-account deployments, select the `resco-aiml-multi-account` stack created in [Step 2: Deploy Central Infrastructure](#step-2-deploy-central-infrastructure) and find the `AssessmentBucket` output
    - Go to the **Outputs** tab
-   - Copy the S3 bucket name from the `AssessmentBucketName` output
+   - Copy the S3 bucket name
 
 2. **Navigate to the S3 Bucket**:
    - Go to **S3** in the AWS Console
@@ -183,33 +183,38 @@ You can check the AWS CodeBuild console to ensure that the assessment has comple
   - `bedrock_security_report_{execution_id}.csv` - Amazon Bedrock security assessment results
   - `sagemaker_security_report_{execution_id}.csv` - Amazon SageMaker security assessment results
   - `agentcore_security_report_{execution_id}.csv` - Amazon Bedrock AgentCore security assessment results
+  - `permissions_cache_{execution_id}.json` - IAM permissions cache
   - `security_assessment_{timestamp}_{execution_id}.html` - Consolidated HTML report (same features as multi-account report)
 
-### Sample Assessment Report
+### Sample Assessment Reports
 
-The consolidated report provides a comprehensive view of security findings across all accounts. In the HTML report, reference links appear as "View Docs" buttons with tooltips showing the full URL:
+The assessment generates professional HTML reports with interactive features including filtering, search, and dark mode support.
 
-| Account ID   | Finding                                | Finding Details                                 | Resolution                                                    | Reference                                                                                                      | Severity | Status |
-| ------------ | -------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | -------- | ------ |
-| 3183XXXX3611 | Bedrock Model Invocation Logging Check | Model invocation logging is not enabled         | Enable logging to S3 or CloudWatch for audit tracking         | [Model Invocation Logging](https://docs.aws.amazon.com/bedrock/latest/userguide/model-invocation-logging.html) | Medium   | Failed |
-| 3183XXXX3611 | Bedrock Guardrails Check               | No Guardrails configured                        | Configure content filters and safety measures                 | [Bedrock Guardrails](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails.html)                     | Medium   | Failed |
-| 3183XXXX3611 | Bedrock CloudTrail Logging Check       | CloudTrail not configured for Bedrock API calls | Enable CloudTrail logging for audit compliance                | [CloudTrail Logging](https://docs.aws.amazon.com/bedrock/latest/userguide/logging-using-cloudtrail.html)       | High     | Failed |
-| 3183XXXX3611 | AgentCore Runtime VPC Configuration    | Runtime not configured with VPC                 | Configure VPC with private subnets and required VPC endpoints | [AgentCore VPC](https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/security/agentcore-vpc.md)  | High     | Failed |
-| 3183XXXX3611 | AgentCore Memory Encryption            | Memory without customer-managed encryption      | Enable encryption with customer-managed KMS keys              | [AgentCore Memory](https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/memory/)                 | Medium   | Failed |
-| 3183XXXX3611 | SageMaker Model Registry Issue         | No model package groups found                   | Implement model versioning and lifecycle management           | [MLOps Guide](https://docs.aws.amazon.com/sagemaker/latest/dg/mlops.html)                                      | Medium   | Failed |
+**Example reports are available in the [`sample-reports/`](sample-reports/) folder:**
+
+- [Single Account Report](sample-reports/security_assessment_single_account.html) - Assessment for one AWS account
+- [Multi-Account Report](sample-reports/multi_account_report.html) - Consolidated view across multiple accounts
+
+The reports include:
+
+- **Executive Summary** with severity counts and service breakdown
+- **Priority Recommendations** highlighting critical issues
+- **Detailed Findings Table** with filtering by account, severity, and status
 
 ### Understanding Results
 
-- **Severity Levels**:
-  - **High**: Critical security issues requiring immediate attention
-  - **Medium**: Important security improvements recommended
-  - **Low**: Minor optimizations suggested
-  - **N/A**: No issues found, or check is not applicable
+| Severity | Description |
+|----------|-------------|
+| **High** | Critical security issues requiring immediate attention |
+| **Medium** | Important security improvements recommended |
+| **Low** | Minor optimizations suggested |
+| **N/A** | Check passed or not applicable |
 
-- **Status**:
-  - **Failed**: Security issue identified
-  - **Passed**: No issues found
-  - **N/A**: Check is not applicable to the current configuration
+| Status | Description |
+|--------|-------------|
+| **Failed** | Security issue identified |
+| **Passed** | No issues found |
+| **N/A** | Check not applicable to current configuration |
 
 ## Customization
 
@@ -292,12 +297,13 @@ To remove all resources deployed for multi-account assessment:
 
 1. **Delete AWS SAM-deployed stacks in each member account**:
    - For each account that was scanned, navigate to **CloudFormation** > **Stacks**
-   - Select the `aiml-sec-{account_id}` stack
+   - Select the `resco-aiml-security-{account_id}` stack (e.g., `resco-aiml-security-123456789012`)
+   - For the management account, select `resco-aiml-security-mgmt`
    - Click **Delete**
    - Alternatively, use the AWS CLI to delete across accounts:
      ```bash
      # Assume role in member account and delete stack
-     aws cloudformation delete-stack --stack-name aiml-sec-<account_id> \
+     aws cloudformation delete-stack --stack-name resco-aiml-security-<account_id> \
        --region <region>
      ```
 
@@ -335,7 +341,9 @@ To remove all resources deployed for multi-account assessment:
 ### Cleanup Order
 
 For a clean removal, delete resources in this order:
-1. AWS SAM-deployed assessment stacks (`aiml-sec-*`) in all accounts
+1. AWS SAM-deployed assessment stacks in all accounts:
+   - Single-account: `aiml-sec-{account_id}`
+   - Multi-account: `resco-aiml-security-{account_id}` and `resco-aiml-security-mgmt`
 2. Central infrastructure stack (`resco-aiml-single-account` or `resco-aiml-multi-account`)
 3. AWS CloudFormation StackSet member roles (multi-account only)
 4. Any remaining Amazon S3 buckets manually

@@ -4,21 +4,58 @@ phases:
     runtime-versions:
       python: 3.12
     commands:
-      - pip install -q --upgrade pip
-      - pip install -q --upgrade aws-sam-cli
+      - echo "Installing dependencies..."
+      - |
+        if ! pip install -q --upgrade pip; then
+          echo "ERROR: Failed to upgrade pip"
+          exit 1
+        fi
+      - |
+        if ! pip install -q --upgrade aws-sam-cli; then
+          echo "ERROR: Failed to install aws-sam-cli"
+          exit 1
+        fi
+      - |
+        # Verify jq is available (used for parsing JSON credentials)
+        if ! command -v jq &> /dev/null; then
+          echo "ERROR: jq is not installed"
+          exit 1
+        fi
   build:
     commands:
       - echo "Starting ReSCO AIML Assessment"
+      - |
+        # Validate required environment variables
+        missing_vars=()
+        [[ -z "$BUCKET_REPORT" ]] && missing_vars+=("BUCKET_REPORT")
+        [[ -z "$AWS_PARTITION" ]] && missing_vars+=("AWS_PARTITION")
+        [[ -z "$AWS_ACCOUNT_ID" ]] && missing_vars+=("AWS_ACCOUNT_ID")
+        [[ -z "$AWS_DEFAULT_REGION" ]] && missing_vars+=("AWS_DEFAULT_REGION")
+
+        if [[ $MULTI_ACCOUNT_SCAN == 'true' ]]; then
+          [[ -z "$RESCO_ROLE" ]] && missing_vars+=("RESCO_ROLE")
+        fi
+
+        if [[ ${#missing_vars[@]} -gt 0 ]]; then
+          echo "ERROR: Missing required environment variables: ${missing_vars[*]}"
+          exit 1
+        fi
       - echo "Multi-account scan is $MULTI_ACCOUNT_SCAN"
       - cd resco-aiml-assessment
       - ls -la
       - |
         if [[ $MULTI_ACCOUNT_SCAN = 'true' ]]; then
           echo "Building multi-account template"
-          sam build --template template-multi-account.yaml
+          if ! sam build --template template-multi-account.yaml; then
+            echo "ERROR: SAM build failed for multi-account template"
+            exit 1
+          fi
         else
           echo "Building single-account template"
-          sam build --template template.yaml
+          if ! sam build --template template.yaml; then
+            echo "ERROR: SAM build failed for single-account template"
+            exit 1
+          fi
         fi
       - echo "Build completed, checking build directory:"
       - ls -la .aws-sam/build/
@@ -26,62 +63,146 @@ phases:
         if [[ $MULTI_ACCOUNT_SCAN = 'true' ]]; then
           echo "Getting list of accounts to scan"
           if [[ $MULTI_ACCOUNT_LIST_OVERRIDE != '' ]]; then
+            echo "Using account overrides."
             account_list=$MULTI_ACCOUNT_LIST_OVERRIDE
           else
-            account_list=$(aws organizations list-accounts --query 'Accounts[?Status==`ACTIVE`].Id' --output text)
+            echo "Using accounts from AWS Organizations."
+            if ! account_list=$(aws organizations list-accounts --query 'Accounts[?Status==`ACTIVE`].Id' --output text); then
+              echo "ERROR: Failed to retrieve account list from AWS Organizations"
+              exit 1
+            fi
           fi
+
+          if [[ -z "$account_list" ]]; then
+            echo "ERROR: No accounts found to scan"
+            exit 1
+          fi
+
           echo "Will scan accounts: $account_list"
+
+          # Track failed accounts
+          failed_accounts=()
+
           for accountId in $account_list; do
             echo "Processing account $accountId"
             if [[ $accountId == $AWS_ACCOUNT_ID ]]; then
               echo "Skipping management account $accountId - will be handled separately"
               continue
             fi
-            aws sts assume-role --role-arn arn:$AWS_PARTITION:iam::$accountId:role/service-role/$RESCO_ROLE --role-session-name ReSCOAssessment > /tmp/creds.json || continue
+
+            # Assume role with error handling
+            if ! aws sts assume-role --role-arn arn:$AWS_PARTITION:iam::$accountId:role/service-role/$RESCO_ROLE --role-session-name ReSCOAssessment > /tmp/creds.json; then
+              echo "ERROR: Failed to assume role in account $accountId"
+              failed_accounts+=($accountId)
+              continue
+            fi
+
+            # Validate credentials were retrieved
             export AWS_ACCESS_KEY_ID=$(cat /tmp/creds.json | jq -r '.Credentials.AccessKeyId')
             export AWS_SECRET_ACCESS_KEY=$(cat /tmp/creds.json | jq -r '.Credentials.SecretAccessKey')
             export AWS_SESSION_TOKEN=$(cat /tmp/creds.json | jq -r '.Credentials.SessionToken')
-            echo "Deploying to account $accountId"
-            sam deploy --template-file .aws-sam/build/template.yaml --stack-name resco-aiml-security-$accountId --capabilities CAPABILITY_IAM --no-confirm-changeset --resolve-s3 --region $AWS_DEFAULT_REGION || echo "Deploy failed for $accountId"
-            STATE_MACHINE_ARN=$(aws cloudformation describe-stacks --stack-name resco-aiml-security-$accountId --query 'Stacks[0].Outputs[?OutputKey==`AIMLAssessmentStateMachineArn`].OutputValue' --output text 2>/dev/null)
-            if [[ $STATE_MACHINE_ARN != "" ]]; then
-              EXECUTION_ARN=$(aws stepfunctions start-execution --state-machine-arn $STATE_MACHINE_ARN --input "{\"accountId\":\"$accountId\"}" --query 'executionArn' --output text)
-              echo "Started execution: $EXECUTION_ARN"
+
+            if [[ -z "$AWS_ACCESS_KEY_ID" || "$AWS_ACCESS_KEY_ID" == "null" ]]; then
+              echo "ERROR: Failed to extract credentials for account $accountId"
+              failed_accounts+=($accountId)
+              unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
+              continue
             fi
+
+            echo "Deploying to account $accountId"
+            if ! sam deploy --template-file .aws-sam/build/template.yaml --stack-name resco-aiml-security-$accountId --capabilities CAPABILITY_IAM --no-confirm-changeset --resolve-s3 --region $AWS_DEFAULT_REGION; then
+              echo "ERROR: Deploy failed for account $accountId"
+              failed_accounts+=($accountId)
+              unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
+              continue
+            fi
+
+            STATE_MACHINE_ARN=$(aws cloudformation describe-stacks --stack-name resco-aiml-security-$accountId --query 'Stacks[0].Outputs[?OutputKey==`AIMLAssessmentStateMachineArn`].OutputValue' --output text 2>/dev/null)
+            if [[ $STATE_MACHINE_ARN != "" && $STATE_MACHINE_ARN != "None" ]]; then
+              if EXECUTION_ARN=$(aws stepfunctions start-execution --state-machine-arn $STATE_MACHINE_ARN --input "{\"accountId\":\"$accountId\"}" --query 'executionArn' --output text); then
+                echo "Started execution: $EXECUTION_ARN"
+              else
+                echo "WARNING: Failed to start Step Function execution for account $accountId"
+              fi
+            else
+              echo "WARNING: No State Machine ARN found for account $accountId"
+            fi
+
             unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
+            # Clean up credentials file
+            rm -f /tmp/creds.json
           done
+
           echo "Deploying to management account $AWS_ACCOUNT_ID"
-          sam deploy --template-file .aws-sam/build/template.yaml --stack-name resco-aiml-security-mgmt --capabilities CAPABILITY_IAM --no-confirm-changeset --resolve-s3 --region $AWS_DEFAULT_REGION || echo "Deploy failed for management account"
-          STATE_MACHINE_ARN=$(aws cloudformation describe-stacks --stack-name resco-aiml-security-mgmt --query 'Stacks[0].Outputs[?OutputKey==`AIMLAssessmentStateMachineArn`].OutputValue' --output text 2>/dev/null)
-          if [[ $STATE_MACHINE_ARN != "" ]]; then
-            MGMT_EXECUTION_ARN=$(aws stepfunctions start-execution --state-machine-arn $STATE_MACHINE_ARN --input "{\"accountId\":\"$AWS_ACCOUNT_ID\"}" --query 'executionArn' --output text)
-            echo "Started management account execution: $MGMT_EXECUTION_ARN"
+          if ! sam deploy --template-file .aws-sam/build/template.yaml --stack-name resco-aiml-security-mgmt --capabilities CAPABILITY_IAM --no-confirm-changeset --resolve-s3 --region $AWS_DEFAULT_REGION; then
+            echo "ERROR: Deploy failed for management account"
+            failed_accounts+=($AWS_ACCOUNT_ID)
+          else
+            STATE_MACHINE_ARN=$(aws cloudformation describe-stacks --stack-name resco-aiml-security-mgmt --query 'Stacks[0].Outputs[?OutputKey==`AIMLAssessmentStateMachineArn`].OutputValue' --output text 2>/dev/null)
+            if [[ $STATE_MACHINE_ARN != "" && $STATE_MACHINE_ARN != "None" ]]; then
+              if MGMT_EXECUTION_ARN=$(aws stepfunctions start-execution --state-machine-arn $STATE_MACHINE_ARN --input "{\"accountId\":\"$AWS_ACCOUNT_ID\"}" --query 'executionArn' --output text); then
+                echo "Started management account execution: $MGMT_EXECUTION_ARN"
+              else
+                echo "WARNING: Failed to start Step Function execution for management account"
+              fi
+            fi
           fi
+
+          # Report failed accounts
+          if [[ ${#failed_accounts[@]} -gt 0 ]]; then
+            echo "WARNING: Deployments failed for the following accounts: ${failed_accounts[*]}"
+            echo "Check logs above for specific error details"
+          fi
+
         else
           echo "Single account deployment"
           STACK_NAME="aiml-sec-${AWS_ACCOUNT_ID}"
-          sam deploy --template-file .aws-sam/build/template.yaml --stack-name $STACK_NAME --capabilities CAPABILITY_IAM --no-confirm-changeset --resolve-s3
+          if ! sam deploy --template-file .aws-sam/build/template.yaml --stack-name $STACK_NAME --capabilities CAPABILITY_IAM --no-confirm-changeset --resolve-s3; then
+            echo "ERROR: SAM deploy failed for single account"
+            exit 1
+          fi
           STATE_MACHINE_ARN=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query 'Stacks[0].Outputs[?OutputKey==`AIMLAssessmentStateMachineArn`].OutputValue' --output text)
-          aws stepfunctions start-execution --state-machine-arn $STATE_MACHINE_ARN --input "{\"accountId\":\"$AWS_ACCOUNT_ID\"}"
+          if [[ -z "$STATE_MACHINE_ARN" || "$STATE_MACHINE_ARN" == "None" ]]; then
+            echo "ERROR: Failed to retrieve State Machine ARN"
+            exit 1
+          fi
+          if ! aws stepfunctions start-execution --state-machine-arn $STATE_MACHINE_ARN --input "{\"accountId\":\"$AWS_ACCOUNT_ID\"}"; then
+            echo "ERROR: Failed to start Step Function execution"
+            exit 1
+          fi
         fi
   post_build:
     commands:
-      - echo "Assessment completed. Results in S3:$BUCKET_REPORT"
+      - echo "CODEBUILD_BUILD_SUCCEEDING status is $CODEBUILD_BUILD_SUCCEEDING"
       - |
+        if [ $CODEBUILD_BUILD_SUCCEEDING -eq 0 ]; then
+          echo "ERROR: The previous build stage failed. Exiting post_build without processing results."
+          exit 1
+        fi
+
+        echo "Assessment completed. Results in S3:$BUCKET_REPORT"
+
         if [[ $MULTI_ACCOUNT_SCAN = 'true' ]]; then
-          echo "Getting list of accounts to scan"
+          echo "Getting list of accounts for post-build processing"
           if [[ $MULTI_ACCOUNT_LIST_OVERRIDE != '' ]]; then
             account_list=$MULTI_ACCOUNT_LIST_OVERRIDE
           else
-            account_list=$(aws organizations list-accounts --query 'Accounts[?Status==`ACTIVE`].Id' --output text)
+            if ! account_list=$(aws organizations list-accounts --query 'Accounts[?Status==`ACTIVE`].Id' --output text); then
+              echo "ERROR: Failed to retrieve account list from AWS Organizations"
+              exit 1
+            fi
           fi
           echo "Account list for post-build processing: $account_list"
-          
+
+          # Track failures
+          upload_failed=false
+          failed_accounts=()
+
           # Clean up any existing account-files directory to ensure fresh start
           echo "Cleaning up existing account-files directory"
           rm -rf /tmp/account-files
           mkdir -p /tmp/account-files
-          
+
           echo "Copying files from respective account S3 buckets to CodeBuild environment"
           for accountId in $account_list; do
             echo "Processing account $accountId"
@@ -90,16 +211,28 @@ phases:
               STACK_NAME="resco-aiml-security-mgmt"
             else
               # Member account - assume role and use account-specific stack name
-              aws sts assume-role --role-arn arn:$AWS_PARTITION:iam::$accountId:role/service-role/$RESCO_ROLE --role-session-name ReSCOAssessment > /tmp/creds.json || continue
+              if ! aws sts assume-role --role-arn arn:$AWS_PARTITION:iam::$accountId:role/service-role/$RESCO_ROLE --role-session-name ReSCOAssessment > /tmp/creds.json; then
+                echo "ERROR: Failed to assume role for account $accountId in post-build"
+                failed_accounts+=($accountId)
+                continue
+              fi
+
               export AWS_ACCESS_KEY_ID=$(cat /tmp/creds.json | jq -r '.Credentials.AccessKeyId')
               export AWS_SECRET_ACCESS_KEY=$(cat /tmp/creds.json | jq -r '.Credentials.SecretAccessKey')
               export AWS_SESSION_TOKEN=$(cat /tmp/creds.json | jq -r '.Credentials.SessionToken')
+
+              if [[ -z "$AWS_ACCESS_KEY_ID" || "$AWS_ACCESS_KEY_ID" == "null" ]]; then
+                echo "ERROR: Failed to extract credentials for account $accountId in post-build"
+                failed_accounts+=($accountId)
+                continue
+              fi
+
               STACK_NAME="resco-aiml-security-$accountId"
             fi
-            
+
             # Wait for Step Function to complete before copying files
             STATE_MACHINE_ARN=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query 'Stacks[0].Outputs[?OutputKey==`AIMLAssessmentStateMachineArn`].OutputValue' --output text 2>/dev/null)
-            if [[ $STATE_MACHINE_ARN != "" ]]; then
+            if [[ $STATE_MACHINE_ARN != "" && $STATE_MACHINE_ARN != "None" ]]; then
               echo "Waiting for Step Function completion in account $accountId..."
               EXECUTION_ARN=$(aws stepfunctions list-executions --state-machine-arn $STATE_MACHINE_ARN --status-filter RUNNING --max-items 1 --query 'executions[0].executionArn' --output text 2>/dev/null)
               if [[ $EXECUTION_ARN != "" && $EXECUTION_ARN != "None" ]]; then
@@ -109,57 +242,137 @@ phases:
                   STATUS=$(aws stepfunctions describe-execution --execution-arn $EXECUTION_ARN --query 'status' --output text 2>/dev/null)
                   if [[ $STATUS == "SUCCEEDED" || $STATUS == "FAILED" || $STATUS == "TIMED_OUT" || $STATUS == "ABORTED" ]]; then
                     echo "Step Function for account $accountId completed with status: $STATUS"
+                    if [[ $STATUS == "FAILED" || $STATUS == "TIMED_OUT" || $STATUS == "ABORTED" ]]; then
+                      echo "WARNING: Step Function did not succeed for account $accountId"
+                    fi
                     break
                   fi
                   echo "Step Function for account $accountId still running... waiting 30 seconds"
                   sleep 30
                   elapsed=$((elapsed + 30))
                 done
+                if [[ $elapsed -ge $timeout ]]; then
+                  echo "WARNING: Timeout waiting for Step Function completion in account $accountId"
+                fi
               fi
+            else
+              echo "WARNING: No State Machine ARN found for account $accountId"
             fi
-            
+
             # Now copy files from the completed assessment
             ACCOUNT_BUCKET=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query 'Stacks[0].Outputs[?OutputKey==`AssessmentBucketName`].OutputValue' --output text 2>/dev/null)
-            if [[ $ACCOUNT_BUCKET != "" ]]; then
+            if [[ $ACCOUNT_BUCKET != "" && $ACCOUNT_BUCKET != "None" ]]; then
               echo "Copying files from $ACCOUNT_BUCKET to local storage"
               mkdir -p /tmp/account-files/$accountId
+
               # List bucket contents first for debugging
               echo "Bucket contents for $accountId:"
-              aws s3 ls s3://$ACCOUNT_BUCKET/ || echo "Failed to list bucket contents"
-              aws s3 cp s3://$ACCOUNT_BUCKET/ /tmp/account-files/$accountId/ --recursive --exclude "*" --include "*.csv" --include "*.html" --exclude "*/" || echo "No files to copy from $accountId"
+              if ! aws s3 ls s3://$ACCOUNT_BUCKET/; then
+                echo "WARNING: Failed to list bucket contents for $accountId"
+              fi
+
+              if ! aws s3 cp s3://$ACCOUNT_BUCKET/ /tmp/account-files/$accountId/ --recursive --exclude "*" --include "*.csv" --include "*.html" --exclude "*/"; then
+                echo "WARNING: No files to copy or copy failed from $accountId"
+              fi
+
               # Show what was actually copied
               echo "Files copied for $accountId:"
-              ls -la /tmp/account-files/$accountId/ || echo "No files in directory"
+              ls -la /tmp/account-files/$accountId/ 2>/dev/null || echo "No files in directory"
+
               # Flatten any nested directories
               find /tmp/account-files/$accountId -type f \( -name "*.csv" -o -name "*.html" \) -exec mv {} /tmp/account-files/$accountId/ \; 2>/dev/null || true
               find /tmp/account-files/$accountId -type d -empty -delete 2>/dev/null || true
             else
-              echo "No assessment bucket found for $accountId (STACK_NAME: $STACK_NAME)"
+              echo "WARNING: No assessment bucket found for $accountId (STACK_NAME: $STACK_NAME)"
             fi
-            
+
             if [[ $accountId != $AWS_ACCOUNT_ID ]]; then
               unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
+              rm -f /tmp/creds.json
             fi
           done
-          
+
           echo "Uploading files to management account S3 bucket and creating consolidated report"
-          pip3 install -q beautifulsoup4
-          
+          if ! pip3 install -q beautifulsoup4; then
+            echo "ERROR: Failed to install beautifulsoup4"
+            exit 1
+          fi
+
           # Debug: Show which directories exist
           echo "Available account directories:"
           ls -la /tmp/account-files/ || echo "No account-files directory"
-          
+
           # Upload files from local storage to management account bucket organized by account (overwrite)
+          echo "Uploading account reports to S3..."
           for accountId in $account_list; do
             if [[ -d /tmp/account-files/$accountId ]]; then
               echo "Uploading files for account $accountId (overwriting existing)"
-              aws s3 sync /tmp/account-files/$accountId/ s3://$BUCKET_REPORT/$accountId/ || echo "Failed to upload files for $accountId"
+              if ! aws s3 sync /tmp/account-files/$accountId/ s3://$BUCKET_REPORT/$accountId/; then
+                echo "ERROR: Failed to upload files for $accountId"
+                upload_failed=true
+              fi
             else
-              echo "No directory found for account $accountId"
+              echo "WARNING: No directory found for account $accountId"
             fi
           done
-          
+
           # Create consolidated HTML report using separate script
-          python3 ../consolidate_html_reports.py
+          echo "Creating consolidated HTML report..."
+          if ! python3 ../consolidate_html_reports.py; then
+            echo "ERROR: Failed to create consolidated HTML report"
+            upload_failed=true
+          fi
+
+          # Report failures
+          if [[ ${#failed_accounts[@]} -gt 0 ]]; then
+            echo "WARNING: Post-build processing failed for the following accounts: ${failed_accounts[*]}"
+          fi
+
+          if [[ $upload_failed == true ]]; then
+            echo "ERROR: One or more uploads or report generation failed. Check logs above for details."
+            exit 1
+          fi
+
+          echo "All reports uploaded successfully!"
+        else
+          # Single account post-build: wait for Step Function and report status
+          echo "Single account post-build processing"
+          STACK_NAME="aiml-sec-${AWS_ACCOUNT_ID}"
+
+          STATE_MACHINE_ARN=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query 'Stacks[0].Outputs[?OutputKey==`AIMLAssessmentStateMachineArn`].OutputValue' --output text 2>/dev/null)
+          if [[ $STATE_MACHINE_ARN != "" && $STATE_MACHINE_ARN != "None" ]]; then
+            echo "Waiting for Step Function completion..."
+            EXECUTION_ARN=$(aws stepfunctions list-executions --state-machine-arn $STATE_MACHINE_ARN --status-filter RUNNING --max-items 1 --query 'executions[0].executionArn' --output text 2>/dev/null)
+            if [[ $EXECUTION_ARN != "" && $EXECUTION_ARN != "None" ]]; then
+              timeout=300
+              elapsed=0
+              while [[ $elapsed -lt $timeout ]]; do
+                STATUS=$(aws stepfunctions describe-execution --execution-arn $EXECUTION_ARN --query 'status' --output text 2>/dev/null)
+                if [[ $STATUS == "SUCCEEDED" || $STATUS == "FAILED" || $STATUS == "TIMED_OUT" || $STATUS == "ABORTED" ]]; then
+                  echo "Step Function completed with status: $STATUS"
+                  if [[ $STATUS != "SUCCEEDED" ]]; then
+                    echo "WARNING: Step Function did not succeed"
+                  fi
+                  break
+                fi
+                echo "Step Function still running... waiting 30 seconds"
+                sleep 30
+                elapsed=$((elapsed + 30))
+              done
+              if [[ $elapsed -ge $timeout ]]; then
+                echo "WARNING: Timeout waiting for Step Function completion"
+              fi
+            else
+              echo "No running executions found"
+            fi
+          fi
+
+          # Get assessment bucket and report location
+          ACCOUNT_BUCKET=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query 'Stacks[0].Outputs[?OutputKey==`AssessmentBucketName`].OutputValue' --output text 2>/dev/null)
+          if [[ $ACCOUNT_BUCKET != "" && $ACCOUNT_BUCKET != "None" ]]; then
+            echo "Assessment results available in S3 bucket: $ACCOUNT_BUCKET"
+            echo "Bucket contents:"
+            aws s3 ls s3://$ACCOUNT_BUCKET/ --recursive || echo "Failed to list bucket contents"
+          fi
         fi
       - echo "Assessment and consolidation completed"

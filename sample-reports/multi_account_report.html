@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Account AI/ML Security Assessment Report</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #111827;
+            --accent: #6366f1;
+            --accent-light: #eef2ff;
+            --bg-page: #ffffff;
+            --bg-card: #ffffff;
+            --bg-subtle: #f9fafb;
+            --severity-high: #ef4444;
+            --severity-medium: #f59e0b;
+            --severity-low: #6366f1;
+            --severity-na: #9ca3af;
+            --status-passed: #10b981;
+            --status-failed: #ef4444;
+            --border-color: #d1d5db;
+            --border-strong: #9ca3af;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --card-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+        }
+        [data-theme="dark"] {
+            --primary: #f9fafb;
+            --accent: #818cf8;
+            --accent-light: rgba(129, 140, 248, 0.15);
+            --bg-page: #0f172a;
+            --bg-card: #1e293b;
+            --bg-subtle: #334155;
+            --severity-high: #f87171;
+            --severity-medium: #fbbf24;
+            --severity-low: #818cf8;
+            --severity-na: #64748b;
+            --status-passed: #4ade80;
+            --status-failed: #f87171;
+            --border-color: #475569;
+            --border-strong: #64748b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --card-shadow: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg-page); color: var(--text-primary); line-height: 1.6; }
+        .theme-toggle { display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: var(--bg-subtle); border: 2px solid var(--border-color); border-radius: 50px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text-primary); transition: all 0.2s ease; }
+        .theme-toggle:hover { border-color: var(--accent); background: var(--accent-light); }
+        .theme-toggle-icon { width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; }
+        .theme-toggle .sun-icon { display: none; }
+        .theme-toggle .moon-icon { display: block; }
+        [data-theme="dark"] .theme-toggle .sun-icon { display: block; }
+        [data-theme="dark"] .theme-toggle .moon-icon { display: none; }
+        .header { background: var(--bg-card); color: var(--primary); padding: 32px 40px; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid var(--border-color); }
+        .header h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; }
+        .header-right { display: flex; align-items: center; gap: 20px; }
+        .header-meta { text-align: right; font-size: 14px; color: var(--text-secondary); }
+        .container { max-width: 1600px; margin: 0 auto; padding: 24px; }
+        .exec-summary { background: var(--bg-card); border-radius: 16px; margin-bottom: 32px; border: 2px solid var(--border-color); overflow: hidden; box-shadow: var(--card-shadow); }
+        .exec-summary-header { background: var(--bg-subtle); padding: 20px 28px; border-bottom: 2px solid var(--border-color); }
+        .exec-summary-header h2 { font-size: 16px; font-weight: 600; color: var(--text-primary); text-transform: uppercase; letter-spacing: 1px; }
+        .metrics-grid { display: grid; grid-template-columns: repeat(5, 1fr); border-bottom: 2px solid var(--border-color); }
+        .metric-card { padding: 28px; text-align: center; border-right: 2px solid var(--border-color); background: var(--bg-card); transition: background-color 0.15s; }
+        .metric-card:last-child { border-right: none; }
+        .metric-card:hover { background: var(--bg-subtle); }
+        .metric-value { font-size: 42px; font-weight: 800; line-height: 1; margin-bottom: 8px; letter-spacing: -1px; }
+        .metric-label { font-size: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; font-weight: 500; }
+        .metric-card.total .metric-value { color: var(--primary); }
+        .metric-card.high .metric-value { color: var(--severity-high); }
+        .metric-card.medium .metric-value { color: var(--severity-medium); }
+        .metric-card.low .metric-value { color: var(--severity-low); }
+        .metric-card.passed .metric-value { color: var(--status-passed); }
+        .breakdown-section { padding: 28px; display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+        .breakdown-card { background: var(--bg-subtle); border-radius: 12px; padding: 24px; border: 2px solid var(--border-color); }
+        .breakdown-card h3 { font-size: 12px; font-weight: 700; color: var(--text-primary); margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
+        .service-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--border-color); }
+        .service-row:last-child { border-bottom: none; padding-bottom: 0; }
+        .service-name { font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 12px; }
+        .service-icon { width: 32px; height: 32px; background: var(--primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 13px; font-weight: 700; }
+        [data-theme="dark"] .service-icon { background: var(--accent); color: #0f172a; }
+        .service-stats { display: flex; gap: 10px; }
+        .stat-badge { padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; }
+        .stat-badge.failed { background: #fef2f2; color: var(--severity-high); }
+        .stat-badge.passed { background: #ecfdf5; color: var(--status-passed); }
+        .recommendations-list { list-style: none; }
+        .recommendations-list li { display: flex; align-items: flex-start; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--border-color); font-size: 14px; line-height: 1.5; }
+        .recommendations-list li:last-child { border-bottom: none; padding-bottom: 0; }
+        .priority-indicator { width: 10px; height: 10px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+        .priority-indicator.high { background: var(--severity-high); }
+        .priority-indicator.medium { background: var(--severity-medium); }
+        .findings-section { background: var(--bg-card); border-radius: 16px; border: 2px solid var(--border-color); overflow: hidden; box-shadow: var(--card-shadow); }
+        .findings-header { padding: 20px 28px; background: var(--bg-subtle); border-bottom: 2px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .findings-header h2 { font-size: 16px; font-weight: 700; color: var(--text-primary); text-transform: uppercase; letter-spacing: 1px; }
+        .search-box { position: relative; }
+        .search-box input { padding: 12px 16px 12px 44px; border: 1px solid var(--border-color); border-radius: 10px; width: 320px; font-size: 14px; background: var(--bg-card); color: var(--text-primary); transition: all 0.2s; }
+        .search-box input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
+        .search-box::before { content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' fill='%239ca3af' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/%3E%3C/svg%3E"); position: absolute; left: 16px; top: 50%; transform: translateY(-50%); }
+        .findings-table-container { overflow-x: auto; }
+        .findings-table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
+        .findings-table thead { background: var(--bg-subtle); }
+        .findings-table th { padding: 12px 10px; text-align: left; font-weight: 700; font-size: 11px; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 3px solid var(--border-strong); background: var(--bg-subtle); }
+        .findings-table th:nth-child(1) { width: 10%; } /* Account ID */
+        .findings-table th:nth-child(2) { width: 15%; } /* Finding */
+        .findings-table th:nth-child(3) { width: 20%; } /* Finding Details */
+        .findings-table th:nth-child(4) { width: 22%; } /* Resolution */
+        .findings-table th:nth-child(5) { width: 8%; } /* Reference */
+        .findings-table th:nth-child(6) { width: 10%; } /* Severity */
+        .findings-table th:nth-child(7) { width: 10%; } /* Status */
+        .findings-table th .filter-input, .findings-table th .filter-select { display: block; width: 100%; margin-top: 8px; padding: 6px 8px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 12px; font-weight: normal; text-transform: none; letter-spacing: normal; background: var(--bg-card); color: var(--text-primary); }
+        .findings-table th .filter-input:focus, .findings-table th .filter-select:focus { outline: none; border-color: var(--accent); }
+        .findings-table th .filter-select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%236b7280' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; padding-right: 28px; }
+        [data-theme="dark"] .findings-table th .filter-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E"); }
+        .findings-table th.no-filter { vertical-align: top; }
+        .findings-table tbody tr { transition: background-color 0.15s; background: var(--bg-card); }
+        .findings-table tbody tr:hover { background: var(--bg-subtle); }
+        .findings-table td { padding: 12px 10px; border-bottom: 1px solid var(--border-color); vertical-align: top; color: var(--text-primary); word-wrap: break-word; overflow-wrap: break-word; }
+        .findings-table td:first-child { font-family: 'SF Mono', 'Monaco', monospace; font-size: 11px; color: var(--text-secondary); }
+        .severity-badge { display: inline-flex; align-items: center; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; }
+        .severity-badge.high { background: #fef2f2; color: var(--severity-high); }
+        .severity-badge.medium { background: #fffbeb; color: #b45309; }
+        .severity-badge.low { background: var(--accent-light); color: var(--severity-low); }
+        .severity-badge.na { background: #f3f4f6; color: var(--severity-na); }
+        .status-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; }
+        .status-badge.passed { background: #ecfdf5; color: var(--status-passed); }
+        .status-badge.failed { background: #fef2f2; color: var(--status-failed); }
+        .status-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+        .reference-btn { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; background: var(--accent-light); color: var(--accent); text-decoration: none; border-radius: 6px; font-size: 11px; font-weight: 600; border: 1px solid var(--border-color); transition: all 0.15s ease; margin: 2px 0; }
+        .reference-btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
+        .reference-btn::after { content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%236366f1' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z'/%3E%3Cpath fill-rule='evenodd' d='M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z'/%3E%3C/svg%3E"); transition: all 0.15s; }
+        [data-theme="dark"] .reference-btn::after { content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23818cf8' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z'/%3E%3Cpath fill-rule='evenodd' d='M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z'/%3E%3C/svg%3E"); }
+        .reference-btn:hover::after { content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='white' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z'/%3E%3Cpath fill-rule='evenodd' d='M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z'/%3E%3C/svg%3E"); }
+        .reference-cell { display: flex; flex-direction: column; gap: 4px; }
+        .finding-details { color: var(--text-secondary); line-height: 1.5; font-size: 12px; }
+        .resolution-text { color: var(--text-secondary); font-size: 12px; line-height: 1.5; }
+        .report-footer { text-align: center; padding: 32px; color: var(--text-secondary); font-size: 13px; }
+        .report-footer a { color: var(--accent); text-decoration: none; font-weight: 500; }
+        @media (max-width: 1200px) { .metrics-grid { grid-template-columns: repeat(3, 1fr); } .breakdown-section { grid-template-columns: 1fr; } }
+        @media (max-width: 768px) { .header { flex-direction: column; gap: 16px; text-align: center; } .metrics-grid { grid-template-columns: repeat(2, 1fr); } .metric-card { border-right: none; border-bottom: 1px solid var(--border-color); } .findings-header { flex-direction: column; gap: 16px; } .search-box input { width: 100%; } }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>Multi-Account AI/ML Security Assessment</h1>
+        <div class="header-right">
+            <div class="header-meta">
+                <div>4 Accounts</div>
+                <div>2026-04-09 12:18:39 UTC</div>
+            </div>
+            <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+                <span class="theme-toggle-icon">
+                    <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M6 .278a.768.768 0 0 1 .08.858 7.208 7.208 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277.527 0 1.04-.055 1.533-.16a.787.787 0 0 1 .81.316.733.733 0 0 1-.031.893A8.349 8.349 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.752.752 0 0 1 6 .278z"/></svg>
+                    <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0zm0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13zm8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5zM3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8zm10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0zm-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0zm9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707zM4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708z"/></svg>
+                </span>
+                <span class="theme-label">Dark</span>
+            </button>
+        </div>
+    </header>
+    <main class="container">
+        <section class="exec-summary">
+            <div class="exec-summary-header"><h2>Executive Summary</h2></div>
+            <div class="metrics-grid">
+                <div class="metric-card total"><div class="metric-value">109</div><div class="metric-label">Total Findings</div></div>
+                <div class="metric-card high"><div class="metric-value">40</div><div class="metric-label">High Severity</div></div>
+                <div class="metric-card medium"><div class="metric-value">24</div><div class="metric-label">Medium Severity</div></div>
+                <div class="metric-card low"><div class="metric-value">2</div><div class="metric-label">Low Severity</div></div>
+                <div class="metric-card passed"><div class="metric-value">24</div><div class="metric-label">Passed Checks</div></div>
+            </div>
+            <div class="breakdown-section">
+                <div class="breakdown-card">
+                    <h3>Findings by Service</h3>
+                    <div class="service-row"><span class="service-name"><span class="service-icon">B</span>Amazon Bedrock</span><div class="service-stats"><span class="stat-badge failed">29 Failed</span><span class="stat-badge passed">18 Passed</span></div></div>
+                    <div class="service-row"><span class="service-name"><span class="service-icon">S</span>Amazon SageMaker</span><div class="service-stats"><span class="stat-badge failed">7 Failed</span><span class="stat-badge passed">6 Passed</span></div></div>
+                    <div class="service-row"><span class="service-name"><span class="service-icon">A</span>AgentCore</span><div class="service-stats"><span class="stat-badge failed">30 Failed</span><span class="stat-badge passed">0 Passed</span></div></div>
+                </div>
+                <div class="breakdown-card"><h3>Priority Recommendations</h3><ul class="recommendations-list"><li><span class="priority-indicator high"></span><span>Limit the AmazonBedrockFullAccess policy only to required access</span></li><li><span class="priority-indicator high"></span><span>Limit the AmazonBedrockFullAccess policy only to required access</span></li><li><span class="priority-indicator high"></span><span>Limit the AmazonBedrockFullAccess policy only to required access</span></li><li><span class="priority-indicator medium"></span><span>Configure Bedrock Guardrails to implement safeguards such as:
+- Content filters to block harmful content
+- Denied topics to prevent undesirable discussions
+- Sensitive information filters to protect PII
+- Contextual grounding checks to prevent hallucinations</span></li><li><span class="priority-indicator medium"></span><span>Enable and properly configure AWS IAM Identity Center (successor to AWS SSO) for centralized access management. Ensure Identity Store ID is configured.</span></li></ul></div>
+            </div>
+        </section>
+        <section class="findings-section">
+            <div class="findings-header"><h2>Detailed Findings</h2><div class="search-box"><input type="text" id="searchInput" placeholder="Search across all columns..."></div></div>
+            <div class="findings-table-container">
+                <table class="findings-table" id="findingsTable">
+                    <thead><tr>
+                        <th>Account ID<select class="filter-select" data-column="0"><option value="">All Accounts</option><option value="222222222222">222222222222</option><option value="333333333333">333333333333</option><option value="444444444444">444444444444</option><option value="111111111111">111111111111</option></select></th>
+                        <th>Finding<input type="text" class="filter-input" placeholder="Search findings..." data-column="1"></th>
+                        <th class="no-filter">Finding Details</th>
+                        <th class="no-filter">Resolution</th>
+                        <th class="no-filter">Reference</th>
+                        <th>Severity<select class="filter-select" data-column="5"><option value="">All Severities</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option><option value="n/a">N/A</option></select></th>
+                        <th>Status<select class="filter-select" data-column="6"><option value="">All Statuses</option><option value="failed">Failed</option><option value="passed">Passed</option><option value="n/a">N/A</option></select></th>
+                    </tr></thead>
+                    <tbody><tr>
+                <td>333333333333</td>
+                <td>AmazonBedrockFullAccess role check</td>
+                <td class="finding-details">Role 'IDPSageMakerCfnStack-SageMakerExecutionRole-aqrHz6dVkoHC' has AmazonBedrockFullAccess policy attached</td>
+                <td class="resolution-text">Limit the AmazonBedrockFullAccess policy only to required access</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/security_iam_id-based-policy-examples-agent.html#iam-agents-ex-all" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/security_iam_id-based-policy-examples-agent.html#iam-agents-ex-all">View Docs</a><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/security_iam_id-based-policy-examples-br-studio.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/security_iam_id-based-policy-examples-br-studio.html">View Docs</a></td>
+                <td><span class="severity-badge high">High</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>AmazonBedrockFullAccess role check</td>
+                <td class="finding-details">Role 'LLMEvaluationPromptfoo-SageMakerExecutionRole-M69xCHJ9c3LU' has AmazonBedrockFullAccess policy attached</td>
+                <td class="resolution-text">Limit the AmazonBedrockFullAccess policy only to required access</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/security_iam_id-based-policy-examples-agent.html#iam-agents-ex-all" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/security_iam_id-based-policy-examples-agent.html#iam-agents-ex-all">View Docs</a><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/security_iam_id-based-policy-examples-br-studio.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/security_iam_id-based-policy-examples-br-studio.html">View Docs</a></td>
+                <td><span class="severity-badge high">High</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>AmazonBedrockFullAccess role check</td>
+                <td class="finding-details">Role 'myAskMeAnything-role-kmsizqwf' has AmazonBedrockFullAccess policy attached</td>
+                <td class="resolution-text">Limit the AmazonBedrockFullAccess policy only to required access</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/security_iam_id-based-policy-examples-agent.html#iam-agents-ex-all" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/security_iam_id-based-policy-examples-agent.html#iam-agents-ex-all">View Docs</a><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/security_iam_id-based-policy-examples-br-studio.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/security_iam_id-based-policy-examples-br-studio.html">View Docs</a></td>
+                <td><span class="severity-badge high">High</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>Marketplace Subscription Access Check</td>
+                <td class="finding-details">Role 'AmazonBedrockAgentCoreSDKRuntime-us-east-1-a6ddf3fc76' has overly permissive marketplace subscription access through policy 'BedrockAgentCoreRuntimeExecutionPolicy-cdk_agent_core'</td>
+                <td class="resolution-text">Ensure that users have access to only the models that you want user to be able to subscribe to based on your organizational policies. For example, you may want users to have access to only text based models and not image and video generation model. This can also help to keep cost in check.</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/security-iam-awsmanpol.html#security-iam-awsmanpol-bedrock-marketplace" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/security-iam-awsmanpol.html#security-iam-awsmanpol-bedrock-marketplace">View Docs</a></td>
+                <td><span class="severity-badge high">High</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>Marketplace Subscription Access Check</td>
+                <td class="finding-details">Role 'AmazonBedrockAgentCoreSDKRuntime-us-east-1-ed660add8b' has overly permissive marketplace subscription access through policy 'BedrockAgentCoreRuntimeExecutionPolicy-neoCyan_Agent'</td>
+                <td class="resolution-text">Ensure that users have access to only the models that you want user to be able to subscribe to based on your organizational policies. For example, you may want users to have access to only text based models and not image and video generation model. This can also help to keep cost in check.</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/security-iam-awsmanpol.html#security-iam-awsmanpol-bedrock-marketplace" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/security-iam-awsmanpol.html#security-iam-awsmanpol-bedrock-marketplace">View Docs</a></td>
+                <td><span class="severity-badge high">High</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>Marketplace Subscription Access Check</td>
+                <td class="finding-details">Role 'AmazonBedrockExecutionRoleForKnowledgeBase_knnc9' has overly permissive marketplace subscription access through policy 'AmazonBedrockFoundationModelPolicyForKnowledgeBase_knnc9'</td>
+                <td class="resolution-text">Ensure that users have access to only the models that you want user to be able to subscribe to based on your organizational policies. For example, you may want users to have access to only text based models and not image and video generation model. This can also help to keep cost in check.</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/security-iam-awsmanpol.html#security-iam-awsmanpol-bedrock-marketplace" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/security-iam-awsmanpol.html#security-iam-awsmanpol-bedrock-marketplace">View Docs</a></td>
+                <td><span class="severity-badge high">High</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>Marketplace Subscription Access Check</td>
+                <td class="finding-details">Role 'AmazonBedrockExecutionRoleForKnowledgeBase_qxqw2' has overly permissive marketplace subscription access through policy 'AmazonBedrockFoundationModelPolicyForKnowledgeBase_qxqw2'</td>
+                <td class="resolution-text">Ensure that users have access to only the models that you want user to be able to subscribe to based on your organizational policies. For example, you may want users to have access to only text based models and not image and video generation model. This can also help to keep cost in check.</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/security-iam-awsmanpol.html#security-iam-awsmanpol-bedrock-marketplace" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/security-iam-awsmanpol.html#security-iam-awsmanpol-bedrock-marketplace">View Docs</a></td>
+                <td><span class="severity-badge high">High</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>Marketplace Subscription Access Check</td>
+                <td class="finding-details">Role 'AmazonSageMaker-ExecutionRole-20250525T153161' has overly permissive marketplace subscription access through policy 'AmazonBedrockLimitedAccess'</td>
+                <td class="resolution-text">Ensure that users have access to only the models that you want user to be able to subscribe to based on your organizational policies. For example, you may want users to have access to only text based models and not image and video generation model. This can also help to keep cost in check.</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/security-iam-awsmanpol.html#security-iam-awsmanpol-bedrock-marketplace" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/security-iam-awsmanpol.html#security-iam-awsmanpol-bedrock-marketplace">View Docs</a></td>
+                <td><span class="severity-badge high">High</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>Marketplace Subscription Access Check</td>
+                <td class="finding-details">Role 'IDPSageMakerCfnStack-SageMakerExecutionRole-aqrHz6dVkoHC' has overly permissive marketplace subscription access through policy 'AmazonBedrockFullAccess'</td>
+                <td class="resolution-text">Ensure that users have access to only the models that you want user to be able to subscribe to based on your organizational policies. For example, you may want users to have access to only text based models and not image and video generation model. This can also help to keep cost in check.</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/security-iam-awsmanpol.html#security-iam-awsmanpol-bedrock-marketplace" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/security-iam-awsmanpol.html#security-iam-awsmanpol-bedrock-marketplace">View Docs</a></td>
+                <td><span class="severity-badge high">High</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>Marketplace Subscription Access Check</td>
+                <td class="finding-details">Role 'LLMEvaluationPromptfoo-SageMakerExecutionRole-M69xCHJ9c3LU' has overly permissive marketplace subscription access through policy 'AmazonBedrockFullAccess'</td>
+                <td class="resolution-text">Ensure that users have access to only the models that you want user to be able to subscribe to based on your organizational policies. For example, you may want users to have access to only text based models and not image and video generation model. This can also help to keep cost in check.</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/security-iam-awsmanpol.html#security-iam-awsmanpol-bedrock-marketplace" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/security-iam-awsmanpol.html#security-iam-awsmanpol-bedrock-marketplace">View Docs</a></td>
+                <td><span class="severity-badge high">High</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>Marketplace Subscription Access Check</td>
+                <td class="finding-details">Role 'myAskMeAnything-role-kmsizqwf' has overly permissive marketplace subscription access through policy 'AmazonBedrockFullAccess'</td>
+                <td class="resolution-text">Ensure that users have access to only the models that you want user to be able to subscribe to based on your organizational policies. For example, you may want users to have access to only text based models and not image and video generation model. This can also help to keep cost in check.</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/security-iam-awsmanpol.html#security-iam-awsmanpol-bedrock-marketplace" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/security-iam-awsmanpol.html#security-iam-awsmanpol-bedrock-marketplace">View Docs</a></td>
+                <td><span class="severity-badge high">High</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>Marketplace Subscription Access Check</td>
+                <td class="finding-details">User 'BedrockAPIKey-20pp' has overly permissive marketplace subscription access through policy 'AmazonBedrockLimitedAccess'</td>
+                <td class="resolution-text">Ensure that users have access to only the models that you want user to be able to subscribe to based on your organizational policies. For example, you may want users to have access to only text based models and not image and video generation model. This can also help to keep cost in check.</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/security-iam-awsmanpol.html#security-iam-awsmanpol-bedrock-marketplace" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/security-iam-awsmanpol.html#security-iam-awsmanpol-bedrock-marketplace">View Docs</a></td>
+                <td><span class="severity-badge high">High</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>Marketplace Subscription Access Check</td>
+                <td class="finding-details">User 'BedrockAPIKey-yhc3' has overly permissive marketplace subscription access through policy 'AmazonBedrockLimitedAccess'</td>
+                <td class="resolution-text">Ensure that users have access to only the models that you want user to be able to subscribe to based on your organizational policies. For example, you may want users to have access to only text based models and not image and video generation model. This can also help to keep cost in check.</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/security-iam-awsmanpol.html#security-iam-awsmanpol-bedrock-marketplace" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/security-iam-awsmanpol.html#security-iam-awsmanpol-bedrock-marketplace">View Docs</a></td>
+                <td><span class="severity-badge high">High</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>Marketplace Subscription Access Check</td>
+                <td class="finding-details">User 'BedrockClientUser' has overly permissive marketplace subscription access through policy 'AmazonBedrockFullAccess'</td>
+                <td class="resolution-text">Ensure that users have access to only the models that you want user to be able to subscribe to based on your organizational policies. For example, you may want users to have access to only text based models and not image and video generation model. This can also help to keep cost in check.</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/security-iam-awsmanpol.html#security-iam-awsmanpol-bedrock-marketplace" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/security-iam-awsmanpol.html#security-iam-awsmanpol-bedrock-marketplace">View Docs</a></td>
+                <td><span class="severity-badge high">High</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>Bedrock Model Invocation Logging Check</td>
+                <td class="finding-details">Model invocation logging is properly configured with delivery to: CloudWatch Logs</td>
+                <td class="resolution-text">No action required</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/model-invocation-logging.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/model-invocation-logging.html">View Docs</a></td>
+                <td><span class="severity-badge na">N/A</span></td>
+                <td><span class="status-badge passed">Passed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>Bedrock Guardrails Check</td>
+                <td class="finding-details">No Amazon Bedrock Guardrails are configured. This may expose your application to potential risks such as harmful content, sensitive information disclosure, or hallucinations.</td>
+                <td class="resolution-text">Configure Bedrock Guardrails to implement safeguards such as:
+- Content filters to block harmful content
+- Denied topics to prevent undesirable discussions
+- Sensitive information filters to protect PII
+- Contextual grounding checks to prevent hallucinations</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails.html">View Docs</a></td>
+                <td><span class="severity-badge medium">Medium</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>Bedrock CloudTrail Logging Check</td>
+                <td class="finding-details">CloudTrail is not configured to log Amazon Bedrock API calls. This limits your ability to audit and monitor Bedrock usage.</td>
+                <td class="resolution-text">Enable CloudTrail logging for Bedrock by :
+1. Configuring an advanced event selector for Bedrock events 
+2. Enabling management events logging in a multi-region trail</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/logging-using-cloudtrail.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/logging-using-cloudtrail.html">View Docs</a></td>
+                <td><span class="severity-badge high">High</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>Bedrock Agent IAM Roles Check</td>
+                <td class="finding-details">No Bedrock agents found in the account</td>
+                <td class="resolution-text">No action required</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/security_iam_service-with-iam.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/security_iam_service-with-iam.html">View Docs</a></td>
+                <td><span class="severity-badge na">N/A</span></td>
+                <td><span class="status-badge passed">Passed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>Non-VPC Only Network Access</td>
+                <td class="finding-details">SageMaker domain 'd-cz8qi7j81si3' (QuickSetupDomain-20250525T153160) is not configured for VPC-only access</td>
+                <td class="resolution-text">Configure the SageMaker domain to use VPC-only network access type</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/sagemaker/latest/dg/infrastructure-security.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/sagemaker/latest/dg/infrastructure-security.html">View Docs</a></td>
+                <td><span class="severity-badge high">High</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>SageMaker Full Access Policy Used</td>
+                <td class="finding-details">Role 'AmazonSageMaker-ExecutionRole-20231014T200029' has AmazonSageMakerFullAccess policy attached</td>
+                <td class="resolution-text">Replace AmazonSageMakerFullAccess with more restrictive custom policies that follow the principle of least privilege</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/sagemaker-unified-studio/latest/adminguide/security-iam.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/sagemaker-unified-studio/latest/adminguide/security-iam.html">View Docs</a></td>
+                <td><span class="severity-badge high">High</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>SageMaker Full Access Policy Used</td>
+                <td class="finding-details">Role 'AmazonSageMaker-ExecutionRole-20250525T153161' has AmazonSageMakerFullAccess policy attached</td>
+                <td class="resolution-text">Replace AmazonSageMakerFullAccess with more restrictive custom policies that follow the principle of least privilege</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/sagemaker-unified-studio/latest/adminguide/security-iam.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/sagemaker-unified-studio/latest/adminguide/security-iam.html">View Docs</a></td>
+                <td><span class="severity-badge high">High</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>SageMaker Full Access Policy Used</td>
+                <td class="finding-details">Role 'AmazonSageMakerServiceCatalogProductsExecutionRole' has AmazonSageMakerFullAccess policy attached</td>
+                <td class="resolution-text">Replace AmazonSageMakerFullAccess with more restrictive custom policies that follow the principle of least privilege</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/sagemaker-unified-studio/latest/adminguide/security-iam.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/sagemaker-unified-studio/latest/adminguide/security-iam.html">View Docs</a></td>
+                <td><span class="severity-badge high">High</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>SageMaker Full Access Policy Used</td>
+                <td class="finding-details">Role 'EMR_EC2_DefaultRole' has AmazonSageMakerFullAccess policy attached</td>
+                <td class="resolution-text">Replace AmazonSageMakerFullAccess with more restrictive custom policies that follow the principle of least privilege</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/sagemaker-unified-studio/latest/adminguide/security-iam.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/sagemaker-unified-studio/latest/adminguide/security-iam.html">View Docs</a></td>
+                <td><span class="severity-badge high">High</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>SageMaker Full Access Policy Used</td>
+                <td class="finding-details">Role 'IDPSageMakerCfnStack-SageMakerExecutionRole-aqrHz6dVkoHC' has AmazonSageMakerFullAccess policy attached</td>
+                <td class="resolution-text">Replace AmazonSageMakerFullAccess with more restrictive custom policies that follow the principle of least privilege</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/sagemaker-unified-studio/latest/adminguide/security-iam.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/sagemaker-unified-studio/latest/adminguide/security-iam.html">View Docs</a></td>
+                <td><span class="severity-badge high">High</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>SageMaker Full Access Policy Used</td>
+                <td class="finding-details">Role 'LLMEvaluationPromptfoo-SageMakerExecutionRole-M69xCHJ9c3LU' has AmazonSageMakerFullAccess policy attached</td>
+                <td class="resolution-text">Replace AmazonSageMakerFullAccess with more restrictive custom policies that follow the principle of least privilege</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/sagemaker-unified-studio/latest/adminguide/security-iam.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/sagemaker-unified-studio/latest/adminguide/security-iam.html">View Docs</a></td>
+                <td><span class="severity-badge high">High</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>SageMaker Full Access Policy Used</td>
+                <td class="finding-details">Role 'SageMaker-EMR-ExecutionRole' has AmazonSageMakerFullAccess policy attached</td>
+                <td class="resolution-text">Replace AmazonSageMakerFullAccess with more restrictive custom policies that follow the principle of least privilege</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/sagemaker-unified-studio/latest/adminguide/security-iam.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/sagemaker-unified-studio/latest/adminguide/security-iam.html">View Docs</a></td>
+                <td><span class="severity-badge high">High</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>SSO Not Properly Configured</td>
+                <td class="finding-details">SageMaker domain 'd-cz8qi7j81si3' (QuickSetupDomain-20250525T153160) is using authentication mode: IAM</td>
+                <td class="resolution-text">Enable and properly configure AWS IAM Identity Center (successor to AWS SSO) for centralized access management. Ensure Identity Store ID is configured.</td>
+                <td class="reference-cell"><a href="https://aws.amazon.com/blogs/machine-learning/team-and-user-management-with-amazon-sagemaker-and-aws-sso/" target="_blank" class="reference-btn" title="https://aws.amazon.com/blogs/machine-learning/team-and-user-management-with-amazon-sagemaker-and-aws-sso/">View Docs</a></td>
+                <td><span class="severity-badge medium">Medium</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>Missing Encryption Configuration</td>
+                <td class="finding-details">Domain 'QuickSetupDomain-20250525T153160' - No KMS key configured</td>
+                <td class="resolution-text">Configure encryption using AWS KMS customer managed keys for enhanced security</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/sagemaker/latest/dg/key-management.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/sagemaker/latest/dg/key-management.html">View Docs</a></td>
+                <td><span class="severity-badge high">High</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>Missing VPC Encryption</td>
+                <td class="finding-details">Domain 'QuickSetupDomain-20250525T153160' - No VPC encryption configuration</td>
+                <td class="resolution-text">Enable encryption for inter-container traffic and VPC communication</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/sagemaker/latest/dg/encryption-in-transit.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/sagemaker/latest/dg/encryption-in-transit.html">View Docs</a></td>
+                <td><span class="severity-badge medium">Medium</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>GuardDuty Enabled</td>
+                <td class="finding-details">Amazon GuardDuty is properly enabled and monitoring for security threats in SageMaker workloads.</td>
+                <td class="resolution-text"></td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/guardduty/latest/ug/ai-protection.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/guardduty/latest/ug/ai-protection.html">View Docs</a></td>
+                <td><span class="severity-badge na">N/A</span></td>
+                <td><span class="status-badge passed">Passed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>AgentCore Runtime VPC Configuration</td>
+                <td class="finding-details">Runtime 'origami_expeditions' (origami_expeditions-TR4jDoHXe8) is not configured with VPC. This exposes the runtime to public internet.</td>
+                <td class="resolution-text">Configure VPC with private subnets and required VPC endpoints (ECR, S3, CloudWatch Logs)</td>
+                <td class="reference-cell"><a href="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/security/agentcore-vpc.md" target="_blank" class="reference-btn" title="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/security/agentcore-vpc.md">View Docs</a></td>
+                <td><span class="severity-badge high">High</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>AgentCore Runtime VPC Configuration</td>
+                <td class="finding-details">Runtime 'neoCyan_Agent' (neoCyan_Agent-yAFXSWFaA3) is not configured with VPC. This exposes the runtime to public internet.</td>
+                <td class="resolution-text">Configure VPC with private subnets and required VPC endpoints (ECR, S3, CloudWatch Logs)</td>
+                <td class="reference-cell"><a href="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/security/agentcore-vpc.md" target="_blank" class="reference-btn" title="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/security/agentcore-vpc.md">View Docs</a></td>
+                <td><span class="severity-badge high">High</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>AgentCore Runtime VPC Configuration</td>
+                <td class="finding-details">Runtime 'customer_support_agent' (customer_support_agent-ZP4e8z55dP) is not configured with VPC. This exposes the runtime to public internet.</td>
+                <td class="resolution-text">Configure VPC with private subnets and required VPC endpoints (ECR, S3, CloudWatch Logs)</td>
+                <td class="reference-cell"><a href="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/security/agentcore-vpc.md" target="_blank" class="reference-btn" title="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/security/agentcore-vpc.md">View Docs</a></td>
+                <td><span class="severity-badge high">High</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>AgentCore Runtime VPC Configuration</td>
+                <td class="finding-details">Runtime 'cdk_agent_core' (cdk_agent_core-7FqFlD86LW) is not configured with VPC. This exposes the runtime to public internet.</td>
+                <td class="resolution-text">Configure VPC with private subnets and required VPC endpoints (ECR, S3, CloudWatch Logs)</td>
+                <td class="reference-cell"><a href="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/security/agentcore-vpc.md" target="_blank" class="reference-btn" title="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/security/agentcore-vpc.md">View Docs</a></td>
+                <td><span class="severity-badge high">High</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>AgentCore IAM Full Access Policy</td>
+                <td class="finding-details">The following roles have BedrockAgentCoreFullAccess policy: AmazonSageMaker-ExecutionRole-20250525T153161</td>
+                <td class="resolution-text">Replace with least-privilege policies scoped to specific AgentCore resources and actions</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/security-iam-awsmanpol.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/security-iam-awsmanpol.html">View Docs</a></td>
+                <td><span class="severity-badge high">High</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>AgentCore IAM Wildcard Permissions</td>
+                <td class="finding-details">The following roles have wildcard AgentCore permissions on all resources: agentcore-wildrydes_gateway_role_ab3991f6-role, resco-aiml-security-19304-AgentCoreSecurityAssessme-w773pPsFWNsn</td>
+                <td class="resolution-text">Scope permissions to specific AgentCore resources using resource ARNs</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/security-iam-awsmanpol.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/security-iam-awsmanpol.html">View Docs</a></td>
+                <td><span class="severity-badge high">High</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>AgentCore Stale Access Check</td>
+                <td class="finding-details">Access denied when checking service last accessed for role agentcore-wildrydes_gateway_role_ab3991f6-role</td>
+                <td class="resolution-text">Ensure Lambda execution role has iam:GenerateServiceLastAccessedDetails and iam:GetServiceLastAccessedDetails permissions</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_last-accessed.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_last-accessed.html">View Docs</a></td>
+                <td><span class="severity-badge high">High</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>AgentCore Runtime CloudWatch Logs</td>
+                <td class="finding-details">Runtime 'origami_expeditions' (origami_expeditions-TR4jDoHXe8) does not have CloudWatch Logs configured</td>
+                <td class="resolution-text">Enable CloudWatch Logs for monitoring and troubleshooting</td>
+                <td class="reference-cell"><a href="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/observability/" target="_blank" class="reference-btn" title="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/observability/">View Docs</a></td>
+                <td><span class="severity-badge medium">Medium</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>AgentCore Runtime X-Ray Tracing</td>
+                <td class="finding-details">Runtime 'origami_expeditions' (origami_expeditions-TR4jDoHXe8) does not have X-Ray tracing enabled</td>
+                <td class="resolution-text">Enable X-Ray tracing for distributed tracing and performance analysis</td>
+                <td class="reference-cell"><a href="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/observability/" target="_blank" class="reference-btn" title="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/observability/">View Docs</a></td>
+                <td><span class="severity-badge medium">Medium</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>AgentCore Runtime CloudWatch Logs</td>
+                <td class="finding-details">Runtime 'neoCyan_Agent' (neoCyan_Agent-yAFXSWFaA3) does not have CloudWatch Logs configured</td>
+                <td class="resolution-text">Enable CloudWatch Logs for monitoring and troubleshooting</td>
+                <td class="reference-cell"><a href="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/observability/" target="_blank" class="reference-btn" title="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/observability/">View Docs</a></td>
+                <td><span class="severity-badge medium">Medium</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>AgentCore Runtime X-Ray Tracing</td>
+                <td class="finding-details">Runtime 'neoCyan_Agent' (neoCyan_Agent-yAFXSWFaA3) does not have X-Ray tracing enabled</td>
+                <td class="resolution-text">Enable X-Ray tracing for distributed tracing and performance analysis</td>
+                <td class="reference-cell"><a href="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/observability/" target="_blank" class="reference-btn" title="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/observability/">View Docs</a></td>
+                <td><span class="severity-badge medium">Medium</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>AgentCore Runtime CloudWatch Logs</td>
+                <td class="finding-details">Runtime 'customer_support_agent' (customer_support_agent-ZP4e8z55dP) does not have CloudWatch Logs configured</td>
+                <td class="resolution-text">Enable CloudWatch Logs for monitoring and troubleshooting</td>
+                <td class="reference-cell"><a href="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/observability/" target="_blank" class="reference-btn" title="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/observability/">View Docs</a></td>
+                <td><span class="severity-badge medium">Medium</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>AgentCore Runtime X-Ray Tracing</td>
+                <td class="finding-details">Runtime 'customer_support_agent' (customer_support_agent-ZP4e8z55dP) does not have X-Ray tracing enabled</td>
+                <td class="resolution-text">Enable X-Ray tracing for distributed tracing and performance analysis</td>
+                <td class="reference-cell"><a href="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/observability/" target="_blank" class="reference-btn" title="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/observability/">View Docs</a></td>
+                <td><span class="severity-badge medium">Medium</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>AgentCore Runtime CloudWatch Logs</td>
+                <td class="finding-details">Runtime 'cdk_agent_core' (cdk_agent_core-7FqFlD86LW) does not have CloudWatch Logs configured</td>
+                <td class="resolution-text">Enable CloudWatch Logs for monitoring and troubleshooting</td>
+                <td class="reference-cell"><a href="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/observability/" target="_blank" class="reference-btn" title="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/observability/">View Docs</a></td>
+                <td><span class="severity-badge medium">Medium</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>AgentCore Runtime X-Ray Tracing</td>
+                <td class="finding-details">Runtime 'cdk_agent_core' (cdk_agent_core-7FqFlD86LW) does not have X-Ray tracing enabled</td>
+                <td class="resolution-text">Enable X-Ray tracing for distributed tracing and performance analysis</td>
+                <td class="reference-cell"><a href="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/observability/" target="_blank" class="reference-btn" title="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/observability/">View Docs</a></td>
+                <td><span class="severity-badge medium">Medium</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>AgentCore ECR Repository AWS-Managed Keys</td>
+                <td class="finding-details">ECR repository 'bedrock-agentcore-customer_support_agent' uses AWS-managed keys instead of customer-managed KMS keys</td>
+                <td class="resolution-text">Consider using customer-managed KMS keys for better control and audit capabilities</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/key-management.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/key-management.html">View Docs</a></td>
+                <td><span class="severity-badge low">Low</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>AgentCore ECR Repository AWS-Managed Keys</td>
+                <td class="finding-details">ECR repository 'bedrock-agentcore-origami_expeditions' uses AWS-managed keys instead of customer-managed KMS keys</td>
+                <td class="resolution-text">Consider using customer-managed KMS keys for better control and audit capabilities</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/key-management.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/key-management.html">View Docs</a></td>
+                <td><span class="severity-badge low">Low</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>AgentCore Runtime Storage Configuration</td>
+                <td class="finding-details">Runtime 'origami_expeditions' (origami_expeditions-TR4jDoHXe8) does not have storage configuration for browser tools</td>
+                <td class="resolution-text">Configure S3 storage for browser tool session recordings and artifacts</td>
+                <td class="reference-cell"><a href="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/browser/" target="_blank" class="reference-btn" title="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/browser/">View Docs</a></td>
+                <td><span class="severity-badge medium">Medium</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>AgentCore Runtime Storage Configuration</td>
+                <td class="finding-details">Runtime 'neoCyan_Agent' (neoCyan_Agent-yAFXSWFaA3) does not have storage configuration for browser tools</td>
+                <td class="resolution-text">Configure S3 storage for browser tool session recordings and artifacts</td>
+                <td class="reference-cell"><a href="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/browser/" target="_blank" class="reference-btn" title="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/browser/">View Docs</a></td>
+                <td><span class="severity-badge medium">Medium</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>AgentCore Runtime Storage Configuration</td>
+                <td class="finding-details">Runtime 'customer_support_agent' (customer_support_agent-ZP4e8z55dP) does not have storage configuration for browser tools</td>
+                <td class="resolution-text">Configure S3 storage for browser tool session recordings and artifacts</td>
+                <td class="reference-cell"><a href="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/browser/" target="_blank" class="reference-btn" title="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/browser/">View Docs</a></td>
+                <td><span class="severity-badge medium">Medium</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>AgentCore Runtime Storage Configuration</td>
+                <td class="finding-details">Runtime 'cdk_agent_core' (cdk_agent_core-7FqFlD86LW) does not have storage configuration for browser tools</td>
+                <td class="resolution-text">Configure S3 storage for browser tool session recordings and artifacts</td>
+                <td class="reference-cell"><a href="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/browser/" target="_blank" class="reference-btn" title="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/browser/">View Docs</a></td>
+                <td><span class="severity-badge medium">Medium</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>AgentCore Memory Encryption</td>
+                <td class="finding-details">Memory 'CustomerSupportMemory-x69jBq5GLp' (CustomerSupportMemory-x69jBq5GLp) does not have customer-managed encryption configured</td>
+                <td class="resolution-text">Enable encryption with customer-managed KMS keys</td>
+                <td class="reference-cell"><a href="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/memory/" target="_blank" class="reference-btn" title="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/memory/">View Docs</a></td>
+                <td><span class="severity-badge medium">Medium</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>AgentCore Memory Encryption</td>
+                <td class="finding-details">Memory 'cdk_agent_core_mem-uxfIagADuF' (cdk_agent_core_mem-uxfIagADuF) does not have customer-managed encryption configured</td>
+                <td class="resolution-text">Enable encryption with customer-managed KMS keys</td>
+                <td class="reference-cell"><a href="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/memory/" target="_blank" class="reference-btn" title="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/memory/">View Docs</a></td>
+                <td><span class="severity-badge medium">Medium</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>AgentCore Memory Encryption</td>
+                <td class="finding-details">Memory 'wildrydes_memory_ab3991f6-9FjiHOHjT2' (wildrydes_memory_ab3991f6-9FjiHOHjT2) does not have customer-managed encryption configured</td>
+                <td class="resolution-text">Enable encryption with customer-managed KMS keys</td>
+                <td class="reference-cell"><a href="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/memory/" target="_blank" class="reference-btn" title="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/memory/">View Docs</a></td>
+                <td><span class="severity-badge medium">Medium</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>333333333333</td>
+                <td>AgentCore Gateway Configuration Check</td>
+                <td class="finding-details">No Gateway resources found</td>
+                <td class="resolution-text">N/A</td>
+                <td class="reference-cell"><a href="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/gateway/" target="_blank" class="reference-btn" title="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/gateway/">View Docs</a></td>
+                <td><span class="severity-badge na">N/A</span></td>
+                <td><span class="status-badge failed">N/A</span></td>
+            </tr>
+<tr>
+                <td>222222222222</td>
+                <td>AmazonBedrockFullAccess role check</td>
+                <td class="finding-details">No roles found with AmazonBedrockFullAccess policy</td>
+                <td class="resolution-text">No action required</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/security_iam_id-based-policy-examples-agent.html#iam-agents-ex-all" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/security_iam_id-based-policy-examples-agent.html#iam-agents-ex-all">View Docs</a><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/security_iam_id-based-policy-examples-br-studio.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/security_iam_id-based-policy-examples-br-studio.html">View Docs</a></td>
+                <td><span class="severity-badge na">N/A</span></td>
+                <td><span class="status-badge passed">Passed</span></td>
+            </tr>
+<tr>
+                <td>222222222222</td>
+                <td>Marketplace Subscription Access Check</td>
+                <td class="finding-details">No identities found with overly permissive marketplace subscription access</td>
+                <td class="resolution-text">No action required</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/security-iam-awsmanpol.html#security-iam-awsmanpol-bedrock-marketplace" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/security-iam-awsmanpol.html#security-iam-awsmanpol-bedrock-marketplace">View Docs</a></td>
+                <td><span class="severity-badge na">N/A</span></td>
+                <td><span class="status-badge passed">Passed</span></td>
+            </tr>
+<tr>
+                <td>222222222222</td>
+                <td>Bedrock Model Invocation Logging Check</td>
+                <td class="finding-details">Model invocation logging is not enabled. This limits your ability to track and audit model usage.</td>
+                <td class="resolution-text">Enable model invocation logging to collect invocation logs, model input data, and model output data. Configure logging to deliver to Amazon S3, CloudWatch Logs, or both for comprehensive monitoring.</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/model-invocation-logging.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/model-invocation-logging.html">View Docs</a></td>
+                <td><span class="severity-badge medium">Medium</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>222222222222</td>
+                <td>Bedrock Guardrails Check</td>
+                <td class="finding-details">No Amazon Bedrock Guardrails are configured. This may expose your application to potential risks such as harmful content, sensitive information disclosure, or hallucinations.</td>
+                <td class="resolution-text">Configure Bedrock Guardrails to implement safeguards such as:
+- Content filters to block harmful content
+- Denied topics to prevent undesirable discussions
+- Sensitive information filters to protect PII
+- Contextual grounding checks to prevent hallucinations</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails.html">View Docs</a></td>
+                <td><span class="severity-badge medium">Medium</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>222222222222</td>
+                <td>Bedrock CloudTrail Logging Check</td>
+                <td class="finding-details">CloudTrail is not configured to log Amazon Bedrock API calls. This limits your ability to audit and monitor Bedrock usage.</td>
+                <td class="resolution-text">Enable CloudTrail logging for Bedrock by :
+1. Configuring an advanced event selector for Bedrock events 
+2. Enabling management events logging in a multi-region trail</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/logging-using-cloudtrail.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/logging-using-cloudtrail.html">View Docs</a></td>
+                <td><span class="severity-badge high">High</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>222222222222</td>
+                <td>Bedrock Agent IAM Roles Check</td>
+                <td class="finding-details">No Bedrock agents found in the account</td>
+                <td class="resolution-text">No action required</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/security_iam_service-with-iam.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/security_iam_service-with-iam.html">View Docs</a></td>
+                <td><span class="severity-badge na">N/A</span></td>
+                <td><span class="status-badge passed">Passed</span></td>
+            </tr>
+<tr>
+                <td>222222222222</td>
+                <td>SageMaker Internet Access Check</td>
+                <td class="finding-details">All SageMaker resources are properly configured to use VPC connectivity</td>
+                <td class="resolution-text"></td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/sagemaker/latest/dg/infrastructure-security.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/sagemaker/latest/dg/infrastructure-security.html">View Docs</a></td>
+                <td><span class="severity-badge na">N/A</span></td>
+                <td><span class="status-badge passed">Passed</span></td>
+            </tr>
+<tr>
+                <td>222222222222</td>
+                <td>SageMaker IAM Permissions Check</td>
+                <td class="finding-details">No issues found with IAM permissions, SSO is enabled, and no stale access detected</td>
+                <td class="resolution-text"></td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/sagemaker-unified-studio/latest/adminguide/security-iam.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/sagemaker-unified-studio/latest/adminguide/security-iam.html">View Docs</a></td>
+                <td><span class="severity-badge na">N/A</span></td>
+                <td><span class="status-badge passed">Passed</span></td>
+            </tr>
+<tr>
+                <td>222222222222</td>
+                <td>Data Protection Check</td>
+                <td class="finding-details">All resources use appropriate encryption configurations</td>
+                <td class="resolution-text"></td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/sagemaker/latest/dg/security.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/sagemaker/latest/dg/security.html">View Docs</a></td>
+                <td><span class="severity-badge na">N/A</span></td>
+                <td><span class="status-badge passed">Passed</span></td>
+            </tr>
+<tr>
+                <td>222222222222</td>
+                <td>GuardDuty Enabled</td>
+                <td class="finding-details">Amazon GuardDuty is properly enabled and monitoring for security threats in SageMaker workloads.</td>
+                <td class="resolution-text"></td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/guardduty/latest/ug/ai-protection.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/guardduty/latest/ug/ai-protection.html">View Docs</a></td>
+                <td><span class="severity-badge na">N/A</span></td>
+                <td><span class="status-badge passed">Passed</span></td>
+            </tr>
+<tr>
+                <td>222222222222</td>
+                <td>AgentCore VPC Configuration Check</td>
+                <td class="finding-details">No AgentCore resources found or all resources have proper VPC configuration</td>
+                <td class="resolution-text">N/A</td>
+                <td class="reference-cell"><a href="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/security/agentcore-vpc.md" target="_blank" class="reference-btn" title="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/security/agentcore-vpc.md">View Docs</a></td>
+                <td><span class="severity-badge na">N/A</span></td>
+                <td><span class="status-badge failed">N/A</span></td>
+            </tr>
+<tr>
+                <td>222222222222</td>
+                <td>AgentCore IAM Wildcard Permissions</td>
+                <td class="finding-details">The following roles have wildcard AgentCore permissions on all resources: resco-aiml-security-00756-AgentCoreSecurityAssessme-kIT72FntzYo1</td>
+                <td class="resolution-text">Scope permissions to specific AgentCore resources using resource ARNs</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/security-iam-awsmanpol.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/security-iam-awsmanpol.html">View Docs</a></td>
+                <td><span class="severity-badge high">High</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>222222222222</td>
+                <td>AgentCore Stale Access Check</td>
+                <td class="finding-details">Access denied when checking service last accessed for role resco-aiml-security-00756-AgentCoreSecurityAssessme-kIT72FntzYo1</td>
+                <td class="resolution-text">Ensure Lambda execution role has iam:GenerateServiceLastAccessedDetails and iam:GetServiceLastAccessedDetails permissions</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_last-accessed.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_last-accessed.html">View Docs</a></td>
+                <td><span class="severity-badge high">High</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>222222222222</td>
+                <td>AgentCore Observability Check</td>
+                <td class="finding-details">No AgentCore resources found or all resources have proper observability configuration</td>
+                <td class="resolution-text">N/A</td>
+                <td class="reference-cell"><a href="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/observability/" target="_blank" class="reference-btn" title="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/observability/">View Docs</a></td>
+                <td><span class="severity-badge na">N/A</span></td>
+                <td><span class="status-badge failed">N/A</span></td>
+            </tr>
+<tr>
+                <td>222222222222</td>
+                <td>AgentCore Encryption Check</td>
+                <td class="finding-details">No AgentCore resources found or all resources have proper encryption configuration</td>
+                <td class="resolution-text">N/A</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/key-management.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/key-management.html">View Docs</a></td>
+                <td><span class="severity-badge na">N/A</span></td>
+                <td><span class="status-badge failed">N/A</span></td>
+            </tr>
+<tr>
+                <td>222222222222</td>
+                <td>AgentCore Browser Tool Recording Check</td>
+                <td class="finding-details">No AgentCore Runtimes found to check browser tool configuration</td>
+                <td class="resolution-text">N/A</td>
+                <td class="reference-cell"><a href="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/browser/" target="_blank" class="reference-btn" title="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/browser/">View Docs</a></td>
+                <td><span class="severity-badge na">N/A</span></td>
+                <td><span class="status-badge failed">N/A</span></td>
+            </tr>
+<tr>
+                <td>222222222222</td>
+                <td>AgentCore Memory Configuration Check</td>
+                <td class="finding-details">No Memory resources found</td>
+                <td class="resolution-text">N/A</td>
+                <td class="reference-cell"><a href="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/memory/" target="_blank" class="reference-btn" title="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/memory/">View Docs</a></td>
+                <td><span class="severity-badge na">N/A</span></td>
+                <td><span class="status-badge failed">N/A</span></td>
+            </tr>
+<tr>
+                <td>222222222222</td>
+                <td>AgentCore Gateway Configuration Check</td>
+                <td class="finding-details">No Gateway resources found</td>
+                <td class="resolution-text">N/A</td>
+                <td class="reference-cell"><a href="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/gateway/" target="_blank" class="reference-btn" title="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/gateway/">View Docs</a></td>
+                <td><span class="severity-badge na">N/A</span></td>
+                <td><span class="status-badge failed">N/A</span></td>
+            </tr>
+<tr>
+                <td>111111111111</td>
+                <td>AmazonBedrockFullAccess role check</td>
+                <td class="finding-details">No roles found with AmazonBedrockFullAccess policy</td>
+                <td class="resolution-text">No action required</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/security_iam_id-based-policy-examples-agent.html#iam-agents-ex-all" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/security_iam_id-based-policy-examples-agent.html#iam-agents-ex-all">View Docs</a><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/security_iam_id-based-policy-examples-br-studio.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/security_iam_id-based-policy-examples-br-studio.html">View Docs</a></td>
+                <td><span class="severity-badge na">N/A</span></td>
+                <td><span class="status-badge passed">Passed</span></td>
+            </tr>
+<tr>
+                <td>111111111111</td>
+                <td>Marketplace Subscription Access Check</td>
+                <td class="finding-details">No identities found with overly permissive marketplace subscription access</td>
+                <td class="resolution-text">No action required</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/security-iam-awsmanpol.html#security-iam-awsmanpol-bedrock-marketplace" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/security-iam-awsmanpol.html#security-iam-awsmanpol-bedrock-marketplace">View Docs</a></td>
+                <td><span class="severity-badge na">N/A</span></td>
+                <td><span class="status-badge passed">Passed</span></td>
+            </tr>
+<tr>
+                <td>111111111111</td>
+                <td>Bedrock Model Invocation Logging Check</td>
+                <td class="finding-details">Model invocation logging is not enabled. This limits your ability to track and audit model usage.</td>
+                <td class="resolution-text">Enable model invocation logging to collect invocation logs, model input data, and model output data. Configure logging to deliver to Amazon S3, CloudWatch Logs, or both for comprehensive monitoring.</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/model-invocation-logging.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/model-invocation-logging.html">View Docs</a></td>
+                <td><span class="severity-badge medium">Medium</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>111111111111</td>
+                <td>Bedrock Guardrails Check</td>
+                <td class="finding-details">No Amazon Bedrock Guardrails are configured. This may expose your application to potential risks such as harmful content, sensitive information disclosure, or hallucinations.</td>
+                <td class="resolution-text">Configure Bedrock Guardrails to implement safeguards such as:
+- Content filters to block harmful content
+- Denied topics to prevent undesirable discussions
+- Sensitive information filters to protect PII
+- Contextual grounding checks to prevent hallucinations</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails.html">View Docs</a></td>
+                <td><span class="severity-badge medium">Medium</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>111111111111</td>
+                <td>Bedrock CloudTrail Logging Check</td>
+                <td class="finding-details">CloudTrail is not configured to log Amazon Bedrock API calls. This limits your ability to audit and monitor Bedrock usage.</td>
+                <td class="resolution-text">Enable CloudTrail logging for Bedrock by :
+1. Configuring an advanced event selector for Bedrock events 
+2. Enabling management events logging in a multi-region trail</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/logging-using-cloudtrail.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/logging-using-cloudtrail.html">View Docs</a></td>
+                <td><span class="severity-badge high">High</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>111111111111</td>
+                <td>Bedrock Agent IAM Roles Check</td>
+                <td class="finding-details">No Bedrock agents found in the account</td>
+                <td class="resolution-text">No action required</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/security_iam_service-with-iam.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/security_iam_service-with-iam.html">View Docs</a></td>
+                <td><span class="severity-badge na">N/A</span></td>
+                <td><span class="status-badge passed">Passed</span></td>
+            </tr>
+<tr>
+                <td>111111111111</td>
+                <td>SageMaker Internet Access Check</td>
+                <td class="finding-details">All SageMaker resources are properly configured to use VPC connectivity</td>
+                <td class="resolution-text"></td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/sagemaker/latest/dg/infrastructure-security.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/sagemaker/latest/dg/infrastructure-security.html">View Docs</a></td>
+                <td><span class="severity-badge na">N/A</span></td>
+                <td><span class="status-badge passed">Passed</span></td>
+            </tr>
+<tr>
+                <td>111111111111</td>
+                <td>SageMaker IAM Permissions Check</td>
+                <td class="finding-details">No issues found with IAM permissions, SSO is enabled, and no stale access detected</td>
+                <td class="resolution-text"></td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/sagemaker-unified-studio/latest/adminguide/security-iam.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/sagemaker-unified-studio/latest/adminguide/security-iam.html">View Docs</a></td>
+                <td><span class="severity-badge na">N/A</span></td>
+                <td><span class="status-badge passed">Passed</span></td>
+            </tr>
+<tr>
+                <td>111111111111</td>
+                <td>Data Protection Check</td>
+                <td class="finding-details">All resources use appropriate encryption configurations</td>
+                <td class="resolution-text"></td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/sagemaker/latest/dg/security.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/sagemaker/latest/dg/security.html">View Docs</a></td>
+                <td><span class="severity-badge na">N/A</span></td>
+                <td><span class="status-badge passed">Passed</span></td>
+            </tr>
+<tr>
+                <td>111111111111</td>
+                <td>GuardDuty Enabled</td>
+                <td class="finding-details">Amazon GuardDuty is properly enabled and monitoring for security threats in SageMaker workloads.</td>
+                <td class="resolution-text"></td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/guardduty/latest/ug/ai-protection.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/guardduty/latest/ug/ai-protection.html">View Docs</a></td>
+                <td><span class="severity-badge na">N/A</span></td>
+                <td><span class="status-badge passed">Passed</span></td>
+            </tr>
+<tr>
+                <td>111111111111</td>
+                <td>AgentCore VPC Configuration Check</td>
+                <td class="finding-details">No AgentCore resources found or all resources have proper VPC configuration</td>
+                <td class="resolution-text">N/A</td>
+                <td class="reference-cell"><a href="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/security/agentcore-vpc.md" target="_blank" class="reference-btn" title="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/security/agentcore-vpc.md">View Docs</a></td>
+                <td><span class="severity-badge na">N/A</span></td>
+                <td><span class="status-badge failed">N/A</span></td>
+            </tr>
+<tr>
+                <td>111111111111</td>
+                <td>AgentCore IAM Wildcard Permissions</td>
+                <td class="finding-details">The following roles have wildcard AgentCore permissions on all resources: resco-aiml-security-mgmt-AgentCoreSecurityAssessmen-yfZeA3tfPS7n</td>
+                <td class="resolution-text">Scope permissions to specific AgentCore resources using resource ARNs</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/security-iam-awsmanpol.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/security-iam-awsmanpol.html">View Docs</a></td>
+                <td><span class="severity-badge high">High</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>111111111111</td>
+                <td>AgentCore Stale Access Check</td>
+                <td class="finding-details">Access denied when checking service last accessed for role resco-aiml-security-mgmt-AgentCoreSecurityAssessmen-yfZeA3tfPS7n</td>
+                <td class="resolution-text">Ensure Lambda execution role has iam:GenerateServiceLastAccessedDetails and iam:GetServiceLastAccessedDetails permissions</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_last-accessed.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_last-accessed.html">View Docs</a></td>
+                <td><span class="severity-badge high">High</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>111111111111</td>
+                <td>AgentCore Observability Check</td>
+                <td class="finding-details">No AgentCore resources found or all resources have proper observability configuration</td>
+                <td class="resolution-text">N/A</td>
+                <td class="reference-cell"><a href="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/observability/" target="_blank" class="reference-btn" title="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/observability/">View Docs</a></td>
+                <td><span class="severity-badge na">N/A</span></td>
+                <td><span class="status-badge failed">N/A</span></td>
+            </tr>
+<tr>
+                <td>111111111111</td>
+                <td>AgentCore Encryption Check</td>
+                <td class="finding-details">No AgentCore resources found or all resources have proper encryption configuration</td>
+                <td class="resolution-text">N/A</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/key-management.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/key-management.html">View Docs</a></td>
+                <td><span class="severity-badge na">N/A</span></td>
+                <td><span class="status-badge failed">N/A</span></td>
+            </tr>
+<tr>
+                <td>111111111111</td>
+                <td>AgentCore Browser Tool Recording Check</td>
+                <td class="finding-details">No AgentCore Runtimes found to check browser tool configuration</td>
+                <td class="resolution-text">N/A</td>
+                <td class="reference-cell"><a href="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/browser/" target="_blank" class="reference-btn" title="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/browser/">View Docs</a></td>
+                <td><span class="severity-badge na">N/A</span></td>
+                <td><span class="status-badge failed">N/A</span></td>
+            </tr>
+<tr>
+                <td>111111111111</td>
+                <td>AgentCore Memory Configuration Check</td>
+                <td class="finding-details">No Memory resources found</td>
+                <td class="resolution-text">N/A</td>
+                <td class="reference-cell"><a href="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/memory/" target="_blank" class="reference-btn" title="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/memory/">View Docs</a></td>
+                <td><span class="severity-badge na">N/A</span></td>
+                <td><span class="status-badge failed">N/A</span></td>
+            </tr>
+<tr>
+                <td>111111111111</td>
+                <td>AgentCore Gateway Configuration Check</td>
+                <td class="finding-details">No Gateway resources found</td>
+                <td class="resolution-text">N/A</td>
+                <td class="reference-cell"><a href="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/gateway/" target="_blank" class="reference-btn" title="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/gateway/">View Docs</a></td>
+                <td><span class="severity-badge na">N/A</span></td>
+                <td><span class="status-badge failed">N/A</span></td>
+            </tr>
+<tr>
+                <td>444444444444</td>
+                <td>AmazonBedrockFullAccess role check</td>
+                <td class="finding-details">No roles found with AmazonBedrockFullAccess policy</td>
+                <td class="resolution-text">No action required</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/security_iam_id-based-policy-examples-agent.html#iam-agents-ex-all" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/security_iam_id-based-policy-examples-agent.html#iam-agents-ex-all">View Docs</a><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/security_iam_id-based-policy-examples-br-studio.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/security_iam_id-based-policy-examples-br-studio.html">View Docs</a></td>
+                <td><span class="severity-badge na">N/A</span></td>
+                <td><span class="status-badge passed">Passed</span></td>
+            </tr>
+<tr>
+                <td>444444444444</td>
+                <td>Marketplace Subscription Access Check</td>
+                <td class="finding-details">No identities found with overly permissive marketplace subscription access</td>
+                <td class="resolution-text">No action required</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/security-iam-awsmanpol.html#security-iam-awsmanpol-bedrock-marketplace" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/security-iam-awsmanpol.html#security-iam-awsmanpol-bedrock-marketplace">View Docs</a></td>
+                <td><span class="severity-badge na">N/A</span></td>
+                <td><span class="status-badge passed">Passed</span></td>
+            </tr>
+<tr>
+                <td>444444444444</td>
+                <td>Bedrock Model Invocation Logging Check</td>
+                <td class="finding-details">Model invocation logging is not enabled. This limits your ability to track and audit model usage.</td>
+                <td class="resolution-text">Enable model invocation logging to collect invocation logs, model input data, and model output data. Configure logging to deliver to Amazon S3, CloudWatch Logs, or both for comprehensive monitoring.</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/model-invocation-logging.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/model-invocation-logging.html">View Docs</a></td>
+                <td><span class="severity-badge medium">Medium</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>444444444444</td>
+                <td>Bedrock Guardrails Check</td>
+                <td class="finding-details">No Amazon Bedrock Guardrails are configured. This may expose your application to potential risks such as harmful content, sensitive information disclosure, or hallucinations.</td>
+                <td class="resolution-text">Configure Bedrock Guardrails to implement safeguards such as:
+- Content filters to block harmful content
+- Denied topics to prevent undesirable discussions
+- Sensitive information filters to protect PII
+- Contextual grounding checks to prevent hallucinations</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails.html">View Docs</a></td>
+                <td><span class="severity-badge medium">Medium</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>444444444444</td>
+                <td>Bedrock CloudTrail Logging Check</td>
+                <td class="finding-details">CloudTrail is not configured to log Amazon Bedrock API calls. This limits your ability to audit and monitor Bedrock usage.</td>
+                <td class="resolution-text">Enable CloudTrail logging for Bedrock by :
+1. Configuring an advanced event selector for Bedrock events 
+2. Enabling management events logging in a multi-region trail</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/logging-using-cloudtrail.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/logging-using-cloudtrail.html">View Docs</a></td>
+                <td><span class="severity-badge high">High</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>444444444444</td>
+                <td>Bedrock Agent IAM Roles Check</td>
+                <td class="finding-details">No Bedrock agents found in the account</td>
+                <td class="resolution-text">No action required</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/security_iam_service-with-iam.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/security_iam_service-with-iam.html">View Docs</a></td>
+                <td><span class="severity-badge na">N/A</span></td>
+                <td><span class="status-badge passed">Passed</span></td>
+            </tr>
+<tr>
+                <td>444444444444</td>
+                <td>SageMaker Internet Access Check</td>
+                <td class="finding-details">All SageMaker resources are properly configured to use VPC connectivity</td>
+                <td class="resolution-text"></td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/sagemaker/latest/dg/infrastructure-security.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/sagemaker/latest/dg/infrastructure-security.html">View Docs</a></td>
+                <td><span class="severity-badge na">N/A</span></td>
+                <td><span class="status-badge passed">Passed</span></td>
+            </tr>
+<tr>
+                <td>444444444444</td>
+                <td>SageMaker IAM Permissions Check</td>
+                <td class="finding-details">No issues found with IAM permissions, SSO is enabled, and no stale access detected</td>
+                <td class="resolution-text"></td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/sagemaker-unified-studio/latest/adminguide/security-iam.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/sagemaker-unified-studio/latest/adminguide/security-iam.html">View Docs</a></td>
+                <td><span class="severity-badge na">N/A</span></td>
+                <td><span class="status-badge passed">Passed</span></td>
+            </tr>
+<tr>
+                <td>444444444444</td>
+                <td>Data Protection Check</td>
+                <td class="finding-details">All resources use appropriate encryption configurations</td>
+                <td class="resolution-text"></td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/sagemaker/latest/dg/security.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/sagemaker/latest/dg/security.html">View Docs</a></td>
+                <td><span class="severity-badge na">N/A</span></td>
+                <td><span class="status-badge passed">Passed</span></td>
+            </tr>
+<tr>
+                <td>444444444444</td>
+                <td>GuardDuty Enabled</td>
+                <td class="finding-details">Amazon GuardDuty is properly enabled and monitoring for security threats in SageMaker workloads.</td>
+                <td class="resolution-text"></td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/guardduty/latest/ug/ai-protection.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/guardduty/latest/ug/ai-protection.html">View Docs</a></td>
+                <td><span class="severity-badge na">N/A</span></td>
+                <td><span class="status-badge passed">Passed</span></td>
+            </tr>
+<tr>
+                <td>444444444444</td>
+                <td>AgentCore VPC Configuration Check</td>
+                <td class="finding-details">No AgentCore resources found or all resources have proper VPC configuration</td>
+                <td class="resolution-text">N/A</td>
+                <td class="reference-cell"><a href="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/security/agentcore-vpc.md" target="_blank" class="reference-btn" title="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/security/agentcore-vpc.md">View Docs</a></td>
+                <td><span class="severity-badge na">N/A</span></td>
+                <td><span class="status-badge failed">N/A</span></td>
+            </tr>
+<tr>
+                <td>444444444444</td>
+                <td>AgentCore IAM Wildcard Permissions</td>
+                <td class="finding-details">The following roles have wildcard AgentCore permissions on all resources: resco-aiml-security-23026-AgentCoreSecurityAssessme-2AEt2MTxg4AU</td>
+                <td class="resolution-text">Scope permissions to specific AgentCore resources using resource ARNs</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/security-iam-awsmanpol.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/security-iam-awsmanpol.html">View Docs</a></td>
+                <td><span class="severity-badge high">High</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>444444444444</td>
+                <td>AgentCore Stale Access Check</td>
+                <td class="finding-details">Access denied when checking service last accessed for role resco-aiml-security-23026-AgentCoreSecurityAssessme-2AEt2MTxg4AU</td>
+                <td class="resolution-text">Ensure Lambda execution role has iam:GenerateServiceLastAccessedDetails and iam:GetServiceLastAccessedDetails permissions</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_last-accessed.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_last-accessed.html">View Docs</a></td>
+                <td><span class="severity-badge high">High</span></td>
+                <td><span class="status-badge failed">Failed</span></td>
+            </tr>
+<tr>
+                <td>444444444444</td>
+                <td>AgentCore Observability Check</td>
+                <td class="finding-details">No AgentCore resources found or all resources have proper observability configuration</td>
+                <td class="resolution-text">N/A</td>
+                <td class="reference-cell"><a href="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/observability/" target="_blank" class="reference-btn" title="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/observability/">View Docs</a></td>
+                <td><span class="severity-badge na">N/A</span></td>
+                <td><span class="status-badge failed">N/A</span></td>
+            </tr>
+<tr>
+                <td>444444444444</td>
+                <td>AgentCore Encryption Check</td>
+                <td class="finding-details">No AgentCore resources found or all resources have proper encryption configuration</td>
+                <td class="resolution-text">N/A</td>
+                <td class="reference-cell"><a href="https://docs.aws.amazon.com/bedrock/latest/userguide/key-management.html" target="_blank" class="reference-btn" title="https://docs.aws.amazon.com/bedrock/latest/userguide/key-management.html">View Docs</a></td>
+                <td><span class="severity-badge na">N/A</span></td>
+                <td><span class="status-badge failed">N/A</span></td>
+            </tr>
+<tr>
+                <td>444444444444</td>
+                <td>AgentCore Browser Tool Recording Check</td>
+                <td class="finding-details">No AgentCore Runtimes found to check browser tool configuration</td>
+                <td class="resolution-text">N/A</td>
+                <td class="reference-cell"><a href="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/browser/" target="_blank" class="reference-btn" title="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/browser/">View Docs</a></td>
+                <td><span class="severity-badge na">N/A</span></td>
+                <td><span class="status-badge failed">N/A</span></td>
+            </tr>
+<tr>
+                <td>444444444444</td>
+                <td>AgentCore Memory Configuration Check</td>
+                <td class="finding-details">No Memory resources found</td>
+                <td class="resolution-text">N/A</td>
+                <td class="reference-cell"><a href="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/memory/" target="_blank" class="reference-btn" title="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/memory/">View Docs</a></td>
+                <td><span class="severity-badge na">N/A</span></td>
+                <td><span class="status-badge failed">N/A</span></td>
+            </tr>
+<tr>
+                <td>444444444444</td>
+                <td>AgentCore Gateway Configuration Check</td>
+                <td class="finding-details">No Gateway resources found</td>
+                <td class="resolution-text">N/A</td>
+                <td class="reference-cell"><a href="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/gateway/" target="_blank" class="reference-btn" title="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/gateway/">View Docs</a></td>
+                <td><span class="severity-badge na">N/A</span></td>
+                <td><span class="status-badge failed">N/A</span></td>
+            </tr></tbody>
+                </table>
+            </div>
+        </section>
+        <footer class="report-footer"><p>AI/ML Security Assessment | <a href="https://github.com/aws-samples/sample-resco-aiml-assessment">GitHub Repository</a></p></footer>
+    </main>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('themeToggle');
+            const themeLabel = themeToggle.querySelector('.theme-label');
+            const html = document.documentElement;
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            if (savedTheme === 'dark') { html.setAttribute('data-theme', 'dark'); themeLabel.textContent = 'Light'; }
+            themeToggle.addEventListener('click', function() {
+                const currentTheme = html.getAttribute('data-theme');
+                if (currentTheme === 'dark') { html.removeAttribute('data-theme'); localStorage.setItem('theme', 'light'); themeLabel.textContent = 'Dark'; }
+                else { html.setAttribute('data-theme', 'dark'); localStorage.setItem('theme', 'dark'); themeLabel.textContent = 'Light'; }
+            });
+            const table = document.getElementById('findingsTable');
+            const searchInput = document.getElementById('searchInput');
+            const textFilters = document.querySelectorAll('.filter-input');
+            const selectFilters = document.querySelectorAll('.filter-select');
+            function applyFilters() {
+                const searchText = searchInput.value.toLowerCase();
+                const rows = table.querySelectorAll('tbody tr');
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    const rowText = row.textContent.toLowerCase();
+                    let shouldShow = true;
+                    if (searchText && !rowText.includes(searchText)) shouldShow = false;
+                    const accountFilter = document.querySelector('.filter-select[data-column="0"]').value.toLowerCase();
+                    if (accountFilter && cells[0] && !cells[0].textContent.toLowerCase().includes(accountFilter)) shouldShow = false;
+                    const findingFilter = document.querySelector('.filter-input[data-column="1"]').value.toLowerCase();
+                    if (findingFilter && cells[1] && !cells[1].textContent.toLowerCase().includes(findingFilter)) shouldShow = false;
+                    const severityFilter = document.querySelector('.filter-select[data-column="5"]').value.toLowerCase();
+                    if (severityFilter && cells[5] && !cells[5].textContent.toLowerCase().includes(severityFilter)) shouldShow = false;
+                    const statusFilter = document.querySelector('.filter-select[data-column="6"]').value.toLowerCase();
+                    if (statusFilter && cells[6] && !cells[6].textContent.toLowerCase().includes(statusFilter)) shouldShow = false;
+                    row.style.display = shouldShow ? '' : 'none';
+                });
+            }
+            searchInput.addEventListener('input', applyFilters);
+            textFilters.forEach(filter => filter.addEventListener('input', applyFilters));
+            selectFilters.forEach(filter => filter.addEventListener('change', applyFilters));
+        });
+    </script>
+</body>
+</html>
