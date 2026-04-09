@@ -6,7 +6,6 @@ from datetime import datetime, timedelta, timezone
 import time
 from typing import Dict, List, Any, Optional
 from io import StringIO
-import asyncio
 from botocore.config import Config
 from botocore.exceptions import ClientError
 import random
@@ -580,34 +579,6 @@ def handle_aws_throttling(func, *args, **kwargs):
                 time.sleep(delay)
             else:
                 raise
-
-def has_bedrock_permissions(policy_doc: Dict) -> bool:
-    """
-    Check if a policy document contains Bedrock permissions
-    """
-    logger.debug("Checking policy document for Bedrock permissions")
-    try:
-        # Handle string input by converting to dict
-        if isinstance(policy_doc, str):
-            import json
-            policy_doc = json.loads(policy_doc)
-            
-        for statement in policy_doc.get('Statement', []):
-            action = statement.get('Action', [])
-            if isinstance(action, str):
-                action = [action]
-            
-            for act in action:
-                if 'bedrock' in act.lower():
-                    effect = statement.get('Effect', '')
-                    if effect.upper() == 'ALLOW':
-                        logger.debug(f"Found Bedrock permission: {act}")
-                        return True
-        
-        return False
-    except Exception as e:
-        logger.error(f"Error parsing policy document: {str(e)}")
-        return False
 
 def check_bedrock_access_and_vpc_endpoints(permission_cache) -> Dict[str, Any]:
     logger.debug("Starting check for Bedrock access and VPC endpoints")
@@ -1264,7 +1235,7 @@ def generate_csv_report(findings: List[Dict[str, Any]]) -> str:
     return csv_buffer.getvalue()
 
 def get_current_utc_date():
-    return datetime.utcnow().strftime("%Y/%m/%d")
+    return datetime.now(timezone.utc).strftime("%Y/%m/%d")
 
 def write_to_s3(execution_id, csv_content: str, bucket_name: str) -> str:
     """

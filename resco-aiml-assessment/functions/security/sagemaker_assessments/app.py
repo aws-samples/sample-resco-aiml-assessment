@@ -6,7 +6,6 @@ from datetime import datetime, timedelta, timezone
 import time
 from typing import Dict, List, Any, Optional
 from io import StringIO
-import asyncio
 from botocore.config import Config
 from botocore.exceptions import ClientError
 import random
@@ -144,7 +143,7 @@ def check_sagemaker_internet_access() -> Dict[str, Any]:
             for instance in instances_with_direct_access:
                 findings['csv_data'].append(create_finding(
                     finding_name='Direct Internet Access Enabled',
-                    finding_details=f"SageMaker notebook instance '{instance_name}' has direct internet access enabled",
+                    finding_details=f"SageMaker notebook instance '{instance['name']}' has direct internet access enabled",
                     resolution="Configure the notebook instance to use VPC connectivity and disable direct internet access",
                     reference="https://docs.aws.amazon.com/sagemaker/latest/dg/infrastructure-security.html",
                     severity='High',
@@ -156,7 +155,7 @@ def check_sagemaker_internet_access() -> Dict[str, Any]:
             for domain in domains_with_direct_access:
                 findings['csv_data'].append(create_finding(
                     finding_name='Non-VPC Only Network Access',
-                    finding_details=f"SageMaker domain '{domain_id}' ({domain_name}) is not configured for VPC-only access",
+                    finding_details=f"SageMaker domain '{domain['domain_id']}' ({domain['name']}) is not configured for VPC-only access",
                     resolution="Configure the SageMaker domain to use VPC-only network access type",
                     reference="https://docs.aws.amazon.com/sagemaker/latest/dg/infrastructure-security.html",
                     severity='High',
@@ -1203,7 +1202,7 @@ def generate_csv_report(findings: List[Dict[str, Any]]) -> str:
     
     return csv_buffer.getvalue()
 def get_current_utc_date():
-    return datetime.utcnow().strftime("%Y/%m/%d")
+    return datetime.now(timezone.utc).strftime("%Y/%m/%d")
 
 def write_to_s3(execution_id, csv_content: str, bucket_name: str) -> Dict[str, str]:
     """

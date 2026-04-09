@@ -5,6 +5,13 @@
         "Cleanup S3 Bucket": {
             "Type": "Task",
             "Resource": "arn:aws:states:::lambda:invoke",
+            "Parameters": {
+                "FunctionName": "${CleanupBucketFunction}",
+                "Payload": {
+                    "Execution.$": "$$.Execution",
+                    "StateMachine.$": "$$.StateMachine"
+                }
+            },
             "Retry": [
                 {
                     "ErrorEquals": [
@@ -19,16 +26,19 @@
                     "JitterStrategy": "FULL"
                 }
             ],
-            "Next": "IAM Permission Caching",
-            "QueryLanguage": "JSONata",
-            "Arguments": {
-                "FunctionName": "${CleanupBucketFunction}",
-                "Payload": "{% $states.context %}"
-            }
+            "ResultPath": null,
+            "Next": "IAM Permission Caching"
         },
         "IAM Permission Caching": {
             "Type": "Task",
             "Resource": "arn:aws:states:::lambda:invoke",
+            "Parameters": {
+                "FunctionName": "${IAMPermissionCachingFunction}",
+                "Payload": {
+                    "Execution.$": "$$.Execution",
+                    "StateMachine.$": "$$.StateMachine"
+                }
+            },
             "Retry": [
                 {
                     "ErrorEquals": [
@@ -43,12 +53,8 @@
                     "JitterStrategy": "FULL"
                 }
             ],
-            "Next": "Run Security Assessments",
-            "QueryLanguage": "JSONata",
-            "Arguments": {
-                "FunctionName": "${IAMPermissionCachingFunction}",
-                "Payload": "{% $states.context %}"
-            }
+            "ResultPath": null,
+            "Next": "Run Security Assessments"
         },
         "Run Security Assessments": {
             "Type": "Parallel",
@@ -59,6 +65,13 @@
                         "Bedrock Security Assessment": {
                             "Type": "Task",
                             "Resource": "arn:aws:states:::lambda:invoke",
+                            "Parameters": {
+                                "FunctionName": "${BedrockSecurityAssessmentFunction}",
+                                "Payload": {
+                                    "Execution.$": "$$.Execution",
+                                    "StateMachine.$": "$$.StateMachine"
+                                }
+                            },
                             "Retry": [
                                 {
                                     "ErrorEquals": [
@@ -73,12 +86,7 @@
                                     "JitterStrategy": "FULL"
                                 }
                             ],
-                            "End": true,
-                            "QueryLanguage": "JSONata",
-                            "Arguments": {
-                                "FunctionName": "${BedrockSecurityAssessmentFunction}",
-                                "Payload": "{% $states.context %}"
-                            }
+                            "End": true
                         }
                     }
                 },
@@ -88,6 +96,13 @@
                         "Sagemaker Security Assessment": {
                             "Type": "Task",
                             "Resource": "arn:aws:states:::lambda:invoke",
+                            "Parameters": {
+                                "FunctionName": "${SagemakerSecurityAssessmentFunction}",
+                                "Payload": {
+                                    "Execution.$": "$$.Execution",
+                                    "StateMachine.$": "$$.StateMachine"
+                                }
+                            },
                             "Retry": [
                                 {
                                     "ErrorEquals": [
@@ -102,22 +117,53 @@
                                     "JitterStrategy": "FULL"
                                 }
                             ],
-                            "End": true,
-                            "QueryLanguage": "JSONata",
-                            "Arguments": {
-                                "FunctionName": "${SagemakerSecurityAssessmentFunction}",
-                                "Payload": "{% $states.context %}"
-                            }
+                            "End": true
+                        }
+                    }
+                },
+                {
+                    "StartAt": "AgentCore Security Assessment",
+                    "States": {
+                        "AgentCore Security Assessment": {
+                            "Type": "Task",
+                            "Resource": "arn:aws:states:::lambda:invoke",
+                            "Parameters": {
+                                "FunctionName": "${AgentCoreSecurityAssessmentFunction}",
+                                "Payload": {
+                                    "Execution.$": "$$.Execution",
+                                    "StateMachine.$": "$$.StateMachine"
+                                }
+                            },
+                            "Retry": [
+                                {
+                                    "ErrorEquals": [
+                                        "Lambda.ServiceException",
+                                        "Lambda.AWSLambdaException",
+                                        "Lambda.SdkClientException",
+                                        "Lambda.TooManyRequestsException"
+                                    ],
+                                    "IntervalSeconds": 1,
+                                    "MaxAttempts": 3,
+                                    "BackoffRate": 2,
+                                    "JitterStrategy": "FULL"
+                                }
+                            ],
+                            "End": true
                         }
                     }
                 }
             ],
-            "QueryLanguage": "JSONata",
             "Next": "Generate Consolidated Report"
         },
         "Generate Consolidated Report": {
             "Type": "Task",
             "Resource": "arn:aws:states:::lambda:invoke",
+            "Parameters": {
+                "FunctionName": "${GenerateConsolidatedReportFunction}",
+                "Payload": {
+                    "Execution.$": "$$.Execution"
+                }
+            },
             "Retry": [
                 {
                     "ErrorEquals": [
@@ -132,15 +178,7 @@
                     "JitterStrategy": "FULL"
                 }
             ],
-            "End": true,
-            "QueryLanguage": "JSONata",
-            "Arguments": {
-                "FunctionName": "${GenerateConsolidatedReportFunction}",
-                "Payload": {
-                    "Execution": "{% $states.context.Execution %}",
-                    "accountId": "{% $split($states.context.Execution.RoleArn, ':')[4] %}"
-                }
-            }
+            "End": true
         }
     }
 }

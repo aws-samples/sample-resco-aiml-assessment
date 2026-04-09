@@ -15,7 +15,7 @@ import random
 from datetime import datetime
 
 def get_current_utc_date():
-    return datetime.utcnow().strftime("%Y/%m/%d")
+    return datetime.now(timezone.utc).strftime("%Y/%m/%d")
 
 
 # Configure boto3 with retries
@@ -218,7 +218,12 @@ def lambda_handler(event, context):
         permission_cache = IAMPermissionCache(iam_client)
         permission_cache.initialize()
         execution_id = event["Execution"]["Name"]
-        write_permissions_to_s3(permission_cache, execution_id)
+        s3_key = write_permissions_to_s3(permission_cache, execution_id)
+
+        return {
+            'statusCode': 200,
+            'body': f'Successfully cached IAM permissions to {s3_key}'
+        }
 
     except Exception as e:
         logger.error(f"Error in lambda_handler: {str(e)}", exc_info=True)

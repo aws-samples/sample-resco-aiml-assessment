@@ -7,13 +7,13 @@ The ReSCO (Resilience, Security, and Cost Optimization) Assessment Framework is 
 ## Architecture Diagrams
 
 ### Phase 1: Deployment Setup (CloudFormation)
-![ReSCO Deployment Phase](generated-diagrams/resco-deployment-phase.png.png)
+![ReSCO Deployment Phase](generated-diagrams/resco-deployment-phase.png)
 
 ### Phase 2: Assessment Execution (CodeBuild)
-![ReSCO Execution Phase](generated-diagrams/resco-execution-phase.png.png)
+![ReSCO Execution Phase](generated-diagrams/resco-execution-phase.png)
 
 ### Service-Level Assessment Architecture
-![ReSCO Service-Level Architecture](generated-diagrams/resco-service-level-architecture.png.png)
+![ReSCO Service-Level Architecture](generated-diagrams/resco-service-level-architecture.png)
 
 ## Two-Phase Architecture
 
@@ -24,10 +24,10 @@ The ReSCO (Resilience, Security, and Cost Optimization) Assessment Framework is 
 - **Cross-Account Trust**: Establishes trust relationship with central management account
 - **Assessment Permissions**: Grants read-only access to AWS services for assessment
 
-#### Step 2: Central Infrastructure (`2-resco-multi-account-assessment.yaml`)
+#### Step 2: Central Infrastructure (`2-resco-assessment-codebuild.yaml`)
 - **CodeBuild Project**: Orchestrates multi-account deployments and assessments
 - **S3 Bucket**: Central storage for consolidated assessment results
-- **IAM Role**: `ReSCOCodeBuildRole` with cross-account access permissions
+- **IAM Role**: `ReSCOMultiAccountCodeBuildRole` with cross-account access permissions
 - **SNS Topic**: Optional email notifications for assessment completion
 - **EventBridge Rules**: Automated workflow triggers
 - **Lambda Trigger**: Automatically starts CodeBuild after stack creation
@@ -44,7 +44,7 @@ The ReSCO (Resilience, Security, and Cost Optimization) Assessment Framework is 
 #### Assessment Modules (Monorepo Structure)
 ```
 resco-assessments/
-├── resco-aiml-assessment/          # AI/ML services (Bedrock, SageMaker)
+├── resco-aiml-assessment/          # AI/ML services (Bedrock, SageMaker, AgentCore)
 ├── resco-security-assessment/      # General security assessments
 ├── resco-resilience-assessment/    # DR, backup, fault tolerance
 ├── resco-cost-assessment/          # Cost optimization assessments
@@ -80,7 +80,8 @@ resco-assessments/
       "Type": "Parallel",
       "Branches": [
         {"StartAt": "Bedrock Assessment", "States": {...}},
-        {"StartAt": "SageMaker Assessment", "States": {...}}
+        {"StartAt": "SageMaker Assessment", "States": {...}},
+        {"StartAt": "AgentCore Assessment", "States": {...}}
       ]
     },
     "Generate Module Report": "..."
@@ -93,6 +94,7 @@ resco-assessments/
 ### 1. AI/ML Assessment (`resco-aiml-assessment/`)
 - **Bedrock Assessment Lambda**: Guardrails, Logging, VPC Endpoints, IAM Roles
 - **SageMaker Assessment Lambda**: Notebooks, Domains, Training Jobs, Model Registry
+- **AgentCore Assessment Lambda**: Runtimes, Memory, Gateway, VPC Configuration, Observability
 - **Comprehend Assessment Lambda**: Data privacy, Access controls (Future)
 - **Textract Assessment Lambda**: Document processing security (Future)
 
@@ -279,7 +281,7 @@ Add required permissions to both member role templates:
   Resource: '*'
 ```
 
-**In `deployment/2-resco-multi-account-assessment.yaml`** (for single account mode):
+**In `deployment/2-resco-assessment-codebuild.yaml`** (for single account mode):
 ```yaml
 - newservice:List*
 - newservice:Describe*
@@ -375,10 +377,10 @@ aws cloudformation create-stack-set \
 
 #### Step 2: Deploy Central Infrastructure
 ```bash
-# Deploy 2-resco-multi-account-assessment.yaml
+# Deploy 2-resco-assessment-codebuild.yaml
 aws cloudformation create-stack \
   --stack-name resco-aiml-multi-account \
-  --template-body file://2-resco-multi-account-assessment.yaml \
+  --template-body file://2-resco-assessment-codebuild.yaml \
   --parameters \
     ParameterKey=MultiAccountScan,ParameterValue=true \
     ParameterKey=DEPLOY_AIML_ASSESSMENT,ParameterValue=true \
@@ -409,7 +411,7 @@ DEPLOY_COST_ASSESSMENT=false
 ## Monitoring and Troubleshooting
 
 ### CloudWatch Logs
-- **CodeBuild Logs**: `/aws/codebuild/ReSCOCodeBuild`
+- **CodeBuild Logs**: `/aws/codebuild/ReSCOMultiAccountCodeBuild`
 - **Lambda Logs**: `/aws/lambda/[FunctionName]`
 - **Step Functions**: View execution history in console
 
@@ -447,7 +449,7 @@ See [Security issue notifications](CONTRIBUTING.md#security-issue-notifications)
 ## Module Development Roadmap
 
 ### Current Status
-- ✅ **AI/ML Assessment**: Bedrock Lambda, SageMaker Lambda (Active)
+- **AI/ML Assessment**: Bedrock Lambda, SageMaker Lambda, AgentCore Lambda (Active)
 
 
 ### Service-Level Development Pattern

@@ -2,17 +2,24 @@ version: 0.2
 phases:
   install:
     runtime-versions:
-      python: 3.9
+      python: 3.12
     commands:
-      - pip install --upgrade pip
-      - pip install --upgrade aws-sam-cli
+      - pip install -q --upgrade pip
+      - pip install -q --upgrade aws-sam-cli
   build:
     commands:
       - echo "Starting ReSCO AIML Assessment"
       - echo "Multi-account scan is $MULTI_ACCOUNT_SCAN"
       - cd resco-aiml-assessment
       - ls -la
-      - sam build --use-container --template template-multi-account.yaml
+      - |
+        if [[ $MULTI_ACCOUNT_SCAN = 'true' ]]; then
+          echo "Building multi-account template"
+          sam build --template template-multi-account.yaml
+        else
+          echo "Building single-account template"
+          sam build --template template.yaml
+        fi
       - echo "Build completed, checking build directory:"
       - ls -la .aws-sam/build/
       - |
@@ -35,8 +42,7 @@ phases:
             export AWS_SECRET_ACCESS_KEY=$(cat /tmp/creds.json | jq -r '.Credentials.SecretAccessKey')
             export AWS_SESSION_TOKEN=$(cat /tmp/creds.json | jq -r '.Credentials.SessionToken')
             echo "Deploying to account $accountId"
-            aws cloudformation delete-stack --stack-name aws-sam-cli-managed-default || echo "No managed stack to delete in $accountId"
-            sam deploy --template-file .aws-sam/build/template.yaml --stack-name resco-aiml-security-$accountId --capabilities CAPABILITY_IAM --no-confirm-changeset --resolve-s3 --parameter-overrides BucketName=$BUCKET_REPORT --region $AWS_DEFAULT_REGION || echo "Deploy failed for $accountId"
+            sam deploy --template-file .aws-sam/build/template.yaml --stack-name resco-aiml-security-$accountId --capabilities CAPABILITY_IAM --no-confirm-changeset --resolve-s3 --region $AWS_DEFAULT_REGION || echo "Deploy failed for $accountId"
             STATE_MACHINE_ARN=$(aws cloudformation describe-stacks --stack-name resco-aiml-security-$accountId --query 'Stacks[0].Outputs[?OutputKey==`AIMLAssessmentStateMachineArn`].OutputValue' --output text 2>/dev/null)
             if [[ $STATE_MACHINE_ARN != "" ]]; then
               EXECUTION_ARN=$(aws stepfunctions start-execution --state-machine-arn $STATE_MACHINE_ARN --input "{\"accountId\":\"$accountId\"}" --query 'executionArn' --output text)
@@ -45,7 +51,7 @@ phases:
             unset AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN
           done
           echo "Deploying to management account $AWS_ACCOUNT_ID"
-          sam deploy --template-file .aws-sam/build/template.yaml --stack-name resco-aiml-security-mgmt --capabilities CAPABILITY_IAM --no-confirm-changeset --s3-bucket $BUCKET_REPORT --parameter-overrides BucketName=$BUCKET_REPORT --region $AWS_DEFAULT_REGION || echo "Deploy failed for management account"
+          sam deploy --template-file .aws-sam/build/template.yaml --stack-name resco-aiml-security-mgmt --capabilities CAPABILITY_IAM --no-confirm-changeset --resolve-s3 --region $AWS_DEFAULT_REGION || echo "Deploy failed for management account"
           STATE_MACHINE_ARN=$(aws cloudformation describe-stacks --stack-name resco-aiml-security-mgmt --query 'Stacks[0].Outputs[?OutputKey==`AIMLAssessmentStateMachineArn`].OutputValue' --output text 2>/dev/null)
           if [[ $STATE_MACHINE_ARN != "" ]]; then
             MGMT_EXECUTION_ARN=$(aws stepfunctions start-execution --state-machine-arn $STATE_MACHINE_ARN --input "{\"accountId\":\"$AWS_ACCOUNT_ID\"}" --query 'executionArn' --output text)
@@ -53,8 +59,9 @@ phases:
           fi
         else
           echo "Single account deployment"
-          sam deploy --template-file .aws-sam/build/template.yaml --stack-name resco-aiml-security --capabilities CAPABILITY_IAM --no-confirm-changeset --s3-bucket $BUCKET_REPORT --parameter-overrides BucketName=$BUCKET_REPORT
-          STATE_MACHINE_ARN=$(aws cloudformation describe-stacks --stack-name resco-aiml-security --query 'Stacks[0].Outputs[?OutputKey==`AIMLAssessmentStateMachineArn`].OutputValue' --output text)
+          STACK_NAME="aiml-sec-${AWS_ACCOUNT_ID}"
+          sam deploy --template-file .aws-sam/build/template.yaml --stack-name $STACK_NAME --capabilities CAPABILITY_IAM --no-confirm-changeset --resolve-s3
+          STATE_MACHINE_ARN=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query 'Stacks[0].Outputs[?OutputKey==`AIMLAssessmentStateMachineArn`].OutputValue' --output text)
           aws stepfunctions start-execution --state-machine-arn $STATE_MACHINE_ARN --input "{\"accountId\":\"$AWS_ACCOUNT_ID\"}"
         fi
   post_build:
@@ -136,7 +143,7 @@ phases:
           done
           
           echo "Uploading files to management account S3 bucket and creating consolidated report"
-          pip3 install beautifulsoup4
+          pip3 install -q beautifulsoup4
           
           # Debug: Show which directories exist
           echo "Available account directories:"

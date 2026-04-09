@@ -1,0 +1,29 @@
+# IDE files
+.kiro/
+.vscode/
+.claude/
+.mcp.json
+
+# AWS SAM build artifacts
+resco-aiml-assessment/.aws-sam/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Environment
+.env
+.venv/
+venv/
+
+# Sample/mockup files (if any)
+samples/

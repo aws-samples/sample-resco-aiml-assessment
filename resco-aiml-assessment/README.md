@@ -17,6 +17,11 @@ Security Assessments for:
   - Authentication and authorization
   - Data protection
   - Governance and Auditability
+- **Amazon Bedrock AgentCore**
+  - Runtime VPC Configuration
+  - Memory Encryption
+  - Gateway Security
+  - Observability Settings
 
 ## Prerequisites
 - AWS Account with appropriate permissions
@@ -30,12 +35,15 @@ Please refer to the [main repository README.md](../README.md) for complete insta
 ## Project Structure
 ```
 resco-aiml-assessment/
-├── template.yaml               # SAM template
+├── template.yaml                       # SAM template
 ├── functions/
-│   ├── security/ 
-│       ├── bedrock/              # Bedrock assessment functions
-│       ├── sagemaker/            # SageMaker assessment functions
-└── statemachine/                 # Contains the state machine definition
+│   └── security/ 
+│       ├── bedrock/                    # Bedrock assessment functions
+│       ├── sagemaker/                  # SageMaker assessment functions
+│       ├── agentcore/                  # AgentCore assessment functions
+│       ├── iam_permission_caching/     # IAM permission cache function
+│       └── generate_consolidated_report/ # HTML report generation
+└── statemachine/                       # Contains the state machine definition
 ```
 
 ## Step Functions Workflow
