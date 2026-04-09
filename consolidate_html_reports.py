@@ -203,7 +203,7 @@ def consolidate_html_reports():
         .header h1 {{ font-size: 26px; font-weight: 700; letter-spacing: -0.5px; }}
         .header-right {{ display: flex; align-items: center; gap: 20px; }}
         .header-meta {{ text-align: right; font-size: 14px; color: var(--text-secondary); }}
-        .container {{ max-width: 1400px; margin: 0 auto; padding: 32px; }}
+        .container {{ max-width: 1600px; margin: 0 auto; padding: 24px; }}
         .exec-summary {{ background: var(--bg-card); border-radius: 16px; margin-bottom: 32px; border: 2px solid var(--border-color); overflow: hidden; box-shadow: var(--card-shadow); }}
         .exec-summary-header {{ background: var(--bg-subtle); padding: 20px 28px; border-bottom: 2px solid var(--border-color); }}
         .exec-summary-header h2 {{ font-size: 16px; font-weight: 600; color: var(--text-primary); text-transform: uppercase; letter-spacing: 1px; }}
@@ -244,35 +244,42 @@ def consolidate_html_reports():
         .search-box input:focus {{ outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }}
         .search-box::before {{ content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' fill='%239ca3af' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/%3E%3C/svg%3E"); position: absolute; left: 16px; top: 50%; transform: translateY(-50%); }}
         .findings-table-container {{ overflow-x: auto; }}
-        .findings-table {{ width: 100%; border-collapse: collapse; font-size: 14px; }}
+        .findings-table {{ width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }}
         .findings-table thead {{ background: var(--bg-subtle); }}
-        .findings-table th {{ padding: 18px 20px; text-align: left; font-weight: 700; font-size: 12px; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 3px solid var(--border-strong); white-space: nowrap; background: var(--bg-subtle); }}
-        .findings-table th .filter-input, .findings-table th .filter-select {{ display: block; width: 100%; margin-top: 10px; padding: 10px 14px; border: 2px solid var(--border-color); border-radius: 8px; font-size: 13px; font-weight: normal; text-transform: none; letter-spacing: normal; background: var(--bg-card); color: var(--text-primary); }}
+        .findings-table th {{ padding: 12px 10px; text-align: left; font-weight: 700; font-size: 11px; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 3px solid var(--border-strong); background: var(--bg-subtle); }}
+        .findings-table th:nth-child(1) {{ width: 10%; }} /* Account ID */
+        .findings-table th:nth-child(2) {{ width: 15%; }} /* Finding */
+        .findings-table th:nth-child(3) {{ width: 20%; }} /* Finding Details */
+        .findings-table th:nth-child(4) {{ width: 22%; }} /* Resolution */
+        .findings-table th:nth-child(5) {{ width: 8%; }} /* Reference */
+        .findings-table th:nth-child(6) {{ width: 10%; }} /* Severity */
+        .findings-table th:nth-child(7) {{ width: 10%; }} /* Status */
+        .findings-table th .filter-input, .findings-table th .filter-select {{ display: block; width: 100%; margin-top: 8px; padding: 6px 8px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 12px; font-weight: normal; text-transform: none; letter-spacing: normal; background: var(--bg-card); color: var(--text-primary); }}
         .findings-table th .filter-input:focus, .findings-table th .filter-select:focus {{ outline: none; border-color: var(--accent); }}
-        .findings-table th .filter-select {{ cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%236b7280' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; min-width: 150px; }}
+        .findings-table th .filter-select {{ cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%236b7280' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; padding-right: 28px; }}
         [data-theme="dark"] .findings-table th .filter-select {{ background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E"); }}
         .findings-table th.no-filter {{ vertical-align: top; }}
         .findings-table tbody tr {{ transition: background-color 0.15s; background: var(--bg-card); }}
         .findings-table tbody tr:hover {{ background: var(--bg-subtle); }}
-        .findings-table td {{ padding: 18px 20px; border-bottom: 1px solid var(--border-color); vertical-align: top; color: var(--text-primary); }}
-        .findings-table td:first-child {{ font-family: 'SF Mono', 'Monaco', monospace; font-size: 12px; color: var(--text-secondary); }}
-        .severity-badge {{ display: inline-flex; align-items: center; padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }}
+        .findings-table td {{ padding: 12px 10px; border-bottom: 1px solid var(--border-color); vertical-align: top; color: var(--text-primary); word-wrap: break-word; overflow-wrap: break-word; }}
+        .findings-table td:first-child {{ font-family: 'SF Mono', 'Monaco', monospace; font-size: 11px; color: var(--text-secondary); }}
+        .severity-badge {{ display: inline-flex; align-items: center; padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; }}
         .severity-badge.high {{ background: #fef2f2; color: var(--severity-high); }}
         .severity-badge.medium {{ background: #fffbeb; color: #b45309; }}
         .severity-badge.low {{ background: var(--accent-light); color: var(--severity-low); }}
         .severity-badge.na {{ background: #f3f4f6; color: var(--severity-na); }}
-        .status-badge {{ display: inline-flex; align-items: center; gap: 8px; padding: 6px 16px; border-radius: 24px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }}
+        .status-badge {{ display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; }}
         .status-badge.passed {{ background: #ecfdf5; color: var(--status-passed); }}
         .status-badge.failed {{ background: #fef2f2; color: var(--status-failed); }}
-        .status-badge::before {{ content: ''; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }}
-        .reference-btn {{ display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: var(--accent-light); color: var(--accent); text-decoration: none; border-radius: 8px; font-size: 13px; font-weight: 600; border: 2px solid var(--border-color); transition: all 0.15s ease; margin: 2px 0; }}
+        .status-badge::before {{ content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }}
+        .reference-btn {{ display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; background: var(--accent-light); color: var(--accent); text-decoration: none; border-radius: 6px; font-size: 11px; font-weight: 600; border: 1px solid var(--border-color); transition: all 0.15s ease; margin: 2px 0; }}
         .reference-btn:hover {{ background: var(--accent); color: white; border-color: var(--accent); }}
         .reference-btn::after {{ content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%236366f1' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z'/%3E%3Cpath fill-rule='evenodd' d='M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z'/%3E%3C/svg%3E"); transition: all 0.15s; }}
         [data-theme="dark"] .reference-btn::after {{ content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23818cf8' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z'/%3E%3Cpath fill-rule='evenodd' d='M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z'/%3E%3C/svg%3E"); }}
         .reference-btn:hover::after {{ content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='white' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z'/%3E%3Cpath fill-rule='evenodd' d='M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z'/%3E%3C/svg%3E"); }}
-        .reference-cell {{ display: flex; flex-direction: column; gap: 6px; }}
-        .finding-details {{ max-width: 300px; color: var(--text-secondary); line-height: 1.6; }}
-        .resolution-text {{ max-width: 280px; color: var(--text-secondary); font-size: 13px; line-height: 1.6; }}
+        .reference-cell {{ display: flex; flex-direction: column; gap: 4px; }}
+        .finding-details {{ color: var(--text-secondary); line-height: 1.5; font-size: 12px; }}
+        .resolution-text {{ color: var(--text-secondary); font-size: 12px; line-height: 1.5; }}
         .report-footer {{ text-align: center; padding: 32px; color: var(--text-secondary); font-size: 13px; }}
         .report-footer a {{ color: var(--accent); text-decoration: none; font-weight: 500; }}
         @media (max-width: 1200px) {{ .metrics-grid {{ grid-template-columns: repeat(3, 1fr); }} .breakdown-section {{ grid-template-columns: 1fr; }} }}
