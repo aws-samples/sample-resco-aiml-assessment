@@ -325,7 +325,16 @@ Resources:
             - Sid: AgentCorePermissions
               Effect: Allow
               Action:
-                - bedrock-agentcore:*
+                - bedrock-agentcore:ListAgentRuntimes
+                - bedrock-agentcore:GetAgentRuntime
+                - bedrock-agentcore:ListMemories
+                - bedrock-agentcore:GetMemory
+                - bedrock-agentcore:ListGateways
+                - bedrock-agentcore:GetGateway
+                - bedrock-agentcore:ListPolicyEngines
+                - bedrock-agentcore:GetPolicyEngine
+                - bedrock-agentcore:GetAgentRuntimeResourcePolicy
+                - bedrock-agentcore:GetGatewayResourcePolicy
               Resource: '*'
             - Sid: IAMRolePermissions
               Effect: Allow

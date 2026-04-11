@@ -35,10 +35,21 @@ The framework performs **43 security checks** across these services, aligned wit
 9. Once complete, AWS CodeBuild automatically deploys the assessment stack and runs the assessment.
 10. To view results:
     - Navigate to the CloudFormation console
-    - Open the `aiml-sec-{account_id}` stack (created by SAM, e.g., `aiml-sec-123456789012`)
+    - Open the stack you deployed (e.g., `resco-aiml-single-account` or your custom name)
     - Go to the **Outputs** tab
-    - Copy the `AssessmentBucketName` value
-    - Navigate to that S3 bucket and open the `security_assessment_*.html` file
+    - Copy the `AssessmentBucket` value
+    - Navigate to that S3 bucket and open the `{account_id}/security_assessment_*.html` file
+
+### Understanding Stack Names
+
+The deployment creates **two types of CloudFormation stacks**:
+
+| Stack Type | Name | Purpose |
+|------------|------|---------|
+| **Infrastructure Stack** | User-chosen (e.g., `my-resco-assessment`) | Contains CodeBuild, S3 bucket for results, IAM roles. This is the stack you deploy manually. |
+| **Assessment Stack** | `aiml-sec-{account_id}` (auto-generated) | Contains Lambda functions and Step Functions for running checks. Created automatically by CodeBuild via SAM. |
+
+When viewing results, use the **Infrastructure Stack** outputs (the stack you named). The assessment stack is for internal use.
 
 ## Multi-Account Deployment
 
@@ -153,10 +164,12 @@ You can check the AWS CodeBuild console to ensure that the assessment has comple
 
 1. **Find the S3 Bucket Name**:
    - Navigate to **CloudFormation** > **Stacks** in the AWS Console
-   - For single-account deployments, select the `aiml-sec-{account_id}` stack (e.g., `aiml-sec-123456789012`) and find the `AssessmentBucketName` output
+   - For single-account deployments using the standalone template (`aiml-security-assessment-single-account.yaml`), select the stack you deployed (e.g., `rescoaiml-standalonerole-mgmt`) and find the `AssessmentBucket` output. Results are synced to this bucket under the `{account_id}/` prefix.
    - For multi-account deployments, select the `resco-aiml-multi-account` stack created in [Step 2: Deploy Central Infrastructure](#step-2-deploy-central-infrastructure) and find the `AssessmentBucket` output
    - Go to the **Outputs** tab
    - Copy the S3 bucket name
+
+   > **Note**: The deployment creates multiple S3 buckets. Only use the bucket from the `AssessmentBucket` output above. Other buckets (e.g., `aiml-sec-*-aimlassessmentbucket-*` from nested stacks or `aws-sam-cli-managed-*` for deployment artifacts) are for internal use and can be ignored.
 
 2. **Navigate to the S3 Bucket**:
    - Go to **S3** in the AWS Console
@@ -346,11 +359,17 @@ To remove all resources deployed for multi-account assessment:
 ### Cleanup Order
 
 For a clean removal, delete resources in this order:
-1. AWS SAM-deployed assessment stacks in all accounts:
-   - Single-account: `aiml-sec-{account_id}`
-   - Multi-account: `resco-aiml-security-{account_id}` and `resco-aiml-security-mgmt`
-2. Central infrastructure stack (`resco-aiml-single-account` or `resco-aiml-multi-account`)
+
+1. **Assessment stacks** (auto-created by SAM):
+   - Single-account: `aiml-sec-{account_id}` (e.g., `aiml-sec-123456789012`)
+   - Multi-account: `resco-aiml-security-{account_id}` per member account, plus `resco-aiml-security-mgmt` for management account
+
+2. **Infrastructure stack** (the stack you deployed manually):
+   - Single-account: Your chosen stack name (e.g., `my-resco-assessment`)
+   - Multi-account: `resco-aiml-multi-account` or your chosen name
+
 3. AWS CloudFormation StackSet member roles (multi-account only)
+
 4. Any remaining Amazon S3 buckets manually
 
 ## Contributing

@@ -30,7 +30,7 @@ Parameters:
   GitHubBranch:
     Type: String
     Description: GitHub branch to build from
-    Default: add-agentcore
+    Default: main
 
   ReSCORole:
     Description: "The role that ReSCO should assume to perform the assessment."
@@ -527,9 +527,9 @@ Resources:
 
 Outputs:
   AccountID:
-    Description: ID that ReSCO is running from
-    Value: !GetAtt ReSCOMultiAccountCodeBuildRole.Arn
+    Description: AWS Account ID where ReSCO is deployed
+    Value: !Ref AWS::AccountId
 
   AssessmentBucket:
-    Description: S3 bucket containing assessment results
+    Description: S3 bucket containing assessment results (HTML reports and CSV data)
     Value: !Ref ReSCOAssessmentBucket

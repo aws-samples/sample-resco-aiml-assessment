@@ -377,7 +377,7 @@ def check_sagemaker_iam_permissions(permission_cache) -> Dict[str, Any]:
                 for user in stale_users:
                     findings['csv_data'].append(create_finding(
                         finding_name='Stale SageMaker Access',
-                        finding_details=f"User '{user["user_name"]}' hasn't accessed SageMaker since {last_accessed.strftime('%Y-%m-%d')}",
+                        finding_details=f"User '{user['name']}' hasn't accessed SageMaker since {user['last_accessed'].strftime('%Y-%m-%d')}",
                         resolution="Review and remove SageMaker access for inactive users",
                         reference="https://docs.aws.amazon.com/sagemaker-unified-studio/latest/adminguide/security-iam.html",
                         severity='Medium',

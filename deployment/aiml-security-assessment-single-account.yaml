@@ -46,6 +46,36 @@ Conditions:
   CreateEmailNotification: !Not [!Equals [!Ref EmailAddress, ""]]
 
 Resources:
+  # S3 bucket for assessment results
+  ReSCOAssessmentBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      VersioningConfiguration:
+        Status: Enabled
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  ReSCOAssessmentBucketPolicy:
+    Type: "AWS::S3::BucketPolicy"
+    Properties:
+      Bucket: !Ref ReSCOAssessmentBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowSSLRequestsOnly
+            Principal: "*"
+            Action: "s3:*"
+            Effect: Deny
+            Resource:
+              - !Sub "${ReSCOAssessmentBucket.Arn}"
+              - !Sub "${ReSCOAssessmentBucket.Arn}/*"
+            Condition:
+              Bool:
+                aws:SecureTransport: false
+
   # Local ReSCO role for single account assessments
   ReSCOMemberRole:
     Type: "AWS::IAM::Role"
@@ -228,6 +258,22 @@ Resources:
                   - s3:*
                 Effect: Allow
                 Resource: "*"
+        - PolicyName: UploadtoS3
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                Effect: Allow
+                Resource: !Sub "${ReSCOAssessmentBucket.Arn}/*"
+              - Action:
+                  - s3:GetObject
+                  - s3:ListBucket
+                Effect: Allow
+                Resource:
+                  - !Sub "arn:${AWS::Partition}:s3:::resco-aiml-security-*"
+                  - !Sub "arn:${AWS::Partition}:s3:::resco-aiml-security-*/*"
 
   # CodeBuild project for running assessments
   ReSCOCodeBuild:
@@ -239,6 +285,9 @@ Resources:
         Image: "aws/codebuild/amazonlinux2-x86_64-standard:4.0"
         Type: "LINUX_CONTAINER"
         EnvironmentVariables:
+          - Name: BUCKET_REPORT
+            Value: !Ref ReSCOAssessmentBucket
+            Type: PLAINTEXT
           - Name: GITHUB_REPO_URL
             Value: !Ref GitHubRepoUrl
             Type: PLAINTEXT
@@ -346,6 +395,7 @@ Resources:
 
   CodeBuildStartBuild:
     Type: Custom::CodeBuildStartBuild
+    DependsOn: ReSCOAssessmentBucketPolicy
     Properties:
       ServiceToken: !GetAtt CodeBuildStartBuildLambda.Arn
       ProjectName: !Ref ReSCOCodeBuild
@@ -401,16 +451,17 @@ Resources:
           InputTransformer:
             InputPathsMap:
               build-status: $.detail.build-status
+              bucket: $.detail.additional-information.environment.environment-variables[0].value
             InputTemplate: >-
               "The ReSCO AIML assessment has <build-status>."
 
-              "View results by checking the 'resco-aiml-security' CloudFormation stack outputs for the AssessmentBucketName."
+              "You can view your results in the <bucket> bucket."
 
 Outputs:
   CodeBuildProject:
     Description: CodeBuild project for running assessments
     Value: !Ref ReSCOCodeBuild
 
-  SAMStackName:
-    Description: Name of the SAM stack containing assessment resources and bucket
-    Value: resco-aiml-security
+  AssessmentBucket:
+    Description: S3 bucket containing assessment results (HTML reports and CSV data)
+    Value: !Ref ReSCOAssessmentBucket

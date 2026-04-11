@@ -314,6 +314,10 @@ def check_stale_bedrock_access(permission_cache) -> Dict[str, Any]:
                         break
                     time.sleep(1)
                     wait_time += 1
+
+                # Log warning if job timed out
+                if wait_time >= max_wait_time:
+                    logger.warning(f"Timeout waiting for IAM job to complete for {identity_type} {identity_name} - skipping")
             except Exception as e:
                 logger.error(f"Error checking last access for {identity_type} {identity_name}: {str(e)}")
                 continue
@@ -429,7 +433,7 @@ def get_role_usage(role_name: str) -> str:
     
     try:
         # Check Lambda functions
-        lambda_client = boto3.client('lambda')
+        lambda_client = boto3.client('lambda', config=boto3_config)
         lambda_functions = lambda_client.list_functions()
         for function in lambda_functions['Functions']:
             if role_name in function['Role']:
@@ -440,7 +444,7 @@ def get_role_usage(role_name: str) -> str:
     
     try:
         # Check ECS tasks
-        ecs_client = boto3.client('ecs')
+        ecs_client = boto3.client('ecs', config=boto3_config)
         clusters = ecs_client.list_clusters()['clusterArns']
         for cluster in clusters:
             tasks = ecs_client.list_tasks(cluster=cluster)['taskArns']
@@ -691,38 +695,6 @@ def check_bedrock_guardrails() -> Dict[str, Any]:
                     )
                 )
 
-            # Check if guardrails are actually being used in any model invocations
-            if response.get('guardrails', []):
-                try:
-                    # Get a sample of recent invocations to check for guardrail usage
-                    model_invocations = bedrock_client.list_model_invocations(
-                        maxResults=20,  # Sample size
-                        filters={
-                            'createdAfter': (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
-                        }
-                    )
-                    
-                    guardrail_usage_found = False
-                    for invocation in model_invocations.get('modelInvocations', []):
-                        if invocation.get('guardrailConfiguration'):
-                            guardrail_usage_found = True
-                            break
-                    
-                    if not guardrail_usage_found:
-                        findings['status'] = 'WARN'
-                        findings['csv_data'].append(
-                            create_finding(
-                                finding_name="Bedrock Guardrails Usage Check",
-                                finding_details="Guardrails are configured but not detected in recent model invocations. This suggests guardrails may not be actively enforced.",
-                                resolution="Ensure guardrails are properly integrated into your application code using the ApplyGuardrail API or through Bedrock Agents and Knowledge Bases.",
-                                reference="https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails.html",
-                                severity='Low',
-                                status='Failed'
-                            )
-                        )
-                except Exception as e:
-                    logger.warning(f"Could not check guardrail usage in invocations: {str(e)}")
-                
         except bedrock_client.exceptions.ValidationException as e:
             findings['status'] = 'ERROR'
             findings['details'] = f"Error validating guardrails configuration: {str(e)}"
@@ -924,7 +896,7 @@ def check_bedrock_cloudtrail_logging() -> Dict[str, Any]:
                     )
                 )
 
-        except cloudtrail_client.exceptions.ClientError as e:
+        except ClientError as e:
             findings['status'] = 'ERROR'
             findings['details'] = f"Error checking CloudTrail configuration: {str(e)}"
             findings['csv_data'].append(
@@ -1547,7 +1519,7 @@ def check_bedrock_invocation_log_encryption() -> Dict[str, Any]:
                         )
                     )
 
-            except s3_client.exceptions.ClientError as e:
+            except ClientError as e:
                 if e.response['Error']['Code'] == 'ServerSideEncryptionConfigurationNotFoundError':
                     findings['status'] = 'FAIL'
                     findings['csv_data'].append(

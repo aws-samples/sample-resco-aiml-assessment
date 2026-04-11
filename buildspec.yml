@@ -333,7 +333,14 @@ phases:
             exit 1
           fi
 
-          echo "All reports uploaded successfully!"
+          echo "==========================================="
+          echo "Multi-account assessment completed successfully!"
+          echo "==========================================="
+          echo "ACCESS YOUR RESULTS HERE: s3://$BUCKET_REPORT/"
+          echo ""
+          echo "Note: Other S3 buckets created during deployment (e.g., aiml-sec-*-aimlassessmentbucket-*)"
+          echo "are for internal use. Use the bucket above from the AssessmentBucket stack output."
+          echo "==========================================="
         else
           # Single account post-build: wait for Step Function and report status
           echo "Single account post-build processing"
@@ -367,12 +374,34 @@ phases:
             fi
           fi
 
-          # Get assessment bucket and report location
+          # Get assessment bucket and sync results to BUCKET_REPORT for consistency
           ACCOUNT_BUCKET=$(aws cloudformation describe-stacks --stack-name $STACK_NAME --query 'Stacks[0].Outputs[?OutputKey==`AssessmentBucketName`].OutputValue' --output text 2>/dev/null)
           if [[ $ACCOUNT_BUCKET != "" && $ACCOUNT_BUCKET != "None" ]]; then
-            echo "Assessment results available in S3 bucket: $ACCOUNT_BUCKET"
+            echo "Assessment results generated in S3 bucket: $ACCOUNT_BUCKET"
             echo "Bucket contents:"
             aws s3 ls s3://$ACCOUNT_BUCKET/ --recursive || echo "Failed to list bucket contents"
+
+            # Sync results to BUCKET_REPORT for consistent access
+            if [[ $ACCOUNT_BUCKET != $BUCKET_REPORT ]]; then
+              echo "Syncing results to consolidated bucket: $BUCKET_REPORT"
+              if ! aws s3 sync s3://$ACCOUNT_BUCKET/ s3://$BUCKET_REPORT/$AWS_ACCOUNT_ID/ --exclude "*" --include "*.csv" --include "*.html"; then
+                echo "WARNING: Failed to sync results to $BUCKET_REPORT"
+              else
+                echo "Results synced successfully to s3://$BUCKET_REPORT/$AWS_ACCOUNT_ID/"
+              fi
+            else
+              echo "Assessment bucket and report bucket are the same, no sync needed"
+            fi
+          else
+            echo "WARNING: Could not determine assessment bucket from stack outputs"
           fi
         fi
-      - echo "Assessment and consolidation completed"
+      - |
+        echo "==========================================="
+        echo "Assessment completed successfully!"
+        echo "==========================================="
+        echo "ACCESS YOUR RESULTS HERE: s3://$BUCKET_REPORT/"
+        echo ""
+        echo "Note: Other S3 buckets created during deployment (e.g., aiml-sec-*-aimlassessmentbucket-*)"
+        echo "are for internal use. Use the bucket above from the AssessmentBucket stack output."
+        echo "==========================================="

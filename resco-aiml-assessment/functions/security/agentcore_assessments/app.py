@@ -475,7 +475,11 @@ def check_stale_agentcore_access(permission_cache: Dict[str, Any]) -> List[Dict[
     
     try:
         logger.info("Checking for stale AgentCore access")
-        
+
+        # Get current account ID from STS
+        sts_client = boto3.client('sts', config=boto3_config)
+        account_id = sts_client.get_caller_identity()['Account']
+
         role_permissions = permission_cache.get('role_permissions', {})
         user_permissions = permission_cache.get('user_permissions', {})
         
@@ -497,7 +501,7 @@ def check_stale_agentcore_access(permission_cache: Dict[str, Any]) -> List[Dict[
         # Check roles - iterate over dict
         for role_name, permissions in role_permissions.items():
             # Build role ARN from role name
-            role_arn = f"arn:aws:iam::{permissions.get('account_id', '914787431788')}:role/{role_name}"
+            role_arn = f"arn:aws:iam::{account_id}:role/{role_name}"
             attached_policies = permissions.get('attached_policies', [])
             inline_policies = permissions.get('inline_policies', [])
             
@@ -550,7 +554,7 @@ def check_stale_agentcore_access(permission_cache: Dict[str, Any]) -> List[Dict[
         # Check users - iterate over dict
         for user_name, permissions in user_permissions.items():
             # Build user ARN from user name
-            user_arn = f"arn:aws:iam::{permissions.get('account_id', '914787431788')}:user/{user_name}"
+            user_arn = f"arn:aws:iam::{account_id}:user/{user_name}"
             attached_policies = permissions.get('attached_policies', [])
             inline_policies = permissions.get('inline_policies', [])
             
