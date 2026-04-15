@@ -134,15 +134,15 @@ def generate_csv_report(findings: List[Dict[str, Any]]) -> str:
         # Create empty report with headers
         writer = csv.DictWriter(
             output,
-            fieldnames=['Finding', 'Finding_Details', 'Resolution', 'Reference', 'Severity', 'Status']
+            fieldnames=['Check_ID', 'Finding', 'Finding_Details', 'Resolution', 'Reference', 'Severity', 'Status']
         )
         writer.writeheader()
         return output.getvalue()
-    
+
     # Write CSV with findings
     writer = csv.DictWriter(
         output,
-        fieldnames=['Finding', 'Finding_Details', 'Resolution', 'Reference', 'Severity', 'Status']
+        fieldnames=['Check_ID', 'Finding', 'Finding_Details', 'Resolution', 'Reference', 'Severity', 'Status']
     )
     writer.writeheader()
     
@@ -209,6 +209,7 @@ def check_agentcore_vpc_configuration() -> List[Dict[str, Any]]:
     if agentcore_client is None:
         logger.error("AgentCore client not available")
         findings.append(create_finding(
+            check_id="AC-01",
             finding_name="AgentCore VPC Configuration Check",
             finding_details="AgentCore client not available in this region",
             resolution="Deploy in a region where Amazon Bedrock AgentCore is available",
@@ -243,6 +244,7 @@ def check_agentcore_vpc_configuration() -> List[Dict[str, Any]]:
                         
                         if network_mode == 'PUBLIC':
                             findings.append(create_finding(
+                                check_id="AC-01",
                                 finding_name="AgentCore Runtime VPC Configuration",
                                 finding_details=f"Runtime '{runtime_name}' ({runtime_id}) is not configured with VPC. This exposes the runtime to public internet.",
                                 resolution="Configure VPC with private subnets and required VPC endpoints (ECR, S3, CloudWatch Logs)",
@@ -274,6 +276,7 @@ def check_agentcore_vpc_configuration() -> List[Dict[str, Any]]:
                                             for route in rt.get('Routes', []):
                                                 if route.get('GatewayId', '').startswith('igw-'):
                                                     findings.append(create_finding(
+                                                        check_id="AC-01",
                                                         finding_name="AgentCore Runtime Public Subnet",
                                                         finding_details=f"Runtime '{runtime_name}' is in public subnet {subnet_id} with direct internet access",
                                                         resolution="Move runtime to private subnets without direct internet gateway routes",
@@ -305,6 +308,7 @@ def check_agentcore_vpc_configuration() -> List[Dict[str, Any]]:
         # If no findings and no resources, return N/A
         if not findings:
             findings.append(create_finding(
+                check_id="AC-01",
                 finding_name="AgentCore VPC Configuration Check",
                 finding_details="No AgentCore resources found or all resources have proper VPC configuration",
                 resolution="N/A",
@@ -316,6 +320,7 @@ def check_agentcore_vpc_configuration() -> List[Dict[str, Any]]:
     except Exception as e:
         logger.error(f"Error in VPC configuration check: {e}")
         findings.append(create_finding(
+            check_id="AC-01",
             finding_name="AgentCore VPC Configuration Check",
             finding_details=f"Error during check: {str(e)}",
             resolution="Investigate error and retry assessment",
@@ -323,7 +328,7 @@ def check_agentcore_vpc_configuration() -> List[Dict[str, Any]]:
             severity=SeverityEnum.HIGH,
             status=StatusEnum.FAILED
         ))
-    
+
     return findings
 
 
@@ -352,6 +357,7 @@ def check_agentcore_full_access_roles(permission_cache: Dict[str, Any]) -> List[
         if not role_permissions:
             logger.info("No role permissions in cache")
             findings.append(create_finding(
+                check_id="AC-02",
                 finding_name="AgentCore IAM Full Access Check",
                 finding_details="No IAM role permissions found in cache",
                 resolution="N/A",
@@ -412,6 +418,7 @@ def check_agentcore_full_access_roles(permission_cache: Dict[str, Any]) -> List[
         # Generate findings for full access roles
         if full_access_roles:
             findings.append(create_finding(
+                check_id="AC-02",
                 finding_name="AgentCore IAM Full Access Policy",
                 finding_details=f"The following roles have BedrockAgentCoreFullAccess policy: {', '.join(full_access_roles)}",
                 resolution="Replace with least-privilege policies scoped to specific AgentCore resources and actions",
@@ -423,6 +430,7 @@ def check_agentcore_full_access_roles(permission_cache: Dict[str, Any]) -> List[
         # Generate findings for wildcard roles
         if wildcard_roles:
             findings.append(create_finding(
+                check_id="AC-02",
                 finding_name="AgentCore IAM Wildcard Permissions",
                 finding_details=f"The following roles have wildcard AgentCore permissions on all resources: {', '.join(wildcard_roles)}",
                 resolution="Scope permissions to specific AgentCore resources using resource ARNs",
@@ -434,6 +442,7 @@ def check_agentcore_full_access_roles(permission_cache: Dict[str, Any]) -> List[
         # If no issues found
         if not findings:
             findings.append(create_finding(
+                check_id="AC-02",
                 finding_name="AgentCore IAM Full Access Check",
                 finding_details="No roles with overly permissive AgentCore access found",
                 resolution="N/A",
@@ -441,10 +450,11 @@ def check_agentcore_full_access_roles(permission_cache: Dict[str, Any]) -> List[
                 severity=SeverityEnum.NA,
                 status=StatusEnum.PASSED
             ))
-            
+
     except Exception as e:
         logger.error(f"Error in full access roles check: {e}")
         findings.append(create_finding(
+            check_id="AC-02",
             finding_name="AgentCore IAM Full Access Check",
             finding_details=f"Error during check: {str(e)}",
             resolution="Investigate error and retry assessment",
@@ -486,6 +496,7 @@ def check_stale_agentcore_access(permission_cache: Dict[str, Any]) -> List[Dict[
         if not role_permissions and not user_permissions:
             logger.info("No IAM permissions in cache")
             findings.append(create_finding(
+                check_id="AC-03",
                 finding_name="AgentCore Stale Access Check",
                 finding_details="No IAM permissions found in cache",
                 resolution="N/A",
@@ -607,6 +618,7 @@ def check_stale_agentcore_access(permission_cache: Dict[str, Any]) -> List[Dict[
         if not agentcore_principals:
             logger.info("No principals with AgentCore permissions found")
             findings.append(create_finding(
+                check_id="AC-03",
                 finding_name="AgentCore Stale Access Check",
                 finding_details="No IAM principals with AgentCore permissions found",
                 resolution="N/A",
@@ -712,6 +724,7 @@ def check_stale_agentcore_access(permission_cache: Dict[str, Any]) -> List[Dict[
                 elif error_code == 'AccessDenied':
                     logger.error(f"Access denied when checking {principal_name}: {e}")
                     findings.append(create_finding(
+                        check_id="AC-03",
                         finding_name="AgentCore Stale Access Check",
                         finding_details=f"Access denied when checking service last accessed for {principal_type} {principal_name}",
                         resolution="Ensure Lambda execution role has iam:GenerateServiceLastAccessedDetails and iam:GetServiceLastAccessedDetails permissions",
@@ -729,10 +742,11 @@ def check_stale_agentcore_access(permission_cache: Dict[str, Any]) -> List[Dict[
         # Generate findings for stale access
         if stale_principals:
             stale_details = ', '.join([
-                f"{p['type']} '{p['name']}' ({p['days']} days)" 
+                f"{p['type']} '{p['name']}' ({p['days']} days)"
                 for p in stale_principals
             ])
             findings.append(create_finding(
+                check_id="AC-03",
                 finding_name="AgentCore Stale Access",
                 finding_details=f"The following principals have not accessed AgentCore in 60+ days: {stale_details}",
                 resolution="Review and remove unused AgentCore permissions following least privilege principle",
@@ -744,10 +758,11 @@ def check_stale_agentcore_access(permission_cache: Dict[str, Any]) -> List[Dict[
         # Generate findings for never accessed
         if never_accessed_principals:
             never_accessed_details = ', '.join([
-                f"{p['type']} '{p['name']}'" 
+                f"{p['type']} '{p['name']}'"
                 for p in never_accessed_principals
             ])
             findings.append(create_finding(
+                check_id="AC-03",
                 finding_name="AgentCore Unused Permissions",
                 finding_details=f"The following principals have AgentCore permissions but have never accessed the service: {never_accessed_details}",
                 resolution="Review and remove unused AgentCore permissions following least privilege principle",
@@ -759,6 +774,7 @@ def check_stale_agentcore_access(permission_cache: Dict[str, Any]) -> List[Dict[
         # If no issues found
         if not findings:
             findings.append(create_finding(
+                check_id="AC-03",
                 finding_name="AgentCore Stale Access Check",
                 finding_details=f"All {len(agentcore_principals)} principals with AgentCore permissions have accessed the service within the last 60 days",
                 resolution="N/A",
@@ -766,10 +782,11 @@ def check_stale_agentcore_access(permission_cache: Dict[str, Any]) -> List[Dict[
                 severity=SeverityEnum.NA,
                 status=StatusEnum.PASSED
             ))
-            
+
     except Exception as e:
         logger.error(f"Error in stale access check: {e}")
         findings.append(create_finding(
+            check_id="AC-03",
             finding_name="AgentCore Stale Access Check",
             finding_details=f"Error during check: {str(e)}",
             resolution="Investigate error and retry assessment",
@@ -798,6 +815,7 @@ def check_agentcore_observability() -> List[Dict[str, Any]]:
     
     if agentcore_client is None:
         findings.append(create_finding(
+            check_id="AC-04",
             finding_name="AgentCore Observability Check",
             finding_details="AgentCore client not available in this region",
             resolution="Deploy in a region where Amazon Bedrock AgentCore is available",
@@ -806,7 +824,7 @@ def check_agentcore_observability() -> List[Dict[str, Any]]:
             status=StatusEnum.NA
         ))
         return findings
-    
+
     try:
         logger.info("Checking AgentCore observability configuration")
         
@@ -833,6 +851,7 @@ def check_agentcore_observability() -> List[Dict[str, Any]]:
                         
                         if not cloudwatch_logs_config:
                             findings.append(create_finding(
+                                check_id="AC-04",
                                 finding_name="AgentCore Runtime CloudWatch Logs",
                                 finding_details=f"Runtime '{runtime_name}' ({runtime_id}) does not have CloudWatch Logs configured",
                                 resolution="Enable CloudWatch Logs for monitoring and troubleshooting",
@@ -852,6 +871,7 @@ def check_agentcore_observability() -> List[Dict[str, Any]]:
                                 except ClientError as e:
                                     if e.response['Error']['Code'] == 'ResourceNotFoundException':
                                         findings.append(create_finding(
+                                            check_id="AC-04",
                                             finding_name="AgentCore Runtime Log Group Missing",
                                             finding_details=f"Runtime '{runtime_name}' has CloudWatch Logs configured but log group '{log_group_name}' does not exist",
                                             resolution="Create the log group or update runtime configuration",
@@ -866,6 +886,7 @@ def check_agentcore_observability() -> List[Dict[str, Any]]:
                         
                         if not tracing_enabled:
                             findings.append(create_finding(
+                                check_id="AC-04",
                                 finding_name="AgentCore Runtime X-Ray Tracing",
                                 finding_details=f"Runtime '{runtime_name}' ({runtime_id}) does not have X-Ray tracing enabled",
                                 resolution="Enable X-Ray tracing for distributed tracing and performance analysis",
@@ -885,6 +906,7 @@ def check_agentcore_observability() -> List[Dict[str, Any]]:
         # If no findings and no resources, return N/A
         if not findings:
             findings.append(create_finding(
+                check_id="AC-04",
                 finding_name="AgentCore Observability Check",
                 finding_details="No AgentCore resources found or all resources have proper observability configuration",
                 resolution="N/A",
@@ -892,10 +914,11 @@ def check_agentcore_observability() -> List[Dict[str, Any]]:
                 severity=SeverityEnum.NA,
                 status=StatusEnum.NA
             ))
-            
+
     except Exception as e:
         logger.error(f"Error in observability check: {e}")
         findings.append(create_finding(
+            check_id="AC-04",
             finding_name="AgentCore Observability Check",
             finding_details=f"Error during check: {str(e)}",
             resolution="Investigate error and retry assessment",
@@ -948,6 +971,7 @@ def check_agentcore_encryption() -> List[Dict[str, Any]]:
                     
                     if encryption_type == 'NONE' or not encryption_config:
                         findings.append(create_finding(
+                            check_id="AC-05",
                             finding_name="AgentCore ECR Repository Encryption",
                             finding_details=f"ECR repository '{repo_name}' does not have encryption enabled",
                             resolution="Enable encryption with customer-managed KMS keys for better control",
@@ -957,6 +981,7 @@ def check_agentcore_encryption() -> List[Dict[str, Any]]:
                         ))
                     elif encryption_type == 'AES256':
                         findings.append(create_finding(
+                            check_id="AC-05",
                             finding_name="AgentCore ECR Repository AWS-Managed Keys",
                             finding_details=f"ECR repository '{repo_name}' uses AWS-managed keys instead of customer-managed KMS keys",
                             resolution="Consider using customer-managed KMS keys for better control and audit capabilities",
@@ -970,10 +995,11 @@ def check_agentcore_encryption() -> List[Dict[str, Any]]:
         
         # Note: Browser Tool recording buckets and Code Interpreter storage are configured
         # as part of Runtime configuration, not as separate resources
-        
+
         # If no findings, return N/A
         if not findings:
             findings.append(create_finding(
+                check_id="AC-05",
                 finding_name="AgentCore Encryption Check",
                 finding_details="No AgentCore resources found or all resources have proper encryption configuration",
                 resolution="N/A",
@@ -981,10 +1007,11 @@ def check_agentcore_encryption() -> List[Dict[str, Any]]:
                 severity=SeverityEnum.NA,
                 status=StatusEnum.NA
             ))
-            
+
     except Exception as e:
         logger.error(f"Error in encryption check: {e}")
         findings.append(create_finding(
+            check_id="AC-05",
             finding_name="AgentCore Encryption Check",
             finding_details=f"Error during check: {str(e)}",
             resolution="Investigate error and retry assessment",
@@ -1012,6 +1039,7 @@ def check_browser_tool_recording() -> List[Dict[str, Any]]:
     
     if agentcore_client is None:
         findings.append(create_finding(
+            check_id="AC-06",
             finding_name="AgentCore Browser Tool Recording Check",
             finding_details="AgentCore client not available in this region",
             resolution="Deploy in a region where Amazon Bedrock AgentCore is available",
@@ -1020,7 +1048,7 @@ def check_browser_tool_recording() -> List[Dict[str, Any]]:
             status=StatusEnum.NA
         ))
         return findings
-    
+
     try:
         logger.info("Checking Browser Tool recording configuration (via Runtime config)")
         
@@ -1032,6 +1060,7 @@ def check_browser_tool_recording() -> List[Dict[str, Any]]:
         if not runtimes:
             logger.info("No AgentCore Runtimes found")
             findings.append(create_finding(
+                check_id="AC-06",
                 finding_name="AgentCore Browser Tool Recording Check",
                 finding_details="No AgentCore Runtimes found to check browser tool configuration",
                 resolution="N/A",
@@ -1056,6 +1085,7 @@ def check_browser_tool_recording() -> List[Dict[str, Any]]:
                 
                 if not storage_config:
                     findings.append(create_finding(
+                        check_id="AC-06",
                         finding_name="AgentCore Runtime Storage Configuration",
                         finding_details=f"Runtime '{runtime_name}' ({runtime_id}) does not have storage configuration for browser tools",
                         resolution="Configure S3 storage for browser tool session recordings and artifacts",
@@ -1071,6 +1101,7 @@ def check_browser_tool_recording() -> List[Dict[str, Any]]:
         # If no findings, return passed
         if not findings:
             findings.append(create_finding(
+                check_id="AC-06",
                 finding_name="AgentCore Browser Tool Recording Check",
                 finding_details=f"All {len(runtimes)} Runtimes have proper storage configuration",
                 resolution="N/A",
@@ -1078,10 +1109,11 @@ def check_browser_tool_recording() -> List[Dict[str, Any]]:
                 severity=SeverityEnum.NA,
                 status=StatusEnum.PASSED
             ))
-            
+
     except Exception as e:
         logger.error(f"Error in browser tool recording check: {e}")
         findings.append(create_finding(
+            check_id="AC-06",
             finding_name="AgentCore Browser Tool Recording Check",
             finding_details=f"Error during check: {str(e)}",
             resolution="Investigate error and retry assessment",
@@ -1110,6 +1142,7 @@ def check_agentcore_memory_configuration() -> List[Dict[str, Any]]:
     
     if agentcore_client is None:
         findings.append(create_finding(
+            check_id="AC-07",
             finding_name="AgentCore Memory Configuration Check",
             finding_details="AgentCore client not available in this region",
             resolution="Deploy in a region where Amazon Bedrock AgentCore is available",
@@ -1118,16 +1151,17 @@ def check_agentcore_memory_configuration() -> List[Dict[str, Any]]:
             status=StatusEnum.NA
         ))
         return findings
-    
+
     try:
         logger.info("Checking AgentCore Memory configuration")
-        
+
         memories_response = agentcore_client.list_memories()
         memories = memories_response.get('memories', [])
         
         if not memories:
             logger.info("No Memory resources found")
             findings.append(create_finding(
+                check_id="AC-07",
                 finding_name="AgentCore Memory Configuration Check",
                 finding_details="No Memory resources found",
                 resolution="N/A",
@@ -1151,6 +1185,7 @@ def check_agentcore_memory_configuration() -> List[Dict[str, Any]]:
                 
                 if not encryption_key_arn:
                     findings.append(create_finding(
+                        check_id="AC-07",
                         finding_name="AgentCore Memory Encryption",
                         finding_details=f"Memory '{memory_name}' ({memory_id}) does not have customer-managed encryption configured",
                         resolution="Enable encryption with customer-managed KMS keys",
@@ -1166,6 +1201,7 @@ def check_agentcore_memory_configuration() -> List[Dict[str, Any]]:
         # If no findings, return passed
         if not findings:
             findings.append(create_finding(
+                check_id="AC-07",
                 finding_name="AgentCore Memory Configuration Check",
                 finding_details=f"All {len(memories)} Memory resources have proper configuration",
                 resolution="N/A",
@@ -1173,10 +1209,11 @@ def check_agentcore_memory_configuration() -> List[Dict[str, Any]]:
                 severity=SeverityEnum.NA,
                 status=StatusEnum.PASSED
             ))
-            
+
     except Exception as e:
         logger.error(f"Error in memory configuration check: {e}")
         findings.append(create_finding(
+            check_id="AC-07",
             finding_name="AgentCore Memory Configuration Check",
             finding_details=f"Error during check: {str(e)}",
             resolution="Investigate error and retry assessment",
@@ -1223,6 +1260,7 @@ def check_agentcore_vpc_endpoints() -> List[Dict[str, Any]]:
 
         if not vpcs:
             findings.append(create_finding(
+                check_id="AC-08",
                 finding_name="AgentCore VPC Endpoints Check",
                 finding_details="No VPCs found in the account",
                 resolution="N/A",
@@ -1251,6 +1289,7 @@ def check_agentcore_vpc_endpoints() -> List[Dict[str, Any]]:
 
         if not found_agentcore_endpoints:
             findings.append(create_finding(
+                check_id="AC-08",
                 finding_name="AgentCore VPC Endpoints Missing",
                 finding_details=f"No AgentCore VPC endpoints found in {len(vpc_ids)} VPCs. AgentCore API traffic traverses public internet, exposing it to interception.",
                 resolution="Create VPC interface endpoints for AgentCore services:\n" +
@@ -1268,6 +1307,7 @@ def check_agentcore_vpc_endpoints() -> List[Dict[str, Any]]:
 
             if unhealthy_endpoints:
                 findings.append(create_finding(
+                    check_id="AC-08",
                     finding_name="AgentCore VPC Endpoints Unhealthy",
                     finding_details=f"Found {len(unhealthy_endpoints)} AgentCore VPC endpoints in non-available state",
                     resolution="Investigate and resolve VPC endpoint issues",
@@ -1278,6 +1318,7 @@ def check_agentcore_vpc_endpoints() -> List[Dict[str, Any]]:
             else:
                 endpoint_details = ', '.join([f"{e['service']} in {e['vpc_id']}" for e in found_agentcore_endpoints])
                 findings.append(create_finding(
+                    check_id="AC-08",
                     finding_name="AgentCore VPC Endpoints Check",
                     finding_details=f"AgentCore VPC endpoints configured: {endpoint_details}",
                     resolution="N/A",
@@ -1289,6 +1330,7 @@ def check_agentcore_vpc_endpoints() -> List[Dict[str, Any]]:
     except Exception as e:
         logger.error(f"Error in VPC endpoints check: {e}")
         findings.append(create_finding(
+            check_id="AC-08",
             finding_name="AgentCore VPC Endpoints Check",
             finding_details=f"Error during check: {str(e)}",
             resolution="Investigate error and retry assessment",
@@ -1338,6 +1380,7 @@ def check_agentcore_service_linked_role() -> List[Dict[str, Any]]:
 
             if has_correct_principal:
                 findings.append(create_finding(
+                    check_id="AC-09",
                     finding_name="AgentCore Service-Linked Role Check",
                     finding_details=f"Service-linked role '{slr_name}' exists and is properly configured for AgentCore VPC networking",
                     resolution="N/A",
@@ -1347,6 +1390,7 @@ def check_agentcore_service_linked_role() -> List[Dict[str, Any]]:
                 ))
             else:
                 findings.append(create_finding(
+                    check_id="AC-09",
                     finding_name="AgentCore Service-Linked Role Misconfigured",
                     finding_details=f"Service-linked role '{slr_name}' exists but may have incorrect trust policy",
                     resolution="Delete and recreate the service-linked role by enabling VPC configuration on an AgentCore Runtime",
@@ -1357,6 +1401,7 @@ def check_agentcore_service_linked_role() -> List[Dict[str, Any]]:
 
         except iam_client.exceptions.NoSuchEntityException:
             findings.append(create_finding(
+                check_id="AC-09",
                 finding_name="AgentCore Service-Linked Role Missing",
                 finding_details=f"Service-linked role '{slr_name}' does not exist. VPC configuration for AgentCore Runtimes will fail without this role.",
                 resolution="The service-linked role is automatically created when you configure VPC for an AgentCore Runtime. Ensure IAM permissions allow service-linked role creation.",
@@ -1368,6 +1413,7 @@ def check_agentcore_service_linked_role() -> List[Dict[str, Any]]:
     except Exception as e:
         logger.error(f"Error in service-linked role check: {e}")
         findings.append(create_finding(
+            check_id="AC-09",
             finding_name="AgentCore Service-Linked Role Check",
             finding_details=f"Error during check: {str(e)}",
             resolution="Investigate error and retry assessment",
@@ -1395,6 +1441,7 @@ def check_agentcore_resource_based_policies() -> List[Dict[str, Any]]:
 
     if agentcore_client is None:
         findings.append(create_finding(
+            check_id="AC-10",
             finding_name="AgentCore Resource-Based Policies Check",
             finding_details="AgentCore client not available in this region",
             resolution="Deploy in a region where Amazon Bedrock AgentCore is available",
@@ -1498,6 +1545,7 @@ def check_agentcore_resource_based_policies() -> List[Dict[str, Any]]:
                 resource_list += f" and {len(resources_without_rbp) - 5} more"
 
             findings.append(create_finding(
+                check_id="AC-10",
                 finding_name="AgentCore Resource-Based Policies Missing",
                 finding_details=f"The following AgentCore resources do not have resource-based policies: {resource_list}. Without RBPs, access control relies solely on identity-based policies.",
                 resolution="Attach resource-based policies to AgentCore resources to:\n" +
@@ -1513,6 +1561,7 @@ def check_agentcore_resource_based_policies() -> List[Dict[str, Any]]:
         if not findings:
             if resources_with_rbp:
                 findings.append(create_finding(
+                    check_id="AC-10",
                     finding_name="AgentCore Resource-Based Policies Check",
                     finding_details=f"Resource-based policies configured on: {', '.join(resources_with_rbp)}",
                     resolution="N/A",
@@ -1522,6 +1571,7 @@ def check_agentcore_resource_based_policies() -> List[Dict[str, Any]]:
                 ))
             else:
                 findings.append(create_finding(
+                    check_id="AC-10",
                     finding_name="AgentCore Resource-Based Policies Check",
                     finding_details="No AgentCore resources found to check for resource-based policies",
                     resolution="N/A",
@@ -1533,6 +1583,7 @@ def check_agentcore_resource_based_policies() -> List[Dict[str, Any]]:
     except Exception as e:
         logger.error(f"Error in resource-based policies check: {e}")
         findings.append(create_finding(
+            check_id="AC-10",
             finding_name="AgentCore Resource-Based Policies Check",
             finding_details=f"Error during check: {str(e)}",
             resolution="Investigate error and retry assessment",
@@ -1558,6 +1609,7 @@ def check_agentcore_policy_engine_encryption() -> List[Dict[str, Any]]:
 
     if agentcore_client is None:
         findings.append(create_finding(
+            check_id="AC-11",
             finding_name="AgentCore Policy Engine Encryption Check",
             finding_details="AgentCore client not available in this region",
             resolution="Deploy in a region where Amazon Bedrock AgentCore is available",
@@ -1577,6 +1629,7 @@ def check_agentcore_policy_engine_encryption() -> List[Dict[str, Any]]:
 
             if not policy_engines:
                 findings.append(create_finding(
+                    check_id="AC-11",
                     finding_name="AgentCore Policy Engine Encryption Check",
                     finding_details="No Policy Engines found",
                     resolution="N/A",
@@ -1613,6 +1666,7 @@ def check_agentcore_policy_engine_encryption() -> List[Dict[str, Any]]:
             if engines_without_cmk:
                 engine_list = ', '.join([f"'{e['name']}'" for e in engines_without_cmk])
                 findings.append(create_finding(
+                    check_id="AC-11",
                     finding_name="AgentCore Policy Engine Encryption Missing",
                     finding_details=f"The following Policy Engines do not use customer-managed KMS encryption: {engine_list}. Policy data containing authorization rules is not protected with CMK.",
                     resolution="1. Create a customer-managed KMS key with appropriate key policy\n" +
@@ -1626,6 +1680,7 @@ def check_agentcore_policy_engine_encryption() -> List[Dict[str, Any]]:
 
             if engines_with_cmk:
                 findings.append(create_finding(
+                    check_id="AC-11",
                     finding_name="AgentCore Policy Engine Encryption Check",
                     finding_details=f"Policy Engines with CMK encryption: {', '.join(engines_with_cmk)}",
                     resolution="N/A",
@@ -1636,6 +1691,7 @@ def check_agentcore_policy_engine_encryption() -> List[Dict[str, Any]]:
 
             if not findings:
                 findings.append(create_finding(
+                    check_id="AC-11",
                     finding_name="AgentCore Policy Engine Encryption Check",
                     finding_details=f"Checked {len(policy_engines)} Policy Engines",
                     resolution="N/A",
@@ -1647,6 +1703,7 @@ def check_agentcore_policy_engine_encryption() -> List[Dict[str, Any]]:
         except AttributeError:
             # API not available
             findings.append(create_finding(
+                check_id="AC-11",
                 finding_name="AgentCore Policy Engine Encryption Check",
                 finding_details="Policy Engine APIs not yet available in bedrock-agentcore-control client",
                 resolution="N/A - Check may need to be updated when APIs become available",
@@ -1658,6 +1715,7 @@ def check_agentcore_policy_engine_encryption() -> List[Dict[str, Any]]:
     except Exception as e:
         logger.error(f"Error in policy engine encryption check: {e}")
         findings.append(create_finding(
+            check_id="AC-11",
             finding_name="AgentCore Policy Engine Encryption Check",
             finding_details=f"Error during check: {str(e)}",
             resolution="Investigate error and retry assessment",
@@ -1683,6 +1741,7 @@ def check_agentcore_gateway_encryption() -> List[Dict[str, Any]]:
 
     if agentcore_client is None:
         findings.append(create_finding(
+            check_id="AC-12",
             finding_name="AgentCore Gateway Encryption Check",
             finding_details="AgentCore client not available in this region",
             resolution="Deploy in a region where Amazon Bedrock AgentCore is available",
@@ -1701,6 +1760,7 @@ def check_agentcore_gateway_encryption() -> List[Dict[str, Any]]:
 
             if not gateways:
                 findings.append(create_finding(
+                    check_id="AC-12",
                     finding_name="AgentCore Gateway Encryption Check",
                     finding_details="No Gateways found",
                     resolution="N/A",
@@ -1738,6 +1798,7 @@ def check_agentcore_gateway_encryption() -> List[Dict[str, Any]]:
             if gateways_without_cmk:
                 gateway_list = ', '.join([f"'{g['name']}'" for g in gateways_without_cmk])
                 findings.append(create_finding(
+                    check_id="AC-12",
                     finding_name="AgentCore Gateway Encryption Missing",
                     finding_details=f"The following Gateways do not use customer-managed KMS encryption: {gateway_list}. Gateway configuration data uses AWS-managed keys.",
                     resolution="1. Create gateways with customer-managed KMS keys for additional control\n" +
@@ -1750,6 +1811,7 @@ def check_agentcore_gateway_encryption() -> List[Dict[str, Any]]:
 
             if gateways_with_cmk:
                 findings.append(create_finding(
+                    check_id="AC-12",
                     finding_name="AgentCore Gateway Encryption Check",
                     finding_details=f"Gateways with CMK encryption: {', '.join(gateways_with_cmk)}",
                     resolution="N/A",
@@ -1760,6 +1822,7 @@ def check_agentcore_gateway_encryption() -> List[Dict[str, Any]]:
 
             if not findings:
                 findings.append(create_finding(
+                    check_id="AC-12",
                     finding_name="AgentCore Gateway Encryption Check",
                     finding_details=f"Checked {len(gateways)} Gateways",
                     resolution="N/A",
@@ -1770,6 +1833,7 @@ def check_agentcore_gateway_encryption() -> List[Dict[str, Any]]:
 
         except AttributeError:
             findings.append(create_finding(
+                check_id="AC-12",
                 finding_name="AgentCore Gateway Encryption Check",
                 finding_details="Gateway APIs not yet available in bedrock-agentcore-control client",
                 resolution="N/A - Check may need to be updated when APIs become available",
@@ -1781,6 +1845,7 @@ def check_agentcore_gateway_encryption() -> List[Dict[str, Any]]:
     except Exception as e:
         logger.error(f"Error in gateway encryption check: {e}")
         findings.append(create_finding(
+            check_id="AC-12",
             finding_name="AgentCore Gateway Encryption Check",
             finding_details=f"Error during check: {str(e)}",
             resolution="Investigate error and retry assessment",
@@ -1806,6 +1871,7 @@ def check_agentcore_gateway_configuration() -> List[Dict[str, Any]]:
     
     if agentcore_client is None:
         findings.append(create_finding(
+            check_id="AC-13",
             finding_name="AgentCore Gateway Configuration Check",
             finding_details="AgentCore client not available in this region",
             resolution="Deploy in a region where Amazon Bedrock AgentCore is available",
@@ -1814,18 +1880,19 @@ def check_agentcore_gateway_configuration() -> List[Dict[str, Any]]:
             status=StatusEnum.NA
         ))
         return findings
-    
+
     try:
         logger.info("Checking AgentCore Gateway configuration")
-        
+
         # Try to list gateways - this API may not exist yet
         try:
             gateways_response = agentcore_client.list_gateways()
             gateways = gateways_response.get('gateways', [])
-            
+
             if not gateways:
                 logger.info("No Gateway resources found")
                 findings.append(create_finding(
+                    check_id="AC-13",
                     finding_name="AgentCore Gateway Configuration Check",
                     finding_details="No Gateway resources found",
                     resolution="N/A",
@@ -1848,6 +1915,7 @@ def check_agentcore_gateway_configuration() -> List[Dict[str, Any]]:
             
             # If no findings, return passed
             findings.append(create_finding(
+                check_id="AC-13",
                 finding_name="AgentCore Gateway Configuration Check",
                 finding_details=f"Found {len(gateways)} Gateway resources",
                 resolution="N/A",
@@ -1855,11 +1923,12 @@ def check_agentcore_gateway_configuration() -> List[Dict[str, Any]]:
                 severity=SeverityEnum.NA,
                 status=StatusEnum.PASSED
             ))
-            
+
         except AttributeError as e:
             # list_gateways method doesn't exist
             logger.info(f"Gateway API not available: {e}")
             findings.append(create_finding(
+                check_id="AC-13",
                 finding_name="AgentCore Gateway Configuration Check",
                 finding_details="Gateway API not yet available in bedrock-agentcore-control",
                 resolution="N/A - Gateway management may be done through other means",
@@ -1867,10 +1936,11 @@ def check_agentcore_gateway_configuration() -> List[Dict[str, Any]]:
                 severity=SeverityEnum.NA,
                 status=StatusEnum.NA
             ))
-            
+
         except ClientError as e:
             if e.response['Error']['Code'] == 'ResourceNotFoundException':
                 findings.append(create_finding(
+                    check_id="AC-13",
                     finding_name="AgentCore Gateway Configuration Check",
                     finding_details="No Gateway resources found",
                     resolution="N/A",
@@ -1880,10 +1950,11 @@ def check_agentcore_gateway_configuration() -> List[Dict[str, Any]]:
                 ))
             else:
                 raise
-            
+
     except Exception as e:
         logger.error(f"Error in gateway configuration check: {e}")
         findings.append(create_finding(
+            check_id="AC-13",
             finding_name="AgentCore Gateway Configuration Check",
             finding_details=f"Error during check: {str(e)}",
             resolution="Investigate error and retry assessment",
@@ -1962,6 +2033,7 @@ def lambda_handler(event, context):
                 logger.error(f"Error in check '{check_name}': {e}")
                 # Add error finding
                 all_findings.append(create_finding(
+                    check_id="AC-00",
                     finding_name=f"AgentCore {check_name} Check Error",
                     finding_details=f"Error during {check_name} check: {str(e)}",
                     resolution="Investigate error and retry assessment",

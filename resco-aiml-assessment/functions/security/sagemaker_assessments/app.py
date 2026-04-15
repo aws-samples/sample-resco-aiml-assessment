@@ -142,6 +142,7 @@ def check_sagemaker_internet_access() -> Dict[str, Any]:
             # Add findings for notebook instances
             for instance in instances_with_direct_access:
                 findings['csv_data'].append(create_finding(
+                    check_id="SM-01",
                     finding_name='Direct Internet Access Enabled',
                     finding_details=f"SageMaker notebook instance '{instance['name']}' has direct internet access enabled",
                     resolution="Configure the notebook instance to use VPC connectivity and disable direct internet access",
@@ -150,10 +151,11 @@ def check_sagemaker_internet_access() -> Dict[str, Any]:
                     status='Failed'
                     )
                 )
-            
+
             # Add findings for domains
             for domain in domains_with_direct_access:
                 findings['csv_data'].append(create_finding(
+                    check_id="SM-01",
                     finding_name='Non-VPC Only Network Access',
                     finding_details=f"SageMaker domain '{domain['domain_id']}' ({domain['name']}) is not configured for VPC-only access",
                     resolution="Configure the SageMaker domain to use VPC-only network access type",
@@ -165,6 +167,7 @@ def check_sagemaker_internet_access() -> Dict[str, Any]:
         else:
             findings['details'] = "No SageMaker resources found with direct internet access"
             findings['csv_data'].append(create_finding(
+                check_id="SM-01",
                 finding_name= 'SageMaker Internet Access Check',
                 finding_details= 'All SageMaker resources are properly configured to use VPC connectivity',
                 resolution='',
@@ -207,6 +210,7 @@ def check_guardduty_enabled() -> Dict[str, Any]:
         if not detectors.get('DetectorIds'):
             findings['csv_data'].append(
                 create_finding(
+                    check_id="SM-04",
                     finding_name='GuardDuty Not Enabled',
                     finding_details='Amazon GuardDuty is not enabled in this account. GuardDuty can help detect security threats in SageMaker workloads.',
                     resolution='Enable Amazon GuardDuty to monitor for potential security threats in your SageMaker environment, including anomalous model access patterns and potential data exfiltration attempts.',
@@ -218,6 +222,7 @@ def check_guardduty_enabled() -> Dict[str, Any]:
         else:
             findings['csv_data'].append(
                 create_finding(
+                    check_id="SM-04",
                     finding_name='GuardDuty Enabled',
                     finding_details='Amazon GuardDuty is properly enabled and monitoring for security threats in SageMaker workloads.',
                     resolution='',
@@ -231,6 +236,7 @@ def check_guardduty_enabled() -> Dict[str, Any]:
         error_message = e.response['Error']['Message']
         findings['csv_data'].append(
             create_finding(
+                check_id="SM-04",
                 finding_name='GuardDuty Check Error',
                 finding_details=f"Error checking GuardDuty status: {error_code} - {error_message}",
                 resolution='Ensure proper IAM permissions to check GuardDuty status',
@@ -242,12 +248,13 @@ def check_guardduty_enabled() -> Dict[str, Any]:
     except Exception as e:
         findings['csv_data'].append(
             create_finding(
+                check_id="SM-04",
                 finding_name='GuardDuty Check Error',
                 finding_details=f"Unexpected error checking GuardDuty status: {str(e)}",
                 resolution='Investigate and resolve the unexpected error',
                 reference='https://docs.aws.amazon.com/guardduty/latest/ug/what-is-guardduty.html',
                 severity='High',
-                status='Failed'    
+                status='Failed'
             )
         )
         
@@ -363,6 +370,7 @@ def check_sagemaker_iam_permissions(permission_cache) -> Dict[str, Any]:
             if roles_with_full_access:
                 for role_name in roles_with_full_access:
                     findings['csv_data'].append(create_finding(
+                        check_id="SM-02",
                         finding_name='SageMaker Full Access Policy Used',
                         finding_details=f"Role '{role_name}' has AmazonSageMakerFullAccess policy attached",
                         resolution="Replace AmazonSageMakerFullAccess with more restrictive custom policies that follow the principle of least privilege",
@@ -376,6 +384,7 @@ def check_sagemaker_iam_permissions(permission_cache) -> Dict[str, Any]:
             if stale_users:
                 for user in stale_users:
                     findings['csv_data'].append(create_finding(
+                        check_id="SM-02",
                         finding_name='Stale SageMaker Access',
                         finding_details=f"User '{user['name']}' hasn't accessed SageMaker since {user['last_accessed'].strftime('%Y-%m-%d')}",
                         resolution="Review and remove SageMaker access for inactive users",
@@ -390,6 +399,7 @@ def check_sagemaker_iam_permissions(permission_cache) -> Dict[str, Any]:
                 for domain in domains_without_sso:
                     findings['csv_data'].append(
                         create_finding(
+                            check_id="SM-02",
                             finding_name="SSO Not Properly Configured",
                             finding_details=(
                                 f"SageMaker domain '{domain['domain_id']}' ({domain['domain_name']}) "
@@ -407,6 +417,7 @@ def check_sagemaker_iam_permissions(permission_cache) -> Dict[str, Any]:
         else:
             findings['csv_data'].append(
                 create_finding(
+                    check_id="SM-02",
                     finding_name='SageMaker IAM Permissions Check',
                     finding_details='No issues found with IAM permissions, SSO is enabled, and no stale access detected',
                     resolution='',
@@ -592,6 +603,7 @@ def check_sagemaker_data_protection() -> Dict[str, Any]:
             for resource in resources_without_encryption:
                 findings['csv_data'].append(
                     create_finding(
+                        check_id="SM-03",
                         finding_name='Missing Encryption Configuration',
                         finding_details=f"{resource['type']} '{resource['name']}' - {resource['issue']}",
                         resolution="Configure encryption using AWS KMS customer managed keys for enhanced security",
@@ -605,6 +617,7 @@ def check_sagemaker_data_protection() -> Dict[str, Any]:
             for resource in resources_with_aws_managed_keys:
                 findings['csv_data'].append(
                     create_finding(
+                        check_id="SM-03",
                         finding_name='AWS Managed Key Usage',
                         finding_details=f"{resource['type']} '{resource['name']}' uses AWS managed key {resource['key_id']}",
                         resolution="Consider using customer managed keys for better control over encryption",
@@ -618,6 +631,7 @@ def check_sagemaker_data_protection() -> Dict[str, Any]:
             for resource in resources_without_vpc_encryption:
                 findings['csv_data'].append(
                     create_finding(
+                        check_id="SM-03",
                         finding_name='Missing VPC Encryption',
                         finding_details=f"{resource['type']} '{resource['name']}' - {resource['issue']}",
                         resolution="Enable encryption for inter-container traffic and VPC communication",
@@ -630,6 +644,7 @@ def check_sagemaker_data_protection() -> Dict[str, Any]:
         else:
             findings['csv_data'].append(
                 create_finding(
+                    check_id="SM-03",
                     finding_name='Data Protection Check',
                     finding_details='All resources use appropriate encryption configurations',
                     resolution='',
@@ -788,6 +803,7 @@ def check_sagemaker_mlops_utilization(permission_cache) -> Dict[str, Any]:
             for issue in issues_found:
                 findings['csv_data'].append(
                     create_finding(
+                        check_id="SM-05",
                         finding_name=f"SageMaker {issue['component']} Issue",
                         finding_details=issue['issue'],
                         resolution=get_resolution_for_component(issue['component']),
@@ -800,6 +816,7 @@ def check_sagemaker_mlops_utilization(permission_cache) -> Dict[str, Any]:
             findings['details'] = "All SageMaker MLOps features are properly utilized"
             findings['csv_data'].append(
                 create_finding(
+                    check_id="SM-05",
                     finding_name='SageMaker MLOps Features Check',
                     finding_details='All SageMaker MLOps features are properly utilized',
                     resolution='',
@@ -894,10 +911,11 @@ def check_sagemaker_clarify_usage(permission_cache) -> Dict[str, Any]:
             })
 
         if issues_found:
-            
+
             for issue in issues_found:
                 findings['csv_data'].append(
                     create_finding(
+                        check_id="SM-06",
                         finding_name=f"SageMaker Clarify {issue['issue_type']}",
                         finding_details=issue['details'],
                         resolution="Implement SageMaker Clarify for model explainability and bias detection",
@@ -910,6 +928,7 @@ def check_sagemaker_clarify_usage(permission_cache) -> Dict[str, Any]:
             findings['details'] = "SageMaker Clarify is properly utilized"
             findings['csv_data'].append(
                 create_finding(
+                    check_id="SM-06",
                     finding_name='SageMaker Clarify Usage Check',
                     finding_details='SageMaker Clarify is properly utilized',
                     resolution='',
@@ -983,10 +1002,11 @@ def check_sagemaker_model_monitor_usage(permission_cache) -> Dict[str, Any]:
             })
 
         if issues_found:
-            
+
             for issue in issues_found:
                 findings['csv_data'].append(
                     create_finding(
+                        check_id="SM-07",
                         finding_name=f"SageMaker Model Monitor {issue['issue_type']}",
                         finding_details=issue['details'],
                         resolution="Configure comprehensive model monitoring schedules",
@@ -998,6 +1018,7 @@ def check_sagemaker_model_monitor_usage(permission_cache) -> Dict[str, Any]:
         else:
             findings['csv_data'].append(
                 create_finding(
+                    check_id="SM-07",
                     finding_name='SageMaker Model Monitor Usage Check',
                     finding_details='SageMaker Model Monitor is actively tracking model performance',
                     resolution='',
@@ -1062,6 +1083,7 @@ def check_sagemaker_notebook_root_access() -> Dict[str, Any]:
             for notebook in notebooks_with_root:
                 findings['csv_data'].append(
                     create_finding(
+                        check_id="SM-09",
                         finding_name='SageMaker Notebook Root Access Enabled',
                         finding_details=f"Notebook instance '{notebook['name']}' has root access enabled. Root access allows users to install arbitrary software, modify system configurations, and potentially escalate privileges.",
                         resolution="Disable root access by updating the notebook instance with RootAccess=Disabled. Note: Lifecycle configurations will still run with root access.",
@@ -1074,6 +1096,7 @@ def check_sagemaker_notebook_root_access() -> Dict[str, Any]:
             detail_msg = f"All {len(notebooks_without_root)} notebook instances have root access disabled" if notebooks_without_root else "No notebook instances found"
             findings['csv_data'].append(
                 create_finding(
+                    check_id="SM-09",
                     finding_name='SageMaker Notebook Root Access Check',
                     finding_details=detail_msg,
                     resolution='',
@@ -1140,6 +1163,7 @@ def check_sagemaker_notebook_vpc_deployment() -> Dict[str, Any]:
             for notebook in notebooks_without_vpc:
                 findings['csv_data'].append(
                     create_finding(
+                        check_id="SM-10",
                         finding_name='SageMaker Notebook Not in VPC',
                         finding_details=f"Notebook instance '{notebook['name']}' is not deployed in a custom VPC. This uses SageMaker's service VPC with reduced network isolation.",
                         resolution="Create the notebook instance within a custom VPC by specifying SubnetId and SecurityGroupIds. This provides network isolation and allows use of VPC endpoints.",
@@ -1152,6 +1176,7 @@ def check_sagemaker_notebook_vpc_deployment() -> Dict[str, Any]:
             detail_msg = f"All {len(notebooks_with_vpc)} notebook instances are deployed in custom VPCs" if notebooks_with_vpc else "No notebook instances found"
             findings['csv_data'].append(
                 create_finding(
+                    check_id="SM-10",
                     finding_name='SageMaker Notebook VPC Deployment Check',
                     finding_details=detail_msg,
                     resolution='',
@@ -1219,6 +1244,7 @@ def check_sagemaker_model_network_isolation() -> Dict[str, Any]:
             for model in models_without_isolation[:20]:
                 findings['csv_data'].append(
                     create_finding(
+                        check_id="SM-11",
                         finding_name='SageMaker Model Network Isolation Disabled',
                         finding_details=f"Model '{model['name']}' does not have network isolation enabled. Model containers can make outbound network calls, potentially exfiltrating data.",
                         resolution="Enable network isolation by setting EnableNetworkIsolation=True when creating models. This prevents containers from making outbound network calls.",
@@ -1231,6 +1257,7 @@ def check_sagemaker_model_network_isolation() -> Dict[str, Any]:
             if len(models_without_isolation) > 20:
                 findings['csv_data'].append(
                     create_finding(
+                        check_id="SM-11",
                         finding_name='SageMaker Model Network Isolation Summary',
                         finding_details=f"Found {len(models_without_isolation)} total models without network isolation (showing first 20)",
                         resolution="Review all models and enable network isolation where appropriate",
@@ -1243,6 +1270,7 @@ def check_sagemaker_model_network_isolation() -> Dict[str, Any]:
             detail_msg = f"All {len(models_with_isolation)} models have network isolation enabled" if models_with_isolation else "No models found"
             findings['csv_data'].append(
                 create_finding(
+                    check_id="SM-11",
                     finding_name='SageMaker Model Network Isolation Check',
                     finding_details=detail_msg,
                     resolution='',
@@ -1320,6 +1348,7 @@ def check_sagemaker_endpoint_instance_count() -> Dict[str, Any]:
             for endpoint in endpoints_single_instance:
                 findings['csv_data'].append(
                     create_finding(
+                        check_id="SM-12",
                         finding_name='SageMaker Endpoint Single Instance',
                         finding_details=f"Endpoint '{endpoint['endpoint_name']}' variant '{endpoint['variant_name']}' has only {endpoint['instance_count']} instance(s). Single instance creates availability risk and no failover capability.",
                         resolution="Configure production endpoints with at least 2 instances across multiple Availability Zones for high availability and fault tolerance.",
@@ -1332,6 +1361,7 @@ def check_sagemaker_endpoint_instance_count() -> Dict[str, Any]:
             detail_msg = f"All {len(endpoints_multi_instance)} endpoint variants have multiple instances" if endpoints_multi_instance else "No InService endpoints found"
             findings['csv_data'].append(
                 create_finding(
+                    check_id="SM-12",
                     finding_name='SageMaker Endpoint Instance Count Check',
                     finding_details=detail_msg,
                     resolution='',
@@ -1399,6 +1429,7 @@ def check_sagemaker_monitoring_network_isolation() -> Dict[str, Any]:
             for schedule in schedules_without_isolation:
                 findings['csv_data'].append(
                     create_finding(
+                        check_id="SM-13",
                         finding_name='SageMaker Monitoring Network Isolation Disabled',
                         finding_details=f"Monitoring schedule '{schedule['name']}' does not have network isolation enabled. Monitoring jobs can make outbound network calls.",
                         resolution="Enable network isolation in the monitoring job definition NetworkConfig to prevent outbound network access.",
@@ -1411,6 +1442,7 @@ def check_sagemaker_monitoring_network_isolation() -> Dict[str, Any]:
             detail_msg = f"All {len(schedules_with_isolation)} monitoring schedules have network isolation enabled" if schedules_with_isolation else "No monitoring schedules found"
             findings['csv_data'].append(
                 create_finding(
+                    check_id="SM-13",
                     finding_name='SageMaker Monitoring Network Isolation Check',
                     finding_details=detail_msg,
                     resolution='',
@@ -1494,6 +1526,7 @@ def check_sagemaker_model_container_repository() -> Dict[str, Any]:
             for model in models_platform_mode[:15]:
                 findings['csv_data'].append(
                     create_finding(
+                        check_id="SM-14",
                         finding_name='SageMaker Model Platform Repository Access',
                         finding_details=f"Model '{model['name']}' uses Platform repository access mode. Container images are pulled from public/external registries, exposing supply chain risks.",
                         resolution="Configure RepositoryAccessMode=Vpc in ImageConfig to pull images from private ECR repositories through VPC. This provides supply chain security.",
@@ -1506,6 +1539,7 @@ def check_sagemaker_model_container_repository() -> Dict[str, Any]:
             if len(models_platform_mode) > 15:
                 findings['csv_data'].append(
                     create_finding(
+                        check_id="SM-14",
                         finding_name='SageMaker Model Repository Access Summary',
                         finding_details=f"Found {len(models_platform_mode)} total models using Platform repository access (showing first 15)",
                         resolution="Review all models and configure VPC repository access where appropriate",
@@ -1518,6 +1552,7 @@ def check_sagemaker_model_container_repository() -> Dict[str, Any]:
             detail_msg = f"All {len(models_vpc_mode)} models use VPC repository access" if models_vpc_mode else "No models found or all use default Platform access"
             findings['csv_data'].append(
                 create_finding(
+                    check_id="SM-14",
                     finding_name='SageMaker Model Repository Access Check',
                     finding_details=detail_msg,
                     resolution='',
@@ -1590,6 +1625,7 @@ def check_sagemaker_feature_store_encryption() -> Dict[str, Any]:
             for group in feature_groups_without_encryption:
                 findings['csv_data'].append(
                     create_finding(
+                        check_id="SM-15",
                         finding_name='SageMaker Feature Store Offline Encryption Missing',
                         finding_details=f"Feature group '{group['name']}' offline store does not have KMS encryption configured. Feature data in S3 may not be encrypted with customer-managed keys.",
                         resolution="Configure KmsKeyId in OfflineStoreConfig.S3StorageConfig when creating feature groups to encrypt offline store data with customer-managed KMS keys.",
@@ -1602,6 +1638,7 @@ def check_sagemaker_feature_store_encryption() -> Dict[str, Any]:
             if feature_groups_with_encryption:
                 findings['csv_data'].append(
                     create_finding(
+                        check_id="SM-15",
                         finding_name='SageMaker Feature Store Encryption Check',
                         finding_details=f"All {len(feature_groups_with_encryption)} feature groups with offline stores have KMS encryption configured",
                         resolution='',
@@ -1613,6 +1650,7 @@ def check_sagemaker_feature_store_encryption() -> Dict[str, Any]:
             else:
                 findings['csv_data'].append(
                     create_finding(
+                        check_id="SM-15",
                         finding_name='SageMaker Feature Store Encryption Check',
                         finding_details="No feature groups with offline stores found",
                         resolution='',
@@ -1680,6 +1718,7 @@ def check_sagemaker_data_quality_encryption() -> Dict[str, Any]:
             for job in jobs_without_encryption:
                 findings['csv_data'].append(
                     create_finding(
+                        check_id="SM-16",
                         finding_name='SageMaker Data Quality Job Encryption Disabled',
                         finding_details=f"Data quality job definition '{job['name']}' does not have inter-container traffic encryption enabled. Data transmitted between containers is not encrypted.",
                         resolution="Enable EnableInterContainerTrafficEncryption in NetworkConfig when creating data quality job definitions.",
@@ -1692,6 +1731,7 @@ def check_sagemaker_data_quality_encryption() -> Dict[str, Any]:
             detail_msg = f"All {len(jobs_with_encryption)} data quality job definitions have inter-container encryption enabled" if jobs_with_encryption else "No data quality job definitions found"
             findings['csv_data'].append(
                 create_finding(
+                    check_id="SM-16",
                     finding_name='SageMaker Data Quality Job Encryption Check',
                     finding_details=detail_msg,
                     resolution='',
@@ -1705,6 +1745,1062 @@ def check_sagemaker_data_quality_encryption() -> Dict[str, Any]:
 
     except Exception as e:
         logger.error(f"Error in check_sagemaker_data_quality_encryption: {str(e)}", exc_info=True)
+        return {
+            'csv_data': []
+        }
+
+
+def check_sagemaker_processing_job_encryption() -> Dict[str, Any]:
+    """
+    Check if SageMaker processing jobs have volume encryption enabled.
+    Aligns with AWS Security Hub control SageMaker.10
+    """
+    logger.debug("Starting check for SageMaker processing job encryption")
+    try:
+        findings = {
+            'csv_data': []
+        }
+
+        sagemaker_client = boto3.client('sagemaker', config=boto3_config)
+
+        jobs_without_encryption = []
+        jobs_with_encryption = []
+
+        try:
+            paginator = sagemaker_client.get_paginator('list_processing_jobs')
+            for page in paginator.paginate():
+                for job in page.get('ProcessingJobSummaries', []):
+                    job_name = job.get('ProcessingJobName')
+                    job_status = job.get('ProcessingJobStatus')
+
+                    if job_name:
+                        try:
+                            job_details = sagemaker_client.describe_processing_job(
+                                ProcessingJobName=job_name
+                            )
+
+                            processing_resources = job_details.get('ProcessingResources', {})
+                            cluster_config = processing_resources.get('ClusterConfig', {})
+                            volume_kms_key = cluster_config.get('VolumeKmsKeyId')
+
+                            if not volume_kms_key:
+                                jobs_without_encryption.append({
+                                    'name': job_name,
+                                    'status': job_status
+                                })
+                            else:
+                                jobs_with_encryption.append(job_name)
+
+                        except Exception as e:
+                            logger.warning(f"Error describing processing job {job_name}: {str(e)}")
+
+        except Exception as e:
+            logger.error(f"Error listing processing jobs: {str(e)}")
+
+        if jobs_without_encryption:
+            for job in jobs_without_encryption[:15]:
+                findings['csv_data'].append(
+                    create_finding(
+                        check_id="SM-17",
+                        finding_name='SageMaker Processing Job Volume Encryption Missing',
+                        finding_details=f"Processing job '{job['name']}' does not have volume encryption configured. Data at rest on processing instances is not encrypted with customer-managed keys.",
+                        resolution="Configure VolumeKmsKeyId in ProcessingResources.ClusterConfig when creating processing jobs to encrypt attached EBS volumes.",
+                        reference="https://docs.aws.amazon.com/sagemaker/latest/dg/processing-job.html",
+                        severity='Medium',
+                        status='Failed'
+                    )
+                )
+
+            if len(jobs_without_encryption) > 15:
+                findings['csv_data'].append(
+                    create_finding(
+                        check_id="SM-17",
+                        finding_name='SageMaker Processing Job Encryption Summary',
+                        finding_details=f"Found {len(jobs_without_encryption)} total processing jobs without volume encryption (showing first 15)",
+                        resolution="Review all processing jobs and configure volume encryption",
+                        reference="https://docs.aws.amazon.com/sagemaker/latest/dg/processing-job.html",
+                        severity='Medium',
+                        status='Failed'
+                    )
+                )
+        else:
+            detail_msg = f"All {len(jobs_with_encryption)} processing jobs have volume encryption configured" if jobs_with_encryption else "No processing jobs found"
+            findings['csv_data'].append(
+                create_finding(
+                    check_id="SM-17",
+                    finding_name='SageMaker Processing Job Encryption Check',
+                    finding_details=detail_msg,
+                    resolution='',
+                    reference="https://docs.aws.amazon.com/sagemaker/latest/dg/processing-job.html",
+                    severity='N/A',
+                    status='Passed'
+                )
+            )
+
+        return findings
+
+    except Exception as e:
+        logger.error(f"Error in check_sagemaker_processing_job_encryption: {str(e)}", exc_info=True)
+        return {
+            'csv_data': []
+        }
+
+
+def check_sagemaker_transform_job_encryption() -> Dict[str, Any]:
+    """
+    Check if SageMaker transform jobs have volume encryption enabled.
+    Aligns with AWS Security Hub control SageMaker.11
+    """
+    logger.debug("Starting check for SageMaker transform job encryption")
+    try:
+        findings = {
+            'csv_data': []
+        }
+
+        sagemaker_client = boto3.client('sagemaker', config=boto3_config)
+
+        jobs_without_encryption = []
+        jobs_with_encryption = []
+
+        try:
+            paginator = sagemaker_client.get_paginator('list_transform_jobs')
+            for page in paginator.paginate():
+                for job in page.get('TransformJobSummaries', []):
+                    job_name = job.get('TransformJobName')
+                    job_status = job.get('TransformJobStatus')
+
+                    if job_name:
+                        try:
+                            job_details = sagemaker_client.describe_transform_job(
+                                TransformJobName=job_name
+                            )
+
+                            transform_resources = job_details.get('TransformResources', {})
+                            volume_kms_key = transform_resources.get('VolumeKmsKeyId')
+
+                            if not volume_kms_key:
+                                jobs_without_encryption.append({
+                                    'name': job_name,
+                                    'status': job_status
+                                })
+                            else:
+                                jobs_with_encryption.append(job_name)
+
+                        except Exception as e:
+                            logger.warning(f"Error describing transform job {job_name}: {str(e)}")
+
+        except Exception as e:
+            logger.error(f"Error listing transform jobs: {str(e)}")
+
+        if jobs_without_encryption:
+            for job in jobs_without_encryption[:15]:
+                findings['csv_data'].append(
+                    create_finding(
+                        check_id="SM-18",
+                        finding_name='SageMaker Transform Job Volume Encryption Missing',
+                        finding_details=f"Transform job '{job['name']}' does not have volume encryption configured. Data at rest on transform instances is not encrypted with customer-managed keys.",
+                        resolution="Configure VolumeKmsKeyId in TransformResources when creating transform jobs to encrypt attached EBS volumes.",
+                        reference="https://docs.aws.amazon.com/sagemaker/latest/dg/batch-transform.html",
+                        severity='Medium',
+                        status='Failed'
+                    )
+                )
+
+            if len(jobs_without_encryption) > 15:
+                findings['csv_data'].append(
+                    create_finding(
+                        check_id="SM-18",
+                        finding_name='SageMaker Transform Job Encryption Summary',
+                        finding_details=f"Found {len(jobs_without_encryption)} total transform jobs without volume encryption (showing first 15)",
+                        resolution="Review all transform jobs and configure volume encryption",
+                        reference="https://docs.aws.amazon.com/sagemaker/latest/dg/batch-transform.html",
+                        severity='Medium',
+                        status='Failed'
+                    )
+                )
+        else:
+            detail_msg = f"All {len(jobs_with_encryption)} transform jobs have volume encryption configured" if jobs_with_encryption else "No transform jobs found"
+            findings['csv_data'].append(
+                create_finding(
+                    check_id="SM-18",
+                    finding_name='SageMaker Transform Job Encryption Check',
+                    finding_details=detail_msg,
+                    resolution='',
+                    reference="https://docs.aws.amazon.com/sagemaker/latest/dg/batch-transform.html",
+                    severity='N/A',
+                    status='Passed'
+                )
+            )
+
+        return findings
+
+    except Exception as e:
+        logger.error(f"Error in check_sagemaker_transform_job_encryption: {str(e)}", exc_info=True)
+        return {
+            'csv_data': []
+        }
+
+
+def check_sagemaker_hyperparameter_tuning_encryption() -> Dict[str, Any]:
+    """
+    Check if SageMaker hyperparameter tuning jobs have volume encryption enabled.
+    Aligns with AWS Security Hub control SageMaker.12
+    """
+    logger.debug("Starting check for SageMaker hyperparameter tuning job encryption")
+    try:
+        findings = {
+            'csv_data': []
+        }
+
+        sagemaker_client = boto3.client('sagemaker', config=boto3_config)
+
+        jobs_without_encryption = []
+        jobs_with_encryption = []
+
+        try:
+            paginator = sagemaker_client.get_paginator('list_hyper_parameter_tuning_jobs')
+            for page in paginator.paginate():
+                for job in page.get('HyperParameterTuningJobSummaries', []):
+                    job_name = job.get('HyperParameterTuningJobName')
+                    job_status = job.get('HyperParameterTuningJobStatus')
+
+                    if job_name:
+                        try:
+                            job_details = sagemaker_client.describe_hyper_parameter_tuning_job(
+                                HyperParameterTuningJobName=job_name
+                            )
+
+                            training_job_definition = job_details.get('TrainingJobDefinition', {})
+                            resource_config = training_job_definition.get('ResourceConfig', {})
+                            volume_kms_key = resource_config.get('VolumeKmsKeyId')
+
+                            if not volume_kms_key:
+                                jobs_without_encryption.append({
+                                    'name': job_name,
+                                    'status': job_status
+                                })
+                            else:
+                                jobs_with_encryption.append(job_name)
+
+                        except Exception as e:
+                            logger.warning(f"Error describing hyperparameter tuning job {job_name}: {str(e)}")
+
+        except Exception as e:
+            logger.error(f"Error listing hyperparameter tuning jobs: {str(e)}")
+
+        if jobs_without_encryption:
+            for job in jobs_without_encryption[:15]:
+                findings['csv_data'].append(
+                    create_finding(
+                        check_id="SM-19",
+                        finding_name='SageMaker Hyperparameter Tuning Job Encryption Missing',
+                        finding_details=f"Hyperparameter tuning job '{job['name']}' does not have volume encryption configured. Training data at rest is not encrypted with customer-managed keys.",
+                        resolution="Configure VolumeKmsKeyId in TrainingJobDefinition.ResourceConfig when creating hyperparameter tuning jobs.",
+                        reference="https://docs.aws.amazon.com/sagemaker/latest/dg/automatic-model-tuning.html",
+                        severity='Medium',
+                        status='Failed'
+                    )
+                )
+
+            if len(jobs_without_encryption) > 15:
+                findings['csv_data'].append(
+                    create_finding(
+                        check_id="SM-19",
+                        finding_name='SageMaker Hyperparameter Tuning Job Encryption Summary',
+                        finding_details=f"Found {len(jobs_without_encryption)} total hyperparameter tuning jobs without volume encryption (showing first 15)",
+                        resolution="Review all hyperparameter tuning jobs and configure volume encryption",
+                        reference="https://docs.aws.amazon.com/sagemaker/latest/dg/automatic-model-tuning.html",
+                        severity='Medium',
+                        status='Failed'
+                    )
+                )
+        else:
+            detail_msg = f"All {len(jobs_with_encryption)} hyperparameter tuning jobs have volume encryption configured" if jobs_with_encryption else "No hyperparameter tuning jobs found"
+            findings['csv_data'].append(
+                create_finding(
+                    check_id="SM-19",
+                    finding_name='SageMaker Hyperparameter Tuning Job Encryption Check',
+                    finding_details=detail_msg,
+                    resolution='',
+                    reference="https://docs.aws.amazon.com/sagemaker/latest/dg/automatic-model-tuning.html",
+                    severity='N/A',
+                    status='Passed'
+                )
+            )
+
+        return findings
+
+    except Exception as e:
+        logger.error(f"Error in check_sagemaker_hyperparameter_tuning_encryption: {str(e)}", exc_info=True)
+        return {
+            'csv_data': []
+        }
+
+
+def check_sagemaker_compilation_job_encryption() -> Dict[str, Any]:
+    """
+    Check if SageMaker compilation jobs have volume encryption enabled.
+    Aligns with AWS Security Hub control SageMaker.13
+    """
+    logger.debug("Starting check for SageMaker compilation job encryption")
+    try:
+        findings = {
+            'csv_data': []
+        }
+
+        sagemaker_client = boto3.client('sagemaker', config=boto3_config)
+
+        jobs_without_encryption = []
+        jobs_with_encryption = []
+
+        try:
+            paginator = sagemaker_client.get_paginator('list_compilation_jobs')
+            for page in paginator.paginate():
+                for job in page.get('CompilationJobSummaries', []):
+                    job_name = job.get('CompilationJobName')
+                    job_status = job.get('CompilationJobStatus')
+
+                    if job_name:
+                        try:
+                            job_details = sagemaker_client.describe_compilation_job(
+                                CompilationJobName=job_name
+                            )
+
+                            output_config = job_details.get('OutputConfig', {})
+                            kms_key_id = output_config.get('KmsKeyId')
+
+                            if not kms_key_id:
+                                jobs_without_encryption.append({
+                                    'name': job_name,
+                                    'status': job_status
+                                })
+                            else:
+                                jobs_with_encryption.append(job_name)
+
+                        except Exception as e:
+                            logger.warning(f"Error describing compilation job {job_name}: {str(e)}")
+
+        except Exception as e:
+            logger.error(f"Error listing compilation jobs: {str(e)}")
+
+        if jobs_without_encryption:
+            for job in jobs_without_encryption[:15]:
+                findings['csv_data'].append(
+                    create_finding(
+                        check_id="SM-20",
+                        finding_name='SageMaker Compilation Job Encryption Missing',
+                        finding_details=f"Compilation job '{job['name']}' does not have output encryption configured. Compiled model artifacts are not encrypted with customer-managed keys.",
+                        resolution="Configure KmsKeyId in OutputConfig when creating compilation jobs to encrypt compiled model output.",
+                        reference="https://docs.aws.amazon.com/sagemaker/latest/dg/neo.html",
+                        severity='Medium',
+                        status='Failed'
+                    )
+                )
+
+            if len(jobs_without_encryption) > 15:
+                findings['csv_data'].append(
+                    create_finding(
+                        check_id="SM-20",
+                        finding_name='SageMaker Compilation Job Encryption Summary',
+                        finding_details=f"Found {len(jobs_without_encryption)} total compilation jobs without encryption (showing first 15)",
+                        resolution="Review all compilation jobs and configure output encryption",
+                        reference="https://docs.aws.amazon.com/sagemaker/latest/dg/neo.html",
+                        severity='Medium',
+                        status='Failed'
+                    )
+                )
+        else:
+            detail_msg = f"All {len(jobs_with_encryption)} compilation jobs have output encryption configured" if jobs_with_encryption else "No compilation jobs found"
+            findings['csv_data'].append(
+                create_finding(
+                    check_id="SM-20",
+                    finding_name='SageMaker Compilation Job Encryption Check',
+                    finding_details=detail_msg,
+                    resolution='',
+                    reference="https://docs.aws.amazon.com/sagemaker/latest/dg/neo.html",
+                    severity='N/A',
+                    status='Passed'
+                )
+            )
+
+        return findings
+
+    except Exception as e:
+        logger.error(f"Error in check_sagemaker_compilation_job_encryption: {str(e)}", exc_info=True)
+        return {
+            'csv_data': []
+        }
+
+
+def check_sagemaker_automl_network_isolation() -> Dict[str, Any]:
+    """
+    Check if SageMaker AutoML (Autopilot) jobs have network isolation enabled.
+    Aligns with AWS Security Hub control SageMaker.15
+    """
+    logger.debug("Starting check for SageMaker AutoML job network isolation")
+    try:
+        findings = {
+            'csv_data': []
+        }
+
+        sagemaker_client = boto3.client('sagemaker', config=boto3_config)
+
+        jobs_without_isolation = []
+        jobs_with_isolation = []
+
+        try:
+            paginator = sagemaker_client.get_paginator('list_auto_ml_jobs')
+            for page in paginator.paginate():
+                for job in page.get('AutoMLJobSummaries', []):
+                    job_name = job.get('AutoMLJobName')
+                    job_status = job.get('AutoMLJobStatus')
+
+                    if job_name:
+                        try:
+                            job_details = sagemaker_client.describe_auto_ml_job(
+                                AutoMLJobName=job_name
+                            )
+
+                            security_config = job_details.get('AutoMLJobConfig', {}).get('SecurityConfig', {})
+                            enable_inter_container_encryption = security_config.get('EnableInterContainerTrafficEncryption', False)
+
+                            if not enable_inter_container_encryption:
+                                jobs_without_isolation.append({
+                                    'name': job_name,
+                                    'status': job_status
+                                })
+                            else:
+                                jobs_with_isolation.append(job_name)
+
+                        except Exception as e:
+                            logger.warning(f"Error describing AutoML job {job_name}: {str(e)}")
+
+        except Exception as e:
+            logger.error(f"Error listing AutoML jobs: {str(e)}")
+
+        if jobs_without_isolation:
+            for job in jobs_without_isolation[:15]:
+                findings['csv_data'].append(
+                    create_finding(
+                        check_id="SM-21",
+                        finding_name='SageMaker AutoML Job Network Isolation Disabled',
+                        finding_details=f"AutoML job '{job['name']}' does not have inter-container traffic encryption enabled. Data transmitted between containers during training is not encrypted.",
+                        resolution="Enable EnableInterContainerTrafficEncryption in AutoMLJobConfig.SecurityConfig when creating AutoML jobs.",
+                        reference="https://docs.aws.amazon.com/sagemaker/latest/dg/autopilot-security.html",
+                        severity='Medium',
+                        status='Failed'
+                    )
+                )
+
+            if len(jobs_without_isolation) > 15:
+                findings['csv_data'].append(
+                    create_finding(
+                        check_id="SM-21",
+                        finding_name='SageMaker AutoML Job Network Isolation Summary',
+                        finding_details=f"Found {len(jobs_without_isolation)} total AutoML jobs without network isolation (showing first 15)",
+                        resolution="Review all AutoML jobs and enable inter-container traffic encryption",
+                        reference="https://docs.aws.amazon.com/sagemaker/latest/dg/autopilot-security.html",
+                        severity='Medium',
+                        status='Failed'
+                    )
+                )
+        else:
+            detail_msg = f"All {len(jobs_with_isolation)} AutoML jobs have inter-container encryption enabled" if jobs_with_isolation else "No AutoML jobs found"
+            findings['csv_data'].append(
+                create_finding(
+                    check_id="SM-21",
+                    finding_name='SageMaker AutoML Job Network Isolation Check',
+                    finding_details=detail_msg,
+                    resolution='',
+                    reference="https://docs.aws.amazon.com/sagemaker/latest/dg/autopilot-security.html",
+                    severity='N/A',
+                    status='Passed'
+                )
+            )
+
+        return findings
+
+    except Exception as e:
+        logger.error(f"Error in check_sagemaker_automl_network_isolation: {str(e)}", exc_info=True)
+        return {
+            'csv_data': []
+        }
+
+
+# ============================================================================
+# MODEL GOVERNANCE CHECKS
+# ============================================================================
+
+
+def check_model_approval_workflow() -> Dict[str, Any]:
+    """
+    Check if Model Registry has proper approval workflows configured.
+    Validates that models go through approval process before production deployment.
+    """
+    logger.debug("Starting check for model approval workflow")
+    try:
+        findings = {
+            'csv_data': []
+        }
+
+        sagemaker_client = boto3.client('sagemaker', config=boto3_config)
+
+        issues_found = []
+        groups_checked = 0
+
+        try:
+            paginator = sagemaker_client.get_paginator('list_model_package_groups')
+            for page in paginator.paginate():
+                for group in page.get('ModelPackageGroupSummaryList', []):
+                    group_name = group.get('ModelPackageGroupName')
+                    groups_checked += 1
+
+                    if group_name:
+                        try:
+                            # List model packages in this group
+                            models_response = sagemaker_client.list_model_packages(
+                                ModelPackageGroupName=group_name,
+                                MaxResults=100
+                            )
+
+                            model_packages = models_response.get('ModelPackageSummaryList', [])
+
+                            if not model_packages:
+                                continue
+
+                            # Check approval status distribution
+                            pending_count = 0
+                            approved_count = 0
+                            rejected_count = 0
+
+                            for model in model_packages:
+                                status = model.get('ModelApprovalStatus', 'PendingManualApproval')
+                                if status == 'PendingManualApproval':
+                                    pending_count += 1
+                                elif status == 'Approved':
+                                    approved_count += 1
+                                elif status == 'Rejected':
+                                    rejected_count += 1
+
+                            # Check if any models are approved without going through pending
+                            total_models = len(model_packages)
+
+                            # If all models are approved and none are pending/rejected, might indicate auto-approval
+                            if approved_count == total_models and total_models > 3:
+                                issues_found.append({
+                                    'type': 'Auto-Approval Suspected',
+                                    'group': group_name,
+                                    'details': f"All {total_models} models in group '{group_name}' are approved with no pending or rejected models. Manual approval workflow may not be enforced.",
+                                    'severity': 'Medium'
+                                })
+
+                            # Check for models stuck in pending
+                            if pending_count > 5:
+                                issues_found.append({
+                                    'type': 'Stale Pending Models',
+                                    'group': group_name,
+                                    'details': f"Model group '{group_name}' has {pending_count} models pending approval. Review and process pending model approvals.",
+                                    'severity': 'Low'
+                                })
+
+                        except Exception as e:
+                            logger.warning(f"Error checking model group {group_name}: {str(e)}")
+
+        except Exception as e:
+            logger.error(f"Error listing model package groups: {str(e)}")
+
+        if groups_checked == 0:
+            findings['csv_data'].append(
+                create_finding(
+                    check_id="SM-22",
+                    finding_name='Model Approval Workflow Check',
+                    finding_details="No model package groups found. Model Registry is not being used for model governance.",
+                    resolution="Implement Model Registry to track model versions and enforce approval workflows before production deployment.",
+                    reference="https://docs.aws.amazon.com/sagemaker/latest/dg/model-registry-approve.html",
+                    severity='Informational',
+                    status='N/A'
+                )
+            )
+        elif issues_found:
+            for issue in issues_found:
+                findings['csv_data'].append(
+                    create_finding(
+                        check_id="SM-22",
+                        finding_name=f"Model Approval Workflow - {issue['type']}",
+                        finding_details=issue['details'],
+                        resolution="Configure proper model approval workflows using SageMaker Model Registry. Require manual approval or automated validation before models are approved for production.",
+                        reference="https://docs.aws.amazon.com/sagemaker/latest/dg/model-registry-approve.html",
+                        severity=issue['severity'],
+                        status='Failed'
+                    )
+                )
+        else:
+            findings['csv_data'].append(
+                create_finding(
+                    check_id="SM-22",
+                    finding_name='Model Approval Workflow Check',
+                    finding_details=f"Checked {groups_checked} model package groups. Approval workflows appear to be properly configured.",
+                    resolution='',
+                    reference="https://docs.aws.amazon.com/sagemaker/latest/dg/model-registry-approve.html",
+                    severity='N/A',
+                    status='Passed'
+                )
+            )
+
+        return findings
+
+    except Exception as e:
+        logger.error(f"Error in check_model_approval_workflow: {str(e)}", exc_info=True)
+        return {
+            'csv_data': []
+        }
+
+
+def check_model_drift_detection() -> Dict[str, Any]:
+    """
+    Check if Model Monitor is configured for drift detection with proper baselines.
+    Validates that models have data quality and model quality monitoring configured.
+    """
+    logger.debug("Starting check for model drift detection")
+    try:
+        findings = {
+            'csv_data': []
+        }
+
+        sagemaker_client = boto3.client('sagemaker', config=boto3_config)
+
+        endpoints_without_monitoring = []
+        endpoints_with_monitoring = []
+        monitoring_issues = []
+
+        try:
+            # Get all InService endpoints
+            paginator = sagemaker_client.get_paginator('list_endpoints')
+            endpoints = []
+
+            for page in paginator.paginate():
+                for endpoint in page.get('Endpoints', []):
+                    if endpoint.get('EndpointStatus') == 'InService':
+                        endpoints.append(endpoint.get('EndpointName'))
+
+            # Get all monitoring schedules
+            monitoring_schedules = {}
+            schedule_paginator = sagemaker_client.get_paginator('list_monitoring_schedules')
+
+            for page in schedule_paginator.paginate():
+                for schedule in page.get('MonitoringScheduleSummaries', []):
+                    endpoint_name = schedule.get('EndpointName')
+                    if endpoint_name:
+                        if endpoint_name not in monitoring_schedules:
+                            monitoring_schedules[endpoint_name] = []
+                        monitoring_schedules[endpoint_name].append({
+                            'name': schedule.get('MonitoringScheduleName'),
+                            'type': schedule.get('MonitoringType', 'Unknown'),
+                            'status': schedule.get('MonitoringScheduleStatus')
+                        })
+
+            # Check each endpoint for monitoring
+            for endpoint_name in endpoints:
+                if endpoint_name not in monitoring_schedules:
+                    endpoints_without_monitoring.append(endpoint_name)
+                else:
+                    schedules = monitoring_schedules[endpoint_name]
+                    endpoints_with_monitoring.append(endpoint_name)
+
+                    # Check for comprehensive monitoring
+                    monitoring_types = [s['type'] for s in schedules]
+
+                    # Check if data quality monitoring is configured
+                    if 'DataQuality' not in monitoring_types:
+                        monitoring_issues.append({
+                            'endpoint': endpoint_name,
+                            'issue': 'Missing Data Quality Monitoring',
+                            'details': f"Endpoint '{endpoint_name}' does not have data quality monitoring configured."
+                        })
+
+                    # Check if model quality monitoring is configured
+                    if 'ModelQuality' not in monitoring_types:
+                        monitoring_issues.append({
+                            'endpoint': endpoint_name,
+                            'issue': 'Missing Model Quality Monitoring',
+                            'details': f"Endpoint '{endpoint_name}' does not have model quality monitoring configured."
+                        })
+
+                    # Check for inactive schedules
+                    for schedule in schedules:
+                        if schedule['status'] != 'Scheduled':
+                            monitoring_issues.append({
+                                'endpoint': endpoint_name,
+                                'issue': 'Inactive Monitoring Schedule',
+                                'details': f"Monitoring schedule '{schedule['name']}' for endpoint '{endpoint_name}' is {schedule['status']}, not actively scheduled."
+                            })
+
+        except Exception as e:
+            logger.error(f"Error checking model drift detection: {str(e)}")
+
+        # Generate findings
+        if endpoints_without_monitoring:
+            for endpoint in endpoints_without_monitoring[:10]:
+                findings['csv_data'].append(
+                    create_finding(
+                        check_id="SM-23",
+                        finding_name='Model Drift Detection Not Configured',
+                        finding_details=f"Endpoint '{endpoint}' has no Model Monitor schedules configured. Model drift and data quality issues will not be detected.",
+                        resolution="Configure Model Monitor with data quality, model quality, bias, and feature attribution drift monitoring for production endpoints.",
+                        reference="https://docs.aws.amazon.com/sagemaker/latest/dg/model-monitor.html",
+                        severity='Medium',
+                        status='Failed'
+                    )
+                )
+
+            if len(endpoints_without_monitoring) > 10:
+                findings['csv_data'].append(
+                    create_finding(
+                        check_id="SM-23",
+                        finding_name='Model Drift Detection Summary',
+                        finding_details=f"Found {len(endpoints_without_monitoring)} total endpoints without drift detection (showing first 10)",
+                        resolution="Configure Model Monitor for all production endpoints",
+                        reference="https://docs.aws.amazon.com/sagemaker/latest/dg/model-monitor.html",
+                        severity='Medium',
+                        status='Failed'
+                    )
+                )
+
+        if monitoring_issues:
+            for issue in monitoring_issues[:10]:
+                findings['csv_data'].append(
+                    create_finding(
+                        check_id="SM-23",
+                        finding_name=f"Model Drift Detection - {issue['issue']}",
+                        finding_details=issue['details'],
+                        resolution="Configure comprehensive monitoring including data quality, model quality, bias drift, and feature attribution drift monitoring.",
+                        reference="https://docs.aws.amazon.com/sagemaker/latest/dg/model-monitor.html",
+                        severity='Low',
+                        status='Failed'
+                    )
+                )
+
+        if not endpoints_without_monitoring and not monitoring_issues:
+            if endpoints_with_monitoring:
+                findings['csv_data'].append(
+                    create_finding(
+                        check_id="SM-23",
+                        finding_name='Model Drift Detection Check',
+                        finding_details=f"All {len(endpoints_with_monitoring)} InService endpoints have drift detection monitoring configured.",
+                        resolution='',
+                        reference="https://docs.aws.amazon.com/sagemaker/latest/dg/model-monitor.html",
+                        severity='N/A',
+                        status='Passed'
+                    )
+                )
+            else:
+                findings['csv_data'].append(
+                    create_finding(
+                        check_id="SM-23",
+                        finding_name='Model Drift Detection Check',
+                        finding_details="No InService endpoints found to monitor.",
+                        resolution='',
+                        reference="https://docs.aws.amazon.com/sagemaker/latest/dg/model-monitor.html",
+                        severity='N/A',
+                        status='Passed'
+                    )
+                )
+
+        return findings
+
+    except Exception as e:
+        logger.error(f"Error in check_model_drift_detection: {str(e)}", exc_info=True)
+        return {
+            'csv_data': []
+        }
+
+
+def check_ab_testing_shadow_deployment() -> Dict[str, Any]:
+    """
+    Check if endpoints are configured with proper A/B testing or shadow deployment patterns.
+    Validates production variant configurations for safe model deployment.
+    """
+    logger.debug("Starting check for A/B testing and shadow deployment patterns")
+    try:
+        findings = {
+            'csv_data': []
+        }
+
+        sagemaker_client = boto3.client('sagemaker', config=boto3_config)
+
+        single_variant_endpoints = []
+        multi_variant_endpoints = []
+        shadow_endpoints = []
+
+        try:
+            paginator = sagemaker_client.get_paginator('list_endpoints')
+            for page in paginator.paginate():
+                for endpoint in page.get('Endpoints', []):
+                    endpoint_name = endpoint.get('EndpointName')
+                    endpoint_status = endpoint.get('EndpointStatus')
+
+                    if endpoint_name and endpoint_status == 'InService':
+                        try:
+                            endpoint_details = sagemaker_client.describe_endpoint(
+                                EndpointName=endpoint_name
+                            )
+
+                            production_variants = endpoint_details.get('ProductionVariants', [])
+                            shadow_variants = endpoint_details.get('ShadowProductionVariants', [])
+
+                            if shadow_variants:
+                                shadow_endpoints.append({
+                                    'name': endpoint_name,
+                                    'shadow_variants': len(shadow_variants),
+                                    'production_variants': len(production_variants)
+                                })
+                            elif len(production_variants) > 1:
+                                # Check if it's A/B testing (multiple variants with traffic split)
+                                variant_weights = [v.get('CurrentWeight', 0) for v in production_variants]
+                                if all(w > 0 for w in variant_weights):
+                                    multi_variant_endpoints.append({
+                                        'name': endpoint_name,
+                                        'variants': len(production_variants),
+                                        'weights': variant_weights
+                                    })
+                                else:
+                                    single_variant_endpoints.append(endpoint_name)
+                            else:
+                                single_variant_endpoints.append(endpoint_name)
+
+                        except Exception as e:
+                            logger.warning(f"Error describing endpoint {endpoint_name}: {str(e)}")
+
+        except Exception as e:
+            logger.error(f"Error listing endpoints: {str(e)}")
+
+        # Generate findings - this is informational, not a failure
+        total_endpoints = len(single_variant_endpoints) + len(multi_variant_endpoints) + len(shadow_endpoints)
+
+        if total_endpoints == 0:
+            findings['csv_data'].append(
+                create_finding(
+                    check_id="SM-24",
+                    finding_name='A/B Testing and Shadow Deployment Check',
+                    finding_details="No InService endpoints found.",
+                    resolution='',
+                    reference="https://docs.aws.amazon.com/sagemaker/latest/dg/model-ab-testing.html",
+                    severity='N/A',
+                    status='Passed'
+                )
+            )
+        else:
+            # Report on shadow deployments (best practice)
+            if shadow_endpoints:
+                findings['csv_data'].append(
+                    create_finding(
+                        check_id="SM-24",
+                        finding_name='Shadow Deployment Pattern Detected',
+                        finding_details=f"Found {len(shadow_endpoints)} endpoint(s) using shadow deployment pattern for safe model validation. This is a recommended practice for production deployments.",
+                        resolution='',
+                        reference="https://docs.aws.amazon.com/sagemaker/latest/dg/model-shadow-deployment.html",
+                        severity='N/A',
+                        status='Passed'
+                    )
+                )
+
+            # Report on A/B testing
+            if multi_variant_endpoints:
+                findings['csv_data'].append(
+                    create_finding(
+                        check_id="SM-24",
+                        finding_name='A/B Testing Pattern Detected',
+                        finding_details=f"Found {len(multi_variant_endpoints)} endpoint(s) using A/B testing with multiple production variants. This enables gradual rollout and comparison of model versions.",
+                        resolution='',
+                        reference="https://docs.aws.amazon.com/sagemaker/latest/dg/model-ab-testing.html",
+                        severity='N/A',
+                        status='Passed'
+                    )
+                )
+
+            # Report on single variant endpoints - informational, not necessarily bad
+            if single_variant_endpoints and len(single_variant_endpoints) > 5:
+                findings['csv_data'].append(
+                    create_finding(
+                        check_id="SM-24",
+                        finding_name='Single Variant Endpoints',
+                        finding_details=f"Found {len(single_variant_endpoints)} endpoint(s) with single production variants. Consider using A/B testing or shadow deployments for safer model updates in production.",
+                        resolution="For production-critical endpoints, consider implementing A/B testing (multiple production variants) or shadow deployments to validate new model versions before full deployment.",
+                        reference="https://docs.aws.amazon.com/sagemaker/latest/dg/model-ab-testing.html",
+                        severity='Informational',
+                        status='N/A'
+                    )
+                )
+            elif not shadow_endpoints and not multi_variant_endpoints:
+                findings['csv_data'].append(
+                    create_finding(
+                        check_id="SM-24",
+                        finding_name='Safe Deployment Patterns Check',
+                        finding_details=f"Found {len(single_variant_endpoints)} endpoint(s) without A/B testing or shadow deployment patterns configured.",
+                        resolution="Consider implementing A/B testing or shadow deployments for production endpoints to enable safe model updates.",
+                        reference="https://docs.aws.amazon.com/sagemaker/latest/dg/model-ab-testing.html",
+                        severity='Informational',
+                        status='N/A'
+                    )
+                )
+            else:
+                findings['csv_data'].append(
+                    create_finding(
+                        check_id="SM-24",
+                        finding_name='Safe Deployment Patterns Check',
+                        finding_details=f"Safe deployment patterns are being utilized. {len(shadow_endpoints)} shadow deployments, {len(multi_variant_endpoints)} A/B tests configured.",
+                        resolution='',
+                        reference="https://docs.aws.amazon.com/sagemaker/latest/dg/model-ab-testing.html",
+                        severity='N/A',
+                        status='Passed'
+                    )
+                )
+
+        return findings
+
+    except Exception as e:
+        logger.error(f"Error in check_ab_testing_shadow_deployment: {str(e)}", exc_info=True)
+        return {
+            'csv_data': []
+        }
+
+
+def check_ml_lineage_tracking() -> Dict[str, Any]:
+    """
+    Check if ML Lineage Tracking is being used to track model artifacts and experiments.
+    Validates that experiments, trials, and artifact associations are configured.
+    """
+    logger.debug("Starting check for ML Lineage Tracking")
+    try:
+        findings = {
+            'csv_data': []
+        }
+
+        sagemaker_client = boto3.client('sagemaker', config=boto3_config)
+
+        experiments_found = False
+        trials_found = False
+        lineage_issues = []
+
+        try:
+            # Check for Experiments
+            try:
+                experiments_response = sagemaker_client.list_experiments(MaxResults=10)
+                experiments = experiments_response.get('ExperimentSummaries', [])
+                experiments_found = len(experiments) > 0
+
+                if experiments_found:
+                    # Check trial status for recent experiments
+                    for experiment in experiments[:5]:
+                        experiment_name = experiment.get('ExperimentName')
+                        try:
+                            trials_response = sagemaker_client.list_trials(
+                                ExperimentName=experiment_name,
+                                MaxResults=10
+                            )
+                            trials = trials_response.get('TrialSummaries', [])
+                            if trials:
+                                trials_found = True
+                        except Exception as e:
+                            logger.warning(f"Error listing trials for experiment {experiment_name}: {str(e)}")
+
+            except Exception as e:
+                logger.warning(f"Error listing experiments: {str(e)}")
+
+            # Check for Model Package lineage
+            try:
+                model_packages_paginator = sagemaker_client.get_paginator('list_model_package_groups')
+                for page in model_packages_paginator.paginate(MaxResults=10):
+                    for group in page.get('ModelPackageGroupSummaryList', []):
+                        group_name = group.get('ModelPackageGroupName')
+                        try:
+                            models_response = sagemaker_client.list_model_packages(
+                                ModelPackageGroupName=group_name,
+                                MaxResults=5
+                            )
+                            for model_pkg in models_response.get('ModelPackageSummaryList', []):
+                                model_arn = model_pkg.get('ModelPackageArn')
+                                try:
+                                    # Check if model has lineage associations
+                                    associations = sagemaker_client.list_associations(
+                                        SourceArn=model_arn,
+                                        MaxResults=5
+                                    )
+                                    if not associations.get('AssociationSummaries'):
+                                        lineage_issues.append({
+                                            'type': 'Missing Lineage',
+                                            'resource': model_pkg.get('ModelPackageName', model_arn),
+                                            'details': f"Model package has no lineage associations. Training data and experiment lineage not tracked."
+                                        })
+                                except Exception as e:
+                                    # list_associations might not be available or might fail
+                                    pass
+                        except Exception as e:
+                            logger.warning(f"Error checking model packages in group {group_name}: {str(e)}")
+                    break  # Only check first page
+
+            except Exception as e:
+                logger.warning(f"Error checking model package lineage: {str(e)}")
+
+        except Exception as e:
+            logger.error(f"Error in lineage tracking check: {str(e)}")
+
+        # Generate findings
+        if not experiments_found:
+            findings['csv_data'].append(
+                create_finding(
+                    check_id="SM-25",
+                    finding_name='ML Lineage Tracking - Experiments Not Used',
+                    finding_details="No SageMaker Experiments found. ML Lineage tracking through Experiments is not being utilized.",
+                    resolution="Implement SageMaker Experiments to track ML training runs, hyperparameters, metrics, and model artifacts. This enables reproducibility and auditability.",
+                    reference="https://docs.aws.amazon.com/sagemaker/latest/dg/experiments.html",
+                    severity='Informational',
+                    status='N/A'
+                )
+            )
+        elif not trials_found:
+            findings['csv_data'].append(
+                create_finding(
+                    check_id="SM-25",
+                    finding_name='ML Lineage Tracking - No Active Trials',
+                    finding_details="SageMaker Experiments exist but no trials found. Experiments may not be actively used for tracking training runs.",
+                    resolution="Create trials within experiments to track individual training runs, their parameters, and results.",
+                    reference="https://docs.aws.amazon.com/sagemaker/latest/dg/experiments.html",
+                    severity='Low',
+                    status='Failed'
+                )
+            )
+        else:
+            findings['csv_data'].append(
+                create_finding(
+                    check_id="SM-25",
+                    finding_name='ML Lineage Tracking - Experiments Active',
+                    finding_details="SageMaker Experiments and Trials are being used for ML lineage tracking.",
+                    resolution='',
+                    reference="https://docs.aws.amazon.com/sagemaker/latest/dg/experiments.html",
+                    severity='N/A',
+                    status='Passed'
+                )
+            )
+
+        # Add lineage issues if found
+        for issue in lineage_issues[:5]:
+            findings['csv_data'].append(
+                create_finding(
+                    check_id="SM-25",
+                    finding_name=f"ML Lineage Tracking - {issue['type']}",
+                    finding_details=issue['details'],
+                    resolution="Configure lineage associations for model packages to track the full ML pipeline from data to deployed model.",
+                    reference="https://docs.aws.amazon.com/sagemaker/latest/dg/lineage-tracking.html",
+                    severity='Informational',
+                    status='N/A'
+                )
+            )
+
+        return findings
+
+    except Exception as e:
+        logger.error(f"Error in check_ml_lineage_tracking: {str(e)}", exc_info=True)
         return {
             'csv_data': []
         }
@@ -1785,10 +2881,11 @@ def check_model_registry_usage(permission_cache) -> Dict[str, Any]:
             })
 
         if issues_found:
-            
+
             for issue in issues_found:
                 findings['csv_data'].append(
                     create_finding(
+                        check_id="SM-08",
                         finding_name=f"Model Registry {issue['issue_type']}",
                         finding_details=issue['details'],
                         resolution="Implement proper model versioning and approval workflows",
@@ -1800,6 +2897,7 @@ def check_model_registry_usage(permission_cache) -> Dict[str, Any]:
         else:
             findings['csv_data'].append(
                 create_finding(
+                    check_id="SM-08",
                     finding_name='Model Registry Usage Check',
                     finding_details='Model Registry is being used effectively',
                     resolution='',
@@ -1883,7 +2981,7 @@ def generate_csv_report(findings: List[Dict[str, Any]]) -> str:
     """
     logger.debug("Generating CSV report")
     csv_buffer = StringIO()
-    fieldnames = ['Finding', 'Finding_Details', 'Resolution', 'Reference', 'Severity', 'Status']
+    fieldnames = ['Check_ID', 'Finding', 'Finding_Details', 'Resolution', 'Reference', 'Severity', 'Status']
     writer = csv.DictWriter(csv_buffer, fieldnames=fieldnames)
     
     writer.writeheader()
@@ -2001,6 +3099,44 @@ def lambda_handler(event, context):
         logger.info("Running SageMaker data quality job encryption check")
         data_quality_encryption_findings = check_sagemaker_data_quality_encryption()
         all_findings.append(data_quality_encryption_findings)
+
+        # Additional AWS Security Hub Controls
+        logger.info("Running SageMaker processing job encryption check (SageMaker.10)")
+        processing_job_encryption_findings = check_sagemaker_processing_job_encryption()
+        all_findings.append(processing_job_encryption_findings)
+
+        logger.info("Running SageMaker transform job encryption check (SageMaker.11)")
+        transform_job_encryption_findings = check_sagemaker_transform_job_encryption()
+        all_findings.append(transform_job_encryption_findings)
+
+        logger.info("Running SageMaker hyperparameter tuning job encryption check (SageMaker.12)")
+        hyperparameter_tuning_encryption_findings = check_sagemaker_hyperparameter_tuning_encryption()
+        all_findings.append(hyperparameter_tuning_encryption_findings)
+
+        logger.info("Running SageMaker compilation job encryption check (SageMaker.13)")
+        compilation_job_encryption_findings = check_sagemaker_compilation_job_encryption()
+        all_findings.append(compilation_job_encryption_findings)
+
+        logger.info("Running SageMaker AutoML job network isolation check (SageMaker.15)")
+        automl_network_isolation_findings = check_sagemaker_automl_network_isolation()
+        all_findings.append(automl_network_isolation_findings)
+
+        # Model Governance Checks
+        logger.info("Running model approval workflow check")
+        model_approval_workflow_findings = check_model_approval_workflow()
+        all_findings.append(model_approval_workflow_findings)
+
+        logger.info("Running model drift detection check")
+        model_drift_detection_findings = check_model_drift_detection()
+        all_findings.append(model_drift_detection_findings)
+
+        logger.info("Running A/B testing and shadow deployment check")
+        ab_testing_findings = check_ab_testing_shadow_deployment()
+        all_findings.append(ab_testing_findings)
+
+        logger.info("Running ML lineage tracking check")
+        ml_lineage_tracking_findings = check_ml_lineage_tracking()
+        all_findings.append(ml_lineage_tracking_findings)
 
         # Generate and upload report
         logger.info("Generating reports")

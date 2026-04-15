@@ -148,6 +148,7 @@ def check_marketplace_subscription_access(permission_cache) -> Dict[str, Any]:
             for identity in overly_permissive_identities:
                 findings['csv_data'].append(
                     create_finding(
+                        check_id="BR-03",
                         finding_name="Marketplace Subscription Access Check",
                         finding_details=f"{identity['type'].capitalize()} '{identity['name']}' has overly permissive marketplace subscription access through policy '{identity['policy']}'",
                         resolution="Ensure that users have access to only the models that you want user to be able to subscribe to based on your organizational policies. For example, you may want users to have access to only text based models and not image and video generation model. This can also help to keep cost in check.",
@@ -160,6 +161,7 @@ def check_marketplace_subscription_access(permission_cache) -> Dict[str, Any]:
             findings['details'] = "No identities found with overly permissive marketplace subscription access"
             findings['csv_data'].append(
                 create_finding(
+                    check_id="BR-03",
                     finding_name="Marketplace Subscription Access Check",
                     finding_details="No identities found with overly permissive marketplace subscription access",
                     resolution="No action required",
@@ -266,6 +268,7 @@ def check_stale_bedrock_access(permission_cache) -> Dict[str, Any]:
             logger.info("No identities found with Bedrock access")
             findings['csv_data'].append(
                 create_finding(
+                    check_id="BR-14",
                     finding_name="Stale Bedrock Access Check",
                     finding_details="No identities found with Bedrock access",
                     resolution="No action required",
@@ -330,6 +333,7 @@ def check_stale_bedrock_access(permission_cache) -> Dict[str, Any]:
                 last_accessed_str = identity['last_accessed'].strftime('%Y-%m-%d') if identity['last_accessed'] else 'never'
                 findings['csv_data'].append(
                     create_finding(
+                        check_id="BR-14",
                         finding_name="Stale Bedrock Access Check",
                         finding_details=f"{identity['type'].capitalize()} '{identity['name']}' last accessed Bedrock on {last_accessed_str}",
                         resolution="You can use last accessed information to refine your policies and allow access to only the services and actions that your IAM identities and policies use. This helps you to better adhere to the best practice of least privilege.",
@@ -352,6 +356,7 @@ def check_stale_bedrock_access(permission_cache) -> Dict[str, Any]:
             findings['details'] = finding_details
             findings['csv_data'].append(
                 create_finding(
+                    check_id="BR-14",
                     finding_name="Stale Bedrock Access Check",
                     finding_details=finding_details,
                     resolution="No action required",
@@ -401,6 +406,7 @@ def check_bedrock_full_access_roles(permission_cache) -> Dict[str, Any]:
         for role in bedrock_roles:
             findings['csv_data'].append(
                 create_finding(
+                    check_id="BR-01",
                     finding_name="AmazonBedrockFullAccess role check",
                     finding_details=f"Role '{role['name']}' has AmazonBedrockFullAccess policy attached",
                     resolution="Limit the AmazonBedrockFullAccess policy only to required access",
@@ -413,6 +419,7 @@ def check_bedrock_full_access_roles(permission_cache) -> Dict[str, Any]:
         findings['details'] = "No roles found with AmazonBedrockFullAccess policy"
         findings['csv_data'].append(
             create_finding(
+                check_id="BR-01",
                 finding_name="AmazonBedrockFullAccess role check",
                 finding_details="No roles found with AmazonBedrockFullAccess policy",
                 resolution="No action required",
@@ -622,6 +629,7 @@ def check_bedrock_access_and_vpc_endpoints(permission_cache) -> Dict[str, Any]:
                 
                 findings['csv_data'].append(
                     create_finding(
+                        check_id="BR-02",
                         finding_name='Amazon Bedrock private connectivity not used',
                         finding_details=finding_detail,
                         resolution='Create a VPC endpoint in your VPC with any of the following Bedrock service endpoints that your application may be using:\n- com.amazonaws.region.bedrock\n- com.amazonaws.region.bedrock-runtime\n- com.amazonaws.region.bedrock-agent\n- com.amazonaws.region.bedrock-agent-runtime',
@@ -673,6 +681,7 @@ def check_bedrock_guardrails() -> Dict[str, Any]:
                 findings['details'] = f"Found {len(guardrail_names)} Bedrock guardrails configured"
                 findings['csv_data'].append(
                     create_finding(
+                        check_id="BR-05",
                         finding_name="Bedrock Guardrails Check",
                         finding_details=f"Amazon Bedrock Guardrails are properly configured with {len(guardrail_names)} guardrails",
                         resolution="No action required. Continue monitoring and updating guardrails as needed.",
@@ -686,6 +695,7 @@ def check_bedrock_guardrails() -> Dict[str, Any]:
                 findings['details'] = "No Bedrock guardrails configured"
                 findings['csv_data'].append(
                     create_finding(
+                        check_id="BR-05",
                         finding_name="Bedrock Guardrails Check",
                         finding_details="No Amazon Bedrock Guardrails are configured. This may expose your application to potential risks such as harmful content, sensitive information disclosure, or hallucinations.",
                         resolution="Configure Bedrock Guardrails to implement safeguards such as:\n- Content filters to block harmful content\n- Denied topics to prevent undesirable discussions\n- Sensitive information filters to protect PII\n- Contextual grounding checks to prevent hallucinations",
@@ -700,6 +710,7 @@ def check_bedrock_guardrails() -> Dict[str, Any]:
             findings['details'] = f"Error validating guardrails configuration: {str(e)}"
             findings['csv_data'].append(
                 create_finding(
+                    check_id="BR-05",
                     finding_name="Bedrock Guardrails Check",
                     finding_details=f"Error checking Bedrock Guardrails configuration: {str(e)}",
                     resolution="Verify your AWS credentials and permissions to access Bedrock Guardrails.",
@@ -759,6 +770,7 @@ def check_bedrock_logging_configuration() -> Dict[str, Any]:
                 findings['details'] = f"Model invocation logging is enabled with delivery to: {', '.join(enabled_destinations)}"
                 findings['csv_data'].append(
                     create_finding(
+                        check_id="BR-04",
                         finding_name="Bedrock Model Invocation Logging Check",
                         finding_details=f"Model invocation logging is properly configured with delivery to: {', '.join(enabled_destinations)}",
                         resolution="No action required",
@@ -772,6 +784,7 @@ def check_bedrock_logging_configuration() -> Dict[str, Any]:
                 findings['details'] = "Model invocation logging is not enabled"
                 findings['csv_data'].append(
                     create_finding(
+                        check_id="BR-04",
                         finding_name="Bedrock Model Invocation Logging Check",
                         finding_details="Model invocation logging is not enabled. This limits your ability to track and audit model usage.",
                         resolution="Enable model invocation logging to collect invocation logs, model input data, and model output data. Configure logging to deliver to Amazon S3, CloudWatch Logs, or both for comprehensive monitoring.",
@@ -780,12 +793,13 @@ def check_bedrock_logging_configuration() -> Dict[str, Any]:
                         status='Failed'
                     )
                 )
-                
+
         except bedrock_client.exceptions.ValidationException:
             findings['status'] = 'FAIL'
             findings['details'] = "Model invocation logging is not enabled"
             findings['csv_data'].append(
                 create_finding(
+                    check_id="BR-04",
                     finding_name="Bedrock Model Invocation Logging Check",
                     finding_details="Model invocation logging is not enabled. This limits your ability to track and audit model usage.",
                     resolution="Enable model invocation logging to collect invocation logs, model input data, and model output data. Configure logging to deliver to Amazon S3, CloudWatch Logs, or both for comprehensive monitoring.",
@@ -872,6 +886,7 @@ def check_bedrock_cloudtrail_logging() -> Dict[str, Any]:
                 findings['details'] = f"CloudTrail logging enabled for Bedrock in trails: {', '.join(logging_trails)}"
                 findings['csv_data'].append(
                     create_finding(
+                        check_id="BR-06",
                         finding_name="Bedrock CloudTrail Logging Check",
                         finding_details=f"CloudTrail is properly configured to log Bedrock API activity in trails: {', '.join(logging_trails)}",
                         resolution="No action required. Continue monitoring CloudTrail logs for Bedrock activity.",
@@ -885,9 +900,10 @@ def check_bedrock_cloudtrail_logging() -> Dict[str, Any]:
                 findings['details'] = "No CloudTrail trails configured to log Bedrock activity"
                 findings['csv_data'].append(
                     create_finding(
+                        check_id="BR-06",
                         finding_name="Bedrock CloudTrail Logging Check",
                         finding_details="CloudTrail is not configured to log Amazon Bedrock API calls. This limits your ability to audit and monitor Bedrock usage.",
-                        resolution="Enable CloudTrail logging for Bedrock by :\n" + 
+                        resolution="Enable CloudTrail logging for Bedrock by :\n" +
                                  "1. Configuring an advanced event selector for Bedrock events \n" +
                                  "2. Enabling management events logging in a multi-region trail",
                         reference="https://docs.aws.amazon.com/bedrock/latest/userguide/logging-using-cloudtrail.html",
@@ -901,6 +917,7 @@ def check_bedrock_cloudtrail_logging() -> Dict[str, Any]:
             findings['details'] = f"Error checking CloudTrail configuration: {str(e)}"
             findings['csv_data'].append(
                 create_finding(
+                    check_id="BR-06",
                     finding_name="Bedrock CloudTrail Logging Check",
                     finding_details=f"Error checking CloudTrail configuration for Bedrock logging: {str(e)}",
                     resolution="Verify your AWS credentials and permissions to access CloudTrail.",
@@ -945,10 +962,11 @@ def check_bedrock_prompt_management() -> Dict[str, Any]:
                 # Count prompts by status
                 active_prompts = [p for p in prompts if p.get('status') == 'ACTIVE']
                 draft_prompts = [p for p in prompts if p.get('status') == 'DRAFT']
-                
+
                 findings['details'] = f"Found {len(prompts)} prompts ({len(active_prompts)} active, {len(draft_prompts)} draft)"
                 findings['csv_data'].append(
                     create_finding(
+                        check_id="BR-07",
                         finding_name="Bedrock Prompt Management Check",
                         finding_details=f"Prompt Management is being used with {len(prompts)} prompts ({len(active_prompts)} active, {len(draft_prompts)} draft)",
                         resolution="No action required. Continue using Prompt Management for consistent and optimized prompts.",
@@ -957,7 +975,7 @@ def check_bedrock_prompt_management() -> Dict[str, Any]:
                         status='Passed'
                     )
                 )
-                
+
                 # Additional check for prompt variants
                 prompts_without_variants = []
                 for prompt in prompts:
@@ -969,11 +987,12 @@ def check_bedrock_prompt_management() -> Dict[str, Any]:
                             prompts_without_variants.append(prompt['name'])
                     except Exception as e:
                         logger.warning(f"Could not get details for prompt {prompt['name']}: {str(e)}")
-                
+
                 if prompts_without_variants:
                     findings['status'] = 'WARN'
                     findings['csv_data'].append(
                         create_finding(
+                            check_id="BR-07",
                             finding_name="Bedrock Prompt Variants Check",
                             finding_details=f"Found {len(prompts_without_variants)} prompts without multiple variants. Testing different prompt variants helps optimize responses.",
                             resolution="Create and test multiple variants for your prompts to find the most effective configurations.",
@@ -987,6 +1006,7 @@ def check_bedrock_prompt_management() -> Dict[str, Any]:
                 findings['details'] = "Prompt Management feature is not being used"
                 findings['csv_data'].append(
                     create_finding(
+                        check_id="BR-07",
                         finding_name="Bedrock Prompt Management Check",
                         finding_details="Prompt Management feature is not being used. This may lead to inconsistent prompt handling and suboptimal model responses.",
                         resolution="Implement Prompt Management to:\n" +
@@ -1005,6 +1025,7 @@ def check_bedrock_prompt_management() -> Dict[str, Any]:
             findings['details'] = f"Error checking Prompt Management: {str(e)}"
             findings['csv_data'].append(
                 create_finding(
+                    check_id="BR-07",
                     finding_name="Bedrock Prompt Management Check",
                     finding_details=f"Error checking Bedrock Prompt Management configuration: {str(e)}",
                     resolution="Verify your AWS credentials and permissions to access Bedrock Prompt Management.",
@@ -1052,6 +1073,7 @@ def check_bedrock_knowledge_base_encryption() -> Dict[str, Any]:
                 findings['details'] = "No Knowledge Bases found"
                 findings['csv_data'].append(
                     create_finding(
+                        check_id="BR-09",
                         finding_name="Bedrock Knowledge Base Encryption Check",
                         finding_details="No Knowledge Bases found in the account",
                         resolution="No action required",
@@ -1127,6 +1149,7 @@ def check_bedrock_knowledge_base_encryption() -> Dict[str, Any]:
                 for kb in kb_without_cmk:
                     findings['csv_data'].append(
                         create_finding(
+                            check_id="BR-09",
                             finding_name="Bedrock Knowledge Base Encryption Review",
                             finding_details=f"Knowledge Base '{kb['name']}' ({kb['id']}) with storage type '{kb['storage_type']}' should be reviewed for customer-managed KMS encryption at the storage layer",
                             resolution="1. For OpenSearch Serverless: Enable encryption with CMK at collection level\n2. For S3 data sources: Use CMK-encrypted S3 buckets\n3. For RDS: Enable KMS encryption on the database\n4. Consider using CMK for transient data during ingestion",
@@ -1138,6 +1161,7 @@ def check_bedrock_knowledge_base_encryption() -> Dict[str, Any]:
             else:
                 findings['csv_data'].append(
                     create_finding(
+                        check_id="BR-09",
                         finding_name="Bedrock Knowledge Base Encryption Check",
                         finding_details=f"All {len(knowledge_bases)} Knowledge Bases reviewed for encryption configuration",
                         resolution="No action required",
@@ -1152,6 +1176,7 @@ def check_bedrock_knowledge_base_encryption() -> Dict[str, Any]:
             findings['details'] = f"Error validating Knowledge Base configuration: {str(e)}"
             findings['csv_data'].append(
                 create_finding(
+                    check_id="BR-09",
                     finding_name="Bedrock Knowledge Base Encryption Check",
                     finding_details=f"Error checking Knowledge Base encryption: {str(e)}",
                     resolution="Verify your AWS credentials and permissions to access Bedrock Knowledge Bases",
@@ -1197,6 +1222,7 @@ def check_bedrock_guardrail_iam_enforcement(permission_cache) -> Dict[str, Any]:
             if not guardrails:
                 findings['csv_data'].append(
                     create_finding(
+                        check_id="BR-10",
                         finding_name="Bedrock Guardrail IAM Enforcement Check",
                         finding_details="No guardrails configured - IAM enforcement check not applicable",
                         resolution="Configure Bedrock Guardrails first, then enforce their use via IAM policies",
@@ -1272,6 +1298,7 @@ def check_bedrock_guardrail_iam_enforcement(permission_cache) -> Dict[str, Any]:
 
             findings['csv_data'].append(
                 create_finding(
+                    check_id="BR-10",
                     finding_name="Bedrock Guardrail IAM Enforcement Missing",
                     finding_details=f"The following roles can invoke Bedrock models without enforced guardrails: {', '.join(roles_without_enforcement[:10])}{'...' if len(roles_without_enforcement) > 10 else ''}",
                     resolution="Add IAM policy conditions to enforce guardrail usage:\n" +
@@ -1287,6 +1314,7 @@ def check_bedrock_guardrail_iam_enforcement(permission_cache) -> Dict[str, Any]:
             detail_msg = "No roles with Bedrock invoke permissions found" if not roles_with_enforcement else f"All {len(roles_with_enforcement)} roles with Bedrock invoke permissions have guardrail enforcement"
             findings['csv_data'].append(
                 create_finding(
+                    check_id="BR-10",
                     finding_name="Bedrock Guardrail IAM Enforcement Check",
                     finding_details=detail_msg,
                     resolution="No action required",
@@ -1334,6 +1362,7 @@ def check_bedrock_custom_model_encryption() -> Dict[str, Any]:
                 findings['details'] = "No custom models found"
                 findings['csv_data'].append(
                     create_finding(
+                        check_id="BR-11",
                         finding_name="Bedrock Custom Model Encryption Check",
                         finding_details="No custom/fine-tuned models found in the account",
                         resolution="No action required",
@@ -1391,6 +1420,7 @@ def check_bedrock_custom_model_encryption() -> Dict[str, Any]:
                 for model in models_without_cmk:
                     findings['csv_data'].append(
                         create_finding(
+                            check_id="BR-11",
                             finding_name="Bedrock Custom Model Encryption Review",
                             finding_details=f"Custom model '{model['name']}' should be reviewed for customer-managed KMS encryption. Model artifacts and training data should use CMK.",
                             resolution="1. Use customer-managed KMS keys for training job output\n2. Ensure S3 buckets with training data use CMK encryption\n3. For future models, specify KMS key in customization job configuration",
@@ -1402,6 +1432,7 @@ def check_bedrock_custom_model_encryption() -> Dict[str, Any]:
             else:
                 findings['csv_data'].append(
                     create_finding(
+                        check_id="BR-11",
                         finding_name="Bedrock Custom Model Encryption Check",
                         finding_details=f"All {len(custom_models)} custom models reviewed",
                         resolution="No action required",
@@ -1415,6 +1446,7 @@ def check_bedrock_custom_model_encryption() -> Dict[str, Any]:
             logger.warning(f"Error listing custom models: {str(e)}")
             findings['csv_data'].append(
                 create_finding(
+                    check_id="BR-11",
                     finding_name="Bedrock Custom Model Encryption Check",
                     finding_details=f"Unable to list custom models: {str(e)}",
                     resolution="Verify permissions to access Bedrock custom models",
@@ -1462,6 +1494,7 @@ def check_bedrock_invocation_log_encryption() -> Dict[str, Any]:
             if not s3_config or not s3_config.get('bucketName'):
                 findings['csv_data'].append(
                     create_finding(
+                        check_id="BR-12",
                         finding_name="Bedrock Invocation Log Encryption Check",
                         finding_details="Model invocation logging to S3 is not configured",
                         resolution="If logging is enabled to CloudWatch only, ensure CloudWatch log group uses CMK encryption",
@@ -1498,6 +1531,7 @@ def check_bedrock_invocation_log_encryption() -> Dict[str, Any]:
                 if has_cmk:
                     findings['csv_data'].append(
                         create_finding(
+                            check_id="BR-12",
                             finding_name="Bedrock Invocation Log Encryption Check",
                             finding_details=f"S3 bucket '{bucket_name}' for invocation logs uses customer-managed KMS encryption",
                             resolution="No action required",
@@ -1510,6 +1544,7 @@ def check_bedrock_invocation_log_encryption() -> Dict[str, Any]:
                     findings['status'] = 'WARN'
                     findings['csv_data'].append(
                         create_finding(
+                            check_id="BR-12",
                             finding_name="Bedrock Invocation Log Encryption",
                             finding_details=f"S3 bucket '{bucket_name}' for invocation logs uses {encryption_type} encryption instead of customer-managed KMS. Invocation logs may contain sensitive prompts and responses.",
                             resolution="1. Enable SSE-KMS with a customer-managed key on the S3 bucket\n2. Update bucket policy to require encrypted uploads\n3. Consider enabling S3 bucket versioning and MFA delete for log integrity",
@@ -1524,6 +1559,7 @@ def check_bedrock_invocation_log_encryption() -> Dict[str, Any]:
                     findings['status'] = 'FAIL'
                     findings['csv_data'].append(
                         create_finding(
+                            check_id="BR-12",
                             finding_name="Bedrock Invocation Log Encryption Missing",
                             finding_details=f"S3 bucket '{bucket_name}' for invocation logs has NO encryption configured. Logs containing prompts and responses are stored unencrypted.",
                             resolution="Enable SSE-KMS encryption with a customer-managed key on the S3 bucket immediately",
@@ -1535,6 +1571,7 @@ def check_bedrock_invocation_log_encryption() -> Dict[str, Any]:
                 elif e.response['Error']['Code'] == 'AccessDenied':
                     findings['csv_data'].append(
                         create_finding(
+                            check_id="BR-12",
                             finding_name="Bedrock Invocation Log Encryption Check",
                             finding_details=f"Unable to check encryption for bucket '{bucket_name}' - access denied",
                             resolution="Ensure Lambda execution role has s3:GetEncryptionConfiguration permission",
@@ -1549,6 +1586,7 @@ def check_bedrock_invocation_log_encryption() -> Dict[str, Any]:
         except bedrock_client.exceptions.ValidationException:
             findings['csv_data'].append(
                 create_finding(
+                    check_id="BR-12",
                     finding_name="Bedrock Invocation Log Encryption Check",
                     finding_details="Model invocation logging is not configured",
                     resolution="Configure model invocation logging with an encrypted S3 bucket",
@@ -1596,6 +1634,7 @@ def check_bedrock_flows_guardrails() -> Dict[str, Any]:
                 findings['details'] = "No Bedrock Flows found"
                 findings['csv_data'].append(
                     create_finding(
+                        check_id="BR-13",
                         finding_name="Bedrock Flows Guardrails Check",
                         finding_details="No Bedrock Flows found in the account",
                         resolution="No action required",
@@ -1668,6 +1707,7 @@ def check_bedrock_flows_guardrails() -> Dict[str, Any]:
                     node_details = ', '.join([f"{n['name']} ({n['type']})" for n in flow['nodes']])
                     findings['csv_data'].append(
                         create_finding(
+                            check_id="BR-13",
                             finding_name="Bedrock Flow Missing Guardrails",
                             finding_details=f"Flow '{flow['flow_name']}' has nodes without guardrails configured: {node_details}. Without guardrails, intermediate steps can generate harmful content.",
                             resolution="1. Configure guardrails on Prompt nodes via guardrailConfiguration\n2. Configure guardrails on Knowledge Base nodes when using RetrieveAndGenerate\n3. Apply organization-wide guardrail enforcement policies",
@@ -1682,6 +1722,7 @@ def check_bedrock_flows_guardrails() -> Dict[str, Any]:
                     detail_msg = f"All nodes in {len(flows_with_guardrails)} flows have guardrails configured"
                 findings['csv_data'].append(
                     create_finding(
+                        check_id="BR-13",
                         finding_name="Bedrock Flows Guardrails Check",
                         finding_details=detail_msg,
                         resolution="No action required",
@@ -1695,6 +1736,7 @@ def check_bedrock_flows_guardrails() -> Dict[str, Any]:
             logger.warning(f"Error listing flows: {str(e)}")
             findings['csv_data'].append(
                 create_finding(
+                    check_id="BR-13",
                     finding_name="Bedrock Flows Guardrails Check",
                     finding_details=f"Unable to check flows: {str(e)}",
                     resolution="Verify permissions to access Bedrock Flows",
@@ -1740,6 +1782,7 @@ def check_bedrock_agent_roles(permission_cache) -> Dict[str, Any]:
                 findings['details'] = "No Bedrock agents found"
                 findings['csv_data'].append(
                     create_finding(
+                        check_id="BR-08",
                         finding_name="Bedrock Agent IAM Roles Check",
                         finding_details="No Bedrock agents found in the account",
                         resolution="No action required",
@@ -1828,8 +1871,9 @@ def check_bedrock_agent_roles(permission_cache) -> Dict[str, Any]:
                 findings['details'] = f"Found {len(issues_found)} roles with least privilege issues"
                 findings['csv_data'].append(
                     create_finding(
+                        check_id="BR-08",
                         finding_name="Bedrock Agent IAM Roles Check",
-                        finding_details=f"IAM roles associated with Bedrock agents have least privilege issues:\n" + 
+                        finding_details=f"IAM roles associated with Bedrock agents have least privilege issues:\n" +
                                       "\n".join(f"- {issue}" for issue in issues_found),
                         resolution="1. Replace full access policies with scoped policies\n" +
                                  "2. Specify exact resource ARNs instead of using wildcards\n" +
@@ -1845,6 +1889,7 @@ def check_bedrock_agent_roles(permission_cache) -> Dict[str, Any]:
                 findings['details'] = f"All {len(agents)} Bedrock agent roles follow least privilege principles"
                 findings['csv_data'].append(
                     create_finding(
+                        check_id="BR-08",
                         finding_name="Bedrock Agent IAM Roles Check",
                         finding_details=f"All {len(agents)} Bedrock agent roles properly implement least privilege access",
                         resolution="No action required",
@@ -1859,6 +1904,7 @@ def check_bedrock_agent_roles(permission_cache) -> Dict[str, Any]:
             findings['details'] = f"Error checking Bedrock agents: {str(e)}"
             findings['csv_data'].append(
                 create_finding(
+                    check_id="BR-08",
                     finding_name="Bedrock Agent IAM Roles Check",
                     finding_details=f"Error checking Bedrock agent configurations: {str(e)}",
                     resolution="Verify your AWS credentials and permissions to access Bedrock agents.",
@@ -1886,7 +1932,7 @@ def generate_csv_report(findings: List[Dict[str, Any]]) -> str:
     """
     logger.debug("Generating CSV report")
     csv_buffer = StringIO()
-    fieldnames = ['Finding', 'Finding_Details', 'Resolution', 'Reference', 'Severity', 'Status']
+    fieldnames = ['Check_ID', 'Finding', 'Finding_Details', 'Resolution', 'Reference', 'Severity', 'Status']
     writer = csv.DictWriter(csv_buffer, fieldnames=fieldnames)
     
     writer.writeheader()
