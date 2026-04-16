@@ -52,18 +52,22 @@ def consolidate_html_reports():
                 rows = tbody.find_all('tr')
                 for row in rows:
                     cells = row.find_all('td')
-                    if len(cells) >= 7:
+                    if len(cells) >= 8:
+                        # Single-account HTML has 8 columns:
+                        # 0: Account ID, 1: Check ID, 2: Finding, 3: Finding Details,
+                        # 4: Resolution, 5: Reference, 6: Severity, 7: Status
                         finding = {
                             'account_id': account_id,
-                            'finding': cells[1].get_text(strip=True) if len(cells) > 1 else '',
-                            'details': cells[2].get_text(strip=True) if len(cells) > 2 else '',
-                            'resolution': cells[3].get_text(strip=True) if len(cells) > 3 else '',
+                            'check_id': cells[1].get_text(strip=True) if len(cells) > 1 else '',
+                            'finding': cells[2].get_text(strip=True) if len(cells) > 2 else '',
+                            'details': cells[3].get_text(strip=True) if len(cells) > 3 else '',
+                            'resolution': cells[4].get_text(strip=True) if len(cells) > 4 else '',
                             'reference': '',
-                            'severity': cells[5].get_text(strip=True) if len(cells) > 5 else '',
-                            'status': cells[6].get_text(strip=True) if len(cells) > 6 else ''
+                            'severity': cells[6].get_text(strip=True) if len(cells) > 6 else '',
+                            'status': cells[7].get_text(strip=True) if len(cells) > 7 else ''
                         }
                         # Extract reference URLs
-                        ref_cell = cells[4] if len(cells) > 4 else None
+                        ref_cell = cells[5] if len(cells) > 5 else None
                         if ref_cell:
                             links = ref_cell.find_all('a')
                             if links:
@@ -131,6 +135,7 @@ def consolidate_html_reports():
 
             row = f'''<tr>
                 <td>{f['account_id']}</td>
+                <td><code style="background: var(--bg-subtle); padding: 2px 6px; border-radius: 4px; font-size: 11px;">{f.get('check_id', '')}</code></td>
                 <td>{f['finding']}</td>
                 <td class="finding-details">{f['details']}</td>
                 <td class="resolution-text">{f['resolution']}</td>
@@ -247,13 +252,14 @@ def consolidate_html_reports():
         .findings-table {{ width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }}
         .findings-table thead {{ background: var(--bg-subtle); }}
         .findings-table th {{ padding: 12px 10px; text-align: left; font-weight: 700; font-size: 11px; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 3px solid var(--border-strong); background: var(--bg-subtle); }}
-        .findings-table th:nth-child(1) {{ width: 10%; }} /* Account ID */
-        .findings-table th:nth-child(2) {{ width: 15%; }} /* Finding */
-        .findings-table th:nth-child(3) {{ width: 20%; }} /* Finding Details */
-        .findings-table th:nth-child(4) {{ width: 22%; }} /* Resolution */
-        .findings-table th:nth-child(5) {{ width: 8%; }} /* Reference */
-        .findings-table th:nth-child(6) {{ width: 10%; }} /* Severity */
-        .findings-table th:nth-child(7) {{ width: 10%; }} /* Status */
+        .findings-table th:nth-child(1) {{ width: 9%; }} /* Account ID */
+        .findings-table th:nth-child(2) {{ width: 6%; }} /* Check ID */
+        .findings-table th:nth-child(3) {{ width: 13%; }} /* Finding */
+        .findings-table th:nth-child(4) {{ width: 21%; }} /* Finding Details */
+        .findings-table th:nth-child(5) {{ width: 23%; }} /* Resolution */
+        .findings-table th:nth-child(6) {{ width: 7%; }} /* Reference */
+        .findings-table th:nth-child(7) {{ width: 10%; }} /* Severity */
+        .findings-table th:nth-child(8) {{ width: 11%; }} /* Status */
         .findings-table th .filter-input, .findings-table th .filter-select {{ display: block; width: 100%; margin-top: 8px; padding: 6px 8px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 12px; font-weight: normal; text-transform: none; letter-spacing: normal; background: var(--bg-card); color: var(--text-primary); }}
         .findings-table th .filter-input:focus, .findings-table th .filter-select:focus {{ outline: none; border-color: var(--accent); }}
         .findings-table th .filter-select {{ cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%236b7280' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; padding-right: 28px; }}
@@ -329,12 +335,13 @@ def consolidate_html_reports():
                 <table class="findings-table" id="findingsTable">
                     <thead><tr>
                         <th>Account ID<select class="filter-select" data-column="0"><option value="">All Accounts</option>{account_options}</select></th>
-                        <th>Finding<input type="text" class="filter-input" placeholder="Search findings..." data-column="1"></th>
+                        <th>Check ID<input type="text" class="filter-input" placeholder="Filter..." data-column="1"></th>
+                        <th>Finding<input type="text" class="filter-input" placeholder="Search findings..." data-column="2"></th>
                         <th class="no-filter">Finding Details</th>
                         <th class="no-filter">Resolution</th>
                         <th class="no-filter">Reference</th>
-                        <th>Severity<select class="filter-select" data-column="5"><option value="">All Severities</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option><option value="n/a">N/A</option></select></th>
-                        <th>Status<select class="filter-select" data-column="6"><option value="">All Statuses</option><option value="failed">Failed</option><option value="passed">Passed</option><option value="n/a">N/A</option></select></th>
+                        <th>Severity<select class="filter-select" data-column="6"><option value="">All Severities</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option><option value="n/a">N/A</option></select></th>
+                        <th>Status<select class="filter-select" data-column="7"><option value="">All Statuses</option><option value="failed">Failed</option><option value="passed">Passed</option><option value="n/a">N/A</option></select></th>
                     </tr></thead>
                     <tbody>{rows}</tbody>
                 </table>
@@ -368,12 +375,14 @@ def consolidate_html_reports():
                     if (searchText && !rowText.includes(searchText)) shouldShow = false;
                     const accountFilter = document.querySelector('.filter-select[data-column="0"]').value.toLowerCase();
                     if (accountFilter && cells[0] && !cells[0].textContent.toLowerCase().includes(accountFilter)) shouldShow = false;
-                    const findingFilter = document.querySelector('.filter-input[data-column="1"]').value.toLowerCase();
-                    if (findingFilter && cells[1] && !cells[1].textContent.toLowerCase().includes(findingFilter)) shouldShow = false;
-                    const severityFilter = document.querySelector('.filter-select[data-column="5"]').value.toLowerCase();
-                    if (severityFilter && cells[5] && !cells[5].textContent.toLowerCase().includes(severityFilter)) shouldShow = false;
-                    const statusFilter = document.querySelector('.filter-select[data-column="6"]').value.toLowerCase();
-                    if (statusFilter && cells[6] && !cells[6].textContent.toLowerCase().includes(statusFilter)) shouldShow = false;
+                    const checkIdFilter = document.querySelector('.filter-input[data-column="1"]').value.toLowerCase();
+                    if (checkIdFilter && cells[1] && !cells[1].textContent.toLowerCase().includes(checkIdFilter)) shouldShow = false;
+                    const findingFilter = document.querySelector('.filter-input[data-column="2"]').value.toLowerCase();
+                    if (findingFilter && cells[2] && !cells[2].textContent.toLowerCase().includes(findingFilter)) shouldShow = false;
+                    const severityFilter = document.querySelector('.filter-select[data-column="6"]').value.toLowerCase();
+                    if (severityFilter && cells[6] && !cells[6].textContent.toLowerCase().includes(severityFilter)) shouldShow = false;
+                    const statusFilter = document.querySelector('.filter-select[data-column="7"]').value.toLowerCase();
+                    if (statusFilter && cells[7] && !cells[7].textContent.toLowerCase().includes(statusFilter)) shouldShow = false;
                     row.style.display = shouldShow ? '' : 'none';
                 }});
             }}
