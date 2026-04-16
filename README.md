@@ -24,7 +24,7 @@ The framework performs **53 security checks** across these services, aligned wit
 
 ## Single-Account Deployment
 
-1. Download the [aiml-security-assessment-single-account.yaml](deployment/aiml-security-assessment-single-account.yaml) AWS CloudFormation template.
+1. Download the [aiml-security-single-account.yaml](deployment/aiml-security-single-account.yaml) AWS CloudFormation template.
 2. **[Deploy to AWS CloudFormation](https://console.aws.amazon.com/cloudformation/home#/stacks/create/template?stackName=resco-aiml-single-account)**
 3. Upload the AWS CloudFormation template from step 1.
 4. Provide a stack name and optionally specify your email address to receive notifications.
@@ -61,13 +61,13 @@ The deployment follows a two-step approach:
 
 ### Step 1: Deploy Member Roles (StackSets)
 
-Deploy [1-resco-member-roles.yaml](deployment/1-resco-member-roles.yaml) to all target accounts using AWS CloudFormation StackSets with service-managed permissions.
+Deploy [1-aiml-security-member-roles.yaml](deployment/1-aiml-security-member-roles.yaml) to all target accounts using AWS CloudFormation StackSets with service-managed permissions.
 
 #### AWS Console Deployment
 
 1. Navigate to **CloudFormation** > **StackSets** in the management account
 2. Click **Create StackSet**
-3. Select **Upload a template file** and upload [1-resco-member-roles.yaml](deployment/1-resco-member-roles.yaml)
+3. Select **Upload a template file** and upload [1-aiml-security-member-roles.yaml](deployment/1-aiml-security-member-roles.yaml)
 4. Enter a StackSet name (e.g., `resco-aiml-member-roles`)
 5. Set the `ReSCOAccountID` parameter to your management account ID
 6. Under **Permissions**, select **Service-managed permissions**
@@ -79,12 +79,12 @@ This uses AWS Organizations to deploy the member role to all accounts in the sel
 
 ### Step 2: Deploy Central Infrastructure
 
-Deploy [2-resco-assessment-codebuild.yaml](deployment/2-resco-assessment-codebuild.yaml) in your central management account or delegated administrator member account.
+Deploy [2-aiml-security-codebuild.yaml](deployment/2-aiml-security-codebuild.yaml) in your central management account or delegated administrator member account.
 
 #### AWS Console Deployment
 
 1. Navigate to [AWS CloudFormation](https://console.aws.amazon.com/cloudformation/home#/stacks/create/template?stackName=resco-aiml-multi-account)
-2. Select **Upload a template file** and upload the [2-resco-assessment-codebuild.yaml](deployment/2-resco-assessment-codebuild.yaml) file.
+2. Select **Upload a template file** and upload the [2-aiml-security-codebuild.yaml](deployment/2-aiml-security-codebuild.yaml) file.
 3. Set the `MultiAccountScan` parameter to `true`.
 4. Optionally, provide your email address in the `EmailAddress` parameter for completion notifications.
 5. Leave the remaining parameters at their default values.
@@ -164,7 +164,7 @@ You can check the AWS CodeBuild console to ensure that the assessment has comple
 
 1. **Find the S3 Bucket Name**:
    - Navigate to **CloudFormation** > **Stacks** in the AWS Console
-   - For single-account deployments using the standalone template (`aiml-security-assessment-single-account.yaml`), select the stack you deployed (e.g., `rescoaiml-standalonerole-mgmt`) and find the `AssessmentBucket` output. Results are synced to this bucket under the `{account_id}/` prefix.
+   - For single-account deployments using the standalone template (`aiml-security-single-account.yaml`), select the stack you deployed (e.g., `rescoaiml-standalonerole-mgmt`) and find the `AssessmentBucket` output. Results are synced to this bucket under the `{account_id}/` prefix.
    - For multi-account deployments, select the `resco-aiml-multi-account` stack created in [Step 2: Deploy Central Infrastructure](#step-2-deploy-central-infrastructure) and find the `AssessmentBucket` output
    - Go to the **Outputs** tab
    - Copy the S3 bucket name
@@ -258,7 +258,7 @@ Each security check has a unique identifier with a service prefix:
 
 ### Modifying Assessment Scope
 
-To add or remove service permissions, edit the member role permissions in `1-resco-member-roles.yaml`.
+To add or remove service permissions, edit the member role permissions in `1-aiml-security-member-roles.yaml`.
 
 ### Concurrent Scanning
 

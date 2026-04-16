@@ -19,12 +19,12 @@ The ReSCO (Resilience, Security, and Cost Optimization) Assessment Framework is 
 
 ### Phase 1: Infrastructure Deployment
 
-#### Step 1: Member Account Roles (`1-resco-member-roles.yaml`)
+#### Step 1: Member Account Roles (`1-aiml-security-member-roles.yaml`)
 - **StackSets Deployment**: Deploys `ReSCOAIMLMemberRole` to all target accounts
 - **Cross-Account Trust**: Establishes trust relationship with central management account
 - **Assessment Permissions**: Grants read-only access to AWS services for assessment
 
-#### Step 2: Central Infrastructure (`2-resco-assessment-codebuild.yaml`)
+#### Step 2: Central Infrastructure (`2-aiml-security-codebuild.yaml`)
 - **CodeBuild Project**: Orchestrates multi-account deployments and assessments
 - **S3 Bucket**: Central storage for consolidated assessment results
 - **IAM Role**: `ReSCOMultiAccountCodeBuildRole` with cross-account access permissions
@@ -317,7 +317,7 @@ fi
 
 Add required permissions to both member role templates:
 
-**In `deployment/1-resco-member-roles.yaml`**:
+**In `deployment/1-aiml-security-member-roles.yaml`**:
 ```yaml
 - Effect: Allow
   Action:
@@ -327,7 +327,7 @@ Add required permissions to both member role templates:
   Resource: '*'
 ```
 
-**In `deployment/2-resco-assessment-codebuild.yaml`** (for single account mode):
+**In `deployment/2-aiml-security-codebuild.yaml`** (for single account mode):
 ```yaml
 - newservice:List*
 - newservice:Describe*
