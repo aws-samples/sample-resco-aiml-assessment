@@ -6,9 +6,9 @@ This project provides a framework for performing security assessments of AI/ML w
 
 This assessment framework is designed for workloads using [Amazon Bedrock](https://aws.amazon.com/bedrock/), [Amazon Bedrock AgentCore](https://aws.github.io/bedrock-agentcore-starter-toolkit/), or [Amazon SageMaker AI](https://aws.amazon.com/sagemaker/ai/).
 
-The framework performs **43 security checks** across these services, aligned with AWS Security Hub controls and security best practices:
+The framework performs **53 security checks** across these services, aligned with AWS Security Hub controls and security best practices:
 - **Amazon Bedrock**: 14 checks (guardrails, encryption, VPC endpoints, IAM permissions)
-- **Amazon SageMaker**: 16 checks (SageMaker.1-5 controls, encryption, network isolation, IAM)
+- **Amazon SageMaker**: 26 checks (SageMaker.1-5 controls, encryption, network isolation, IAM, MLOps)
 - **Amazon Bedrock AgentCore**: 13 checks (VPC configuration, encryption, observability, resource policies)
 
 
@@ -386,63 +386,72 @@ We welcome community contributions! Please see [DEVELOPER_GUIDE.md](DEVELOPER_GU
 
 ## Security Checks Reference
 
-### Amazon SageMaker Checks (16)
+### Amazon SageMaker Checks (26)
 
-| Check | Description | AWS Security Hub Control |
-|-------|-------------|--------------------------|
-| Notebook Encryption | Verifies notebook instances use customer-managed KMS keys | SageMaker.1 |
-| Notebook VPC Deployment | Ensures notebooks are deployed within a VPC | SageMaker.2 |
-| Notebook Root Access | Validates root access is disabled on notebooks | SageMaker.3 |
-| Model Network Isolation | Checks inference containers have network isolation | SageMaker.4 |
-| Endpoint Instance Count | Verifies endpoints have 2+ instances for HA | SageMaker.5 |
-| Domain Encryption | Validates SageMaker Studio domain encryption | - |
-| Training Job Encryption | Checks training jobs use encrypted storage | - |
-| IAM Least Privilege | Identifies overly permissive SageMaker IAM policies | - |
-| Unused Permissions | Detects unused SageMaker permissions | - |
-| GuardDuty Integration | Verifies GuardDuty runtime threat detection | - |
-| Model Registry Access | Validates model package group permissions | - |
-| Feature Store Encryption | Checks feature group encryption settings | - |
-| Pipeline Security | Validates pipeline configurations | - |
-| Processing Job Encryption | Verifies processing job encryption | - |
-| Monitoring Network Isolation | Checks monitoring job network isolation | - |
-| Data Quality Encryption | Validates data quality job encryption | - |
+| Check ID | Check | Description | AWS Security Hub Control |
+|----------|-------|-------------|--------------------------|
+| SM-01 | Internet Access | Checks for direct internet access on notebooks and domains | SageMaker.2 |
+| SM-02 | IAM Permissions | Identifies overly permissive policies, stale access, and SSO configuration | - |
+| SM-03 | Data Protection | Verifies encryption at rest and in transit for notebooks and domains | SageMaker.1 |
+| SM-04 | GuardDuty Integration | Verifies GuardDuty runtime threat detection is enabled | - |
+| SM-05 | MLOps Features | Checks MLOps pipelines, experiment tracking, and model registry usage | - |
+| SM-06 | Clarify Usage | Validates SageMaker Clarify for bias detection and explainability | - |
+| SM-07 | Model Monitor | Checks Model Monitor configuration for drift detection | - |
+| SM-08 | Model Registry | Validates model registry usage and permissions | - |
+| SM-09 | Notebook Root Access | Validates root access is disabled on notebooks | SageMaker.3 |
+| SM-10 | Notebook VPC Deployment | Ensures notebooks are deployed within a VPC | SageMaker.2 |
+| SM-11 | Model Network Isolation | Checks inference containers have network isolation | SageMaker.4 |
+| SM-12 | Endpoint Instance Count | Verifies endpoints have 2+ instances for HA | SageMaker.5 |
+| SM-13 | Monitoring Network Isolation | Checks monitoring job network isolation | - |
+| SM-14 | Model Container Repository | Validates model container repository access | - |
+| SM-15 | Feature Store Encryption | Checks feature group encryption settings | - |
+| SM-16 | Data Quality Encryption | Validates data quality job encryption | - |
+| SM-17 | Processing Job Encryption | Verifies processing job encryption | - |
+| SM-18 | Transform Job Encryption | Checks transform job volume encryption | - |
+| SM-19 | Hyperparameter Tuning Encryption | Validates hyperparameter tuning job encryption | - |
+| SM-20 | Compilation Job Encryption | Checks compilation job encryption | - |
+| SM-21 | AutoML Network Isolation | Validates AutoML job network isolation | - |
+| SM-22 | Model Approval Workflow | Checks model approval and governance workflow | - |
+| SM-23 | Model Drift Detection | Validates model drift monitoring configuration | - |
+| SM-24 | A/B Testing & Shadow Deployment | Checks for safe deployment patterns | - |
+| SM-25 | ML Lineage Tracking | Validates experiment tracking and lineage | - |
 
 ### Amazon Bedrock Checks (14)
 
-| Check | Description |
-|-------|-------------|
-| VPC Endpoint Configuration | Validates Bedrock VPC endpoints exist for private connectivity |
-| Guardrail Configuration | Verifies guardrails are configured and enforced |
-| Model Invocation Logging | Checks invocation logging is enabled |
-| Invocation Log Encryption | Verifies logs are encrypted with KMS |
-| Custom Model Encryption | Validates custom models use customer-managed KMS keys |
-| Knowledge Base Encryption | Checks knowledge base encryption settings |
-| Guardrail IAM Enforcement | Verifies guardrails are enforced via IAM conditions |
-| Flows Guardrails | Validates Bedrock Flows have guardrails attached |
-| Agent IAM Configuration | Checks agent execution role permissions |
-| Prompt Management | Validates Bedrock Prompt template security |
-| IAM Least Privilege | Identifies overly permissive Bedrock IAM policies |
-| Unused Permissions | Detects unused Bedrock API permissions |
-| Knowledge Base IAM | Validates knowledge base IAM permissions |
-| Flows IAM Configuration | Checks flows IAM permissions |
+| Check ID | Check | Description |
+|----------|-------|-------------|
+| BR-01 | IAM Least Privilege | Identifies roles with AmazonBedrockFullAccess policy |
+| BR-02 | VPC Endpoint Configuration | Validates Bedrock VPC endpoints exist for private connectivity |
+| BR-03 | Marketplace Subscription Access | Checks for overly permissive marketplace subscription access |
+| BR-04 | Model Invocation Logging | Checks invocation logging is enabled |
+| BR-05 | Guardrail Configuration | Verifies guardrails are configured and enforced |
+| BR-06 | CloudTrail Logging | Validates CloudTrail logging for Bedrock API calls |
+| BR-07 | Prompt Management | Validates Bedrock Prompt template usage and variants |
+| BR-08 | Agent IAM Configuration | Checks agent execution role permissions |
+| BR-09 | Knowledge Base Encryption | Checks knowledge base encryption settings |
+| BR-10 | Guardrail IAM Enforcement | Verifies guardrails are enforced via IAM conditions |
+| BR-11 | Custom Model Encryption | Validates custom models use customer-managed KMS keys |
+| BR-12 | Invocation Log Encryption | Verifies logs are encrypted with KMS |
+| BR-13 | Flows Guardrails | Validates Bedrock Flows have guardrails attached |
+| BR-14 | Stale Access | Detects unused Bedrock API permissions |
 
 ### Amazon Bedrock AgentCore Checks (13)
 
-| Check | Description |
-|-------|-------------|
-| Runtime VPC Configuration | Validates agent runtimes have proper VPC settings |
-| Runtime Encryption | Verifies runtime encryption at rest |
-| Memory Encryption | Checks agent memory encryption with KMS |
-| Gateway Security | Validates gateway security configuration |
-| Gateway Encryption | Verifies gateway encryption settings |
-| Network Egress Controls | Checks for NAT gateway or VPC endpoints for egress |
-| ECR Repository Encryption | Validates ECR repositories use encryption |
-| Logging Configuration | Verifies CloudWatch Logs are configured |
-| Metrics Configuration | Checks metrics export configuration |
-| VPC Endpoints | Validates VPC endpoints for AgentCore services |
-| Service-Linked Role | Verifies the AgentCore service-linked role exists |
-| Resource-Based Policies | Checks runtime and gateway resource policies |
-| Policy Engine Encryption | Validates policy engine encryption settings |
+| Check ID | Check | Description |
+|----------|-------|-------------|
+| AC-01 | Runtime VPC Configuration | Validates agent runtimes have proper VPC settings |
+| AC-02 | IAM Full Access | Checks for overly permissive AgentCore IAM policies |
+| AC-03 | Stale Access | Detects unused AgentCore permissions |
+| AC-04 | Observability | Verifies CloudWatch Logs and X-Ray tracing configuration |
+| AC-05 | ECR Repository Encryption | Validates ECR repositories use encryption |
+| AC-06 | Browser Tool Recording | Checks storage configuration for browser tools |
+| AC-07 | Memory Encryption | Checks agent memory encryption with KMS |
+| AC-08 | VPC Endpoints | Validates VPC endpoints for AgentCore services |
+| AC-09 | Service-Linked Role | Verifies the AgentCore service-linked role exists |
+| AC-10 | Resource-Based Policies | Checks runtime and gateway resource policies |
+| AC-11 | Policy Engine Encryption | Validates policy engine encryption settings |
+| AC-12 | Gateway Encryption | Verifies gateway encryption settings |
+| AC-13 | Gateway Configuration | Validates gateway security configuration |
 
 ## Security
 

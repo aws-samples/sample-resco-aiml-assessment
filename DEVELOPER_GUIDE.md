@@ -108,65 +108,16 @@ resco-assessments/
 
 ### 1. AI/ML Assessment (`resco-aiml-assessment/`)
 
-The AI/ML assessment module includes **43 security checks** across three services:
+The AI/ML assessment module includes **53 security checks** across three services:
+- **Bedrock Assessment Lambda**: 14 checks (BR-01 to BR-14)
+- **SageMaker Assessment Lambda**: 26 checks (SM-01 to SM-25)
+- **AgentCore Assessment Lambda**: 13 checks (AC-01 to AC-13)
 
-#### Bedrock Assessment Lambda (14 checks)
-| Check | Description | AWS Security Hub Control |
-|-------|-------------|--------------------------|
-| VPC Endpoint Check | Validates Bedrock VPC endpoints exist | - |
-| Guardrail Check | Verifies guardrails are configured | - |
-| Model Invocation Logging | Checks logging configuration | - |
-| IAM Least Privilege | Analyzes IAM permissions for overly permissive policies | - |
-| Unused Permissions | Identifies unused Bedrock permissions | - |
-| Prompt Management | Validates Bedrock Prompt templates | - |
-| Agent IAM Configuration | Checks agent role permissions | - |
-| Custom Model Encryption | Verifies custom models use KMS encryption | - |
-| Knowledge Base Encryption | Validates knowledge base encryption settings | - |
-| Guardrail IAM Enforcement | Checks guardrail enforcement in IAM policies | - |
-| Invocation Log Encryption | Verifies invocation logs are encrypted | - |
-| Flows Guardrails | Validates flows have guardrails configured | - |
-| Knowledge Base IAM | Checks knowledge base IAM permissions | - |
-| Flows IAM | Validates flows IAM configuration | - |
+For the complete list of checks with descriptions, see the [Security Checks Reference](README.md#security-checks-reference) in the main README.
 
-#### SageMaker Assessment Lambda (16 checks)
-| Check | Description | AWS Security Hub Control |
-|-------|-------------|--------------------------|
-| Notebook Encryption | Verifies notebook instances use KMS | SageMaker.1 |
-| Notebook VPC Deployment | Checks notebooks are in VPC | SageMaker.2 |
-| Notebook Root Access | Verifies root access is disabled | SageMaker.3 |
-| Model Network Isolation | Validates model network isolation | SageMaker.4 |
-| Endpoint Instance Count | Checks multi-AZ deployment | SageMaker.5 |
-| Domain Encryption | Validates domain encryption settings | - |
-| Training Job Encryption | Checks training job encryption | - |
-| IAM Least Privilege | Analyzes IAM permissions | - |
-| Unused Permissions | Identifies unused SageMaker permissions | - |
-| GuardDuty Integration | Checks GuardDuty runtime monitoring | - |
-| Model Registry Access | Validates model package permissions | - |
-| Feature Store Encryption | Verifies feature group encryption | - |
-| Pipeline Security | Checks pipeline configurations | - |
-| Processing Job Encryption | Validates processing job encryption | - |
-| Monitoring Network Isolation | Checks monitoring job isolation | - |
-| Data Quality Encryption | Verifies data quality job encryption | - |
-
-#### AgentCore Assessment Lambda (13 checks)
-| Check | Description | AWS Security Hub Control |
-|-------|-------------|--------------------------|
-| Runtime VPC Configuration | Validates VPC settings for runtimes | - |
-| Runtime Encryption | Verifies runtime encryption at rest | - |
-| Memory Encryption | Checks memory encryption settings | - |
-| Gateway Security | Validates gateway configuration | - |
-| Gateway Encryption | Verifies gateway encryption | - |
-| Network Egress | Checks NAT/VPC endpoint for egress | - |
-| ECR Encryption | Validates ECR repository encryption | - |
-| Logging Configuration | Checks CloudWatch logs setup | - |
-| Metrics Configuration | Validates metrics configuration | - |
-| VPC Endpoints | Checks VPC endpoints for AgentCore | - |
-| Service-Linked Role | Verifies service-linked role exists | - |
-| Resource-Based Policies | Validates resource policies | - |
-| Policy Engine Encryption | Checks policy engine encryption | - |
-
-- **Comprehend Assessment Lambda**: Data privacy, Access controls (Future)
-- **Textract Assessment Lambda**: Document processing security (Future)
+**Future Modules:**
+- **Comprehend Assessment Lambda**: Data privacy, Access controls
+- **Textract Assessment Lambda**: Document processing security
 
 
 ## Adding New Assessment Services
@@ -462,59 +413,7 @@ aws stepfunctions start-execution \
 3. Monitor CodeBuild logs for deployment and execution status
 4. Verify results in central S3 bucket
 
-## Deployment Process
-
-### Prerequisites
-- AWS Organizations setup with management account access
-- StackSets service-linked roles configured
-- Appropriate permissions for CloudFormation deployment
-
-### Step-by-Step Deployment
-
-#### Step 1: Deploy Member Roles (StackSets)
-```bash
-# Deploy 1-resco-member-roles.yaml via StackSets
-aws cloudformation create-stack-set \
-  --stack-set-name resco-aiml-member-roles \
-  --template-body file://1-resco-member-roles.yaml \
-  --parameters ParameterKey=ReSCOAccountID,ParameterValue=123456789012 \
-  --capabilities CAPABILITY_NAMED_IAM
-```
-
-#### Step 2: Deploy Central Infrastructure
-```bash
-# Deploy 2-resco-assessment-codebuild.yaml
-aws cloudformation create-stack \
-  --stack-name resco-aiml-multi-account \
-  --template-body file://2-resco-assessment-codebuild.yaml \
-  --parameters \
-    ParameterKey=MultiAccountScan,ParameterValue=true \
-    ParameterKey=DEPLOY_AIML_ASSESSMENT,ParameterValue=true \
-  --capabilities CAPABILITY_NAMED_IAM
-```
-
-#### Step 3: Assessment Execution (Automatic)
-- CodeBuild project starts automatically after stack creation
-- Lambda trigger initiates the assessment process
-- Results are consolidated in central S3 bucket
-
-### Configuration Options
-
-#### Assessment Module Selection
-```bash
-# Environment variables for module deployment
-DEPLOY_AIML_ASSESSMENT=true
-DEPLOY_SECURITY_ASSESSMENT=false
-DEPLOY_RESILIENCE_ASSESSMENT=false
-DEPLOY_COST_ASSESSMENT=false
-```
-
-#### Account Targeting
-- **All Accounts**: Leave `MultiAccountListOverride` blank
-- **Specific Accounts**: Set `MultiAccountListOverride="123456789012 234567890123"`
-- **Single Account**: Set `MultiAccountScan=false`
-
-## Monitoring and Troubleshooting
+## Monitoring and Debugging
 
 ### CloudWatch Logs
 - **CodeBuild Logs**: `/aws/codebuild/ReSCOMultiAccountCodeBuild`
@@ -539,23 +438,10 @@ logger.info(f"Starting assessment for account: {account_id}")
 logger.debug(f"Found {len(resources)} resources to assess")
 ```
 
-## Contributing
-
-We welcome community contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-## Security
-- All roles follow least-privilege principle
-- Cross-account trust limited to specific CodeBuild role
-- S3 bucket enforces SSL-only access
-- Assessment data encrypted in transit and at rest
-- No persistent credentials stored in CodeBuild
-
-See [Security issue notifications](CONTRIBUTING.md#security-issue-notifications) for more information.
-
 ## Module Development Roadmap
 
 ### Current Status
-- **AI/ML Assessment**: 43 security checks across Bedrock (14), SageMaker (16), and AgentCore (13) Lambdas (Active)
+- **AI/ML Assessment**: 53 security checks across Bedrock (14), SageMaker (26), and AgentCore (13) Lambdas (Active)
 
 
 ### Service-Level Development Pattern
