@@ -373,6 +373,9 @@ Resources:
                   - states:TagResource
                   - states:UntagResource
                   - states:ListStateMachines
+                  - states:StartExecution
+                  - states:DescribeExecution
+                  - states:ListExecutions
                 Effect: Allow
                 Resource: '*'
               - Sid: S3Permissions
