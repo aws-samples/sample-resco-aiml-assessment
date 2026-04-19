@@ -19,7 +19,7 @@ from datetime import datetime
 from botocore.exceptions import ClientError
 
 # Add the Lambda function directory to path to import shared template
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'resco-aiml-assessment', 'functions', 'security', 'generate_consolidated_report'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'aiml-security-assessment', 'functions', 'security', 'generate_consolidated_report'))
 
 from report_template import generate_html_report
 

@@ -10,7 +10,7 @@ Comprehensive security scanning with **52 checks** across your AI/ML infrastruct
 
 The framework generates professional, interactive security assessment reports with filtering, search, and dark mode support.
 
-**Download Sample Reports** | [Single Account](sample-reports/security_assessment_single_account.html) · [Multi-Account](sample-reports/security_assessment_multi_account.html)
+**Download Sample Reports** | [Single Account](sample-reports/security_assessment_single_account.html) | [Multi-Account](sample-reports/security_assessment_multi_account.html)
 
 <table>
   <tr>
@@ -57,33 +57,25 @@ The framework generates professional, interactive security assessment reports wi
 - [Quick Start](#quick-start)
 - [Architecture](#architecture)
 - [Prerequisites](#prerequisites)
-- [Deployment](#deployment)
-  - [Single-Account Deployment](#single-account-deployment)
-  - [Multi-Account Deployment](#multi-account-deployment)
+- [Single-Account Deployment](#single-account-deployment)
+- [Multi-Account Deployment](#multi-account-deployment)
 - [How It Works](#how-it-works)
 - [Permissions Required](#permissions-required)
 - [Viewing Assessment Results](#viewing-assessment-results)
-- [Security Checks Reference](#security-checks-reference)
-  - [Amazon SageMaker Checks (25)](#amazon-sagemaker-checks-25)
-  - [Amazon Bedrock Checks (14)](#amazon-bedrock-checks-14)
-  - [Amazon Bedrock AgentCore Checks (13)](#amazon-bedrock-agentcore-checks-13)
 - [Customization](#customization)
-- [Troubleshooting](#troubleshooting)
 - [Cleanup](#cleanup)
-- [Frequently Asked Questions](#frequently-asked-questions)
-  - [General Questions](#general-questions)
-  - [Cost and Billing](#cost-and-billing)
-  - [Customization and Configuration](#customization-and-configuration)
-  - [Troubleshooting](#troubleshooting-1)
-  - [Security and Compliance](#security-and-compliance)
+- [Documentation](#documentation)
 - [Contributing](#contributing)
+- [Security](#security)
 - [License](#license)
 
 ---
 
 ## What It Does
 
-This serverless assessment framework automatically evaluates your AI/ML workloads against AWS security best practices:
+This serverless assessment framework automatically evaluates your AI/ML workloads against AWS security best practices. It uses AWS serverless services to gather data from the control plane and generate reports containing the status of various security checks, severity levels, and recommended actions.
+
+Designed for workloads using [Amazon Bedrock](https://aws.amazon.com/bedrock/), [Amazon Bedrock AgentCore](https://aws.github.io/bedrock-agentcore-starter-toolkit/), or [Amazon SageMaker AI](https://aws.amazon.com/sagemaker/ai/).
 
 **Services Covered:**
 - **Amazon Bedrock** (14 checks) - Guardrails, encryption, Amazon VPC endpoints, AWS IAM permissions, model invocation logging
@@ -104,29 +96,12 @@ This serverless assessment framework automatically evaluates your AI/ML workload
 
 ## Quick Start
 
-### Single-Account Deployment
-
-1. **[Launch CloudFormation Stack](https://console.aws.amazon.com/cloudformation/home#/stacks/create/template?stackName=resco-aiml-single-account)**
-2. Upload the [aiml-security-single-account.yaml](deployment/aiml-security-single-account.yaml) template
-3. Provide stack name and optional email for notifications
-4. Wait ~5 minutes for deployment and automatic assessment
-5. Access your report from the Amazon S3 bucket in stack outputs
-
-### Multi-Account Deployment
-
-See [Multi-Account Deployment](#multi-account-deployment) section below for AWS Organizations setup.
-
----
-
-## Overview
-
-This project provides a framework for performing security assessments of AI/ML workloads in your AWS environment. It supports both single-account and multi-account deployments. The framework uses AWS serverless services to gather data from the control plane and generate reports containing the status of various security checks, severity levels, and recommended actions. All assessment data remains in your own AWS account.
-
-This assessment framework is designed for workloads using [Amazon Bedrock](https://aws.amazon.com/bedrock/), [Amazon Bedrock AgentCore](https://aws.github.io/bedrock-agentcore-starter-toolkit/), or [Amazon SageMaker AI](https://aws.amazon.com/sagemaker/ai/).
+- **Single-Account**: Jump to [Single-Account Deployment](#single-account-deployment)
+- **Multi-Account**: Jump to [Multi-Account Deployment](#multi-account-deployment)
 
 ## Architecture
 
-![Architecture](./diagrams/ArchitectureDiagram.png)
+![Architecture](./docs/diagrams/ArchitectureDiagram.png)
 
 ## Prerequisites
 
@@ -137,7 +112,7 @@ This assessment framework is designed for workloads using [Amazon Bedrock](https
 ## Single-Account Deployment
 
 1. Download the [aiml-security-single-account.yaml](deployment/aiml-security-single-account.yaml) AWS CloudFormation template.
-2. **[Deploy to AWS CloudFormation](https://console.aws.amazon.com/cloudformation/home#/stacks/create/template?stackName=resco-aiml-single-account)**
+2. **[Deploy to AWS CloudFormation](https://console.aws.amazon.com/cloudformation/home#/stacks/create/template?stackName=aiml-security-single-account)**
 3. Upload the AWS CloudFormation template from step 1.
 4. Provide a stack name and optionally specify your email address to receive notifications.
 5. Leave all other parameters at their default values.
@@ -147,14 +122,14 @@ This assessment framework is designed for workloads using [Amazon Bedrock](https
 9. Once complete, AWS CodeBuild automatically deploys the assessment stack and runs the assessment.
 10. To view results:
     - Navigate to the AWS CloudFormation console
-    - Open the stack you deployed (e.g., `resco-aiml-single-account` or your custom name)
+    - Open the stack you deployed (e.g., `aiml-security-single-account` or your custom name)
     - Go to the **Outputs** tab
     - Copy the `AssessmentBucket` value
     - Navigate to that Amazon S3 bucket and open the `{account_id}/security_assessment_*.html` file
 
 ### Understanding Stack Names
 
-> **⚠️ Important**: The deployment creates **TWO** AWS CloudFormation stacks. Only one contains your results!
+> **Important**: The deployment creates **TWO** AWS CloudFormation stacks. Only one contains your results!
 
 <table>
 <tr>
@@ -164,19 +139,19 @@ This assessment framework is designed for workloads using [Amazon Bedrock](https
 <th>What to Do</th>
 </tr>
 <tr>
-<td><strong>✅ Infrastructure Stack</strong><br/><em>(This is the one you need)</em></td>
+<td><strong>Infrastructure Stack</strong><br/><em>(This is the one you need)</em></td>
 <td>
-• The name <strong>you chose</strong><br/>
-• Examples:<br/>
+The name <strong>you chose</strong><br/>
+Examples:<br/>
   - <code>my-aiml-assessment</code><br/>
   - <code>aiml-security-prod</code><br/>
-  - <code>resco-aiml-single-account</code>
+  - <code>aiml-security-single-account</code>
 </td>
 <td>
-• AWS CodeBuild project<br/>
-• Amazon S3 bucket for results<br/>
-• AWS IAM roles<br/>
-• <strong>The "AssessmentBucket" output</strong> ✅
+AWS CodeBuild project<br/>
+Amazon S3 bucket for results<br/>
+AWS IAM roles<br/>
+<strong>The "AssessmentBucket" output</strong>
 </td>
 <td>
 <strong>Use this stack to view results!</strong><br/><br/>
@@ -186,21 +161,21 @@ This assessment framework is designed for workloads using [Amazon Bedrock](https
 </td>
 </tr>
 <tr>
-<td><strong>ℹ️ Assessment Stack</strong><br/><em>(Auto-generated - ignore this)</em></td>
+<td><strong>Assessment Stack</strong><br/><em>(Auto-generated - ignore this)</em></td>
 <td>
-• Auto-generated name:<br/>
-  <code>aiml-sec-{account_id}</code><br/>
-• Example:<br/>
-  <code>aiml-sec-123456789012</code>
+Auto-generated name:<br/>
+<code>aiml-sec-{account_id}</code><br/>
+Example:<br/>
+<code>aiml-sec-123456789012</code>
 </td>
 <td>
-• AWS Lambda functions<br/>
-• AWS Step Functions<br/>
-• Internal resources<br/>
-• <em>No outputs you need</em>
+AWS Lambda functions<br/>
+AWS Step Functions<br/>
+Internal resources<br/>
+<em>No outputs you need</em>
 </td>
 <td>
-<strong>⚠️ Don't use this stack!</strong><br/><br/>
+<strong>Don't use this stack!</strong><br/><br/>
 It's for internal operations only.<br/>
 Created automatically by AWS CodeBuild.
 </td>
@@ -226,8 +201,8 @@ Deploy [1-aiml-security-member-roles.yaml](deployment/1-aiml-security-member-rol
 1. Navigate to **AWS CloudFormation** > **StackSets** in the management account
 2. Click **Create StackSet**
 3. Select **Upload a template file** and upload [1-aiml-security-member-roles.yaml](deployment/1-aiml-security-member-roles.yaml)
-4. Enter a StackSet name (e.g., `resco-aiml-member-roles`)
-5. Set the `ReSCOAccountID` parameter to your management account ID
+4. Enter a StackSet name (e.g., `aiml-security-member-roles`)
+5. Set the `ManagementAccountID` parameter to your management account ID
 6. Under **Permissions**, select **Service-managed permissions**
 7. Under **Deployment targets**, select the Organizational Units (OUs) containing your target accounts
 8. Select **us-east-1** (or your target region) under **Specify regions**
@@ -241,7 +216,7 @@ Deploy [2-aiml-security-codebuild.yaml](deployment/2-aiml-security-codebuild.yam
 
 #### AWS Console Deployment
 
-1. Navigate to [AWS CloudFormation](https://console.aws.amazon.com/cloudformation/home#/stacks/create/template?stackName=resco-aiml-multi-account)
+1. Navigate to [AWS CloudFormation](https://console.aws.amazon.com/cloudformation/home#/stacks/create/template?stackName=aiml-security-multi-account)
 2. Select **Upload a template file** and upload the [2-aiml-security-codebuild.yaml](deployment/2-aiml-security-codebuild.yaml) file.
 3. Set the `MultiAccountScan` parameter to `true`.
 4. Optionally, provide your email address in the `EmailAddress` parameter for completion notifications.
@@ -254,14 +229,14 @@ Deploy [2-aiml-security-codebuild.yaml](deployment/2-aiml-security-codebuild.yam
 
 ### Single-Account Mode (`MultiAccountScan=false`)
 
-- Creates a local `ReSCOAIMLMemberRole`
+- Creates a local `AIMLSecurityMemberRole`
 - Runs the assessment in the same account
 - Uses a local Amazon S3 bucket for results
 
 ### Multi-Account Mode (`MultiAccountScan=true`)
 
 - Lists all active accounts in AWS Organizations
-- Assumes the `ReSCOAIMLMemberRole` in each target account
+- Assumes the `AIMLSecurityMemberRole` in each target account
 - Deploys selected assessment modules in each account with a shared Amazon S3 bucket
 - Executes AWS Step Functions for each deployed module in each account
 - Consolidates results by assessment type in a central Amazon S3 bucket
@@ -276,7 +251,7 @@ Deploy [2-aiml-security-codebuild.yaml](deployment/2-aiml-security-codebuild.yam
 #### Multi-Account Orchestration
 
 1. **Account Discovery**: AWS CodeBuild queries AWS Organizations for active accounts
-2. **Role Assumption**: Assumes `ReSCOAIMLMemberRole` in each target account
+2. **Role Assumption**: Assumes `AIMLSecurityMemberRole` in each target account
 3. **Module Deployment**: Deploys the AI/ML assessment module:
    - Amazon Bedrock Assessment AWS Lambda
    - Amazon SageMaker Assessment AWS Lambda
@@ -291,7 +266,7 @@ Deploy [2-aiml-security-codebuild.yaml](deployment/2-aiml-security-codebuild.yam
 
 ## Permissions Required
 
-### Central Account Role (`ReSCOMultiAccountCodeBuildRole`)
+### Central Account Role (`MultiAccountCodeBuildRole`)
 
 - Assumes roles in member accounts
 - Lists AWS Organizations accounts
@@ -299,7 +274,7 @@ Deploy [2-aiml-security-codebuild.yaml](deployment/2-aiml-security-codebuild.yam
 - Executes AWS Step Functions
 - Writes to the Amazon S3 bucket
 
-### Member Account Role (`ReSCOAIMLMemberRole`)
+### Member Account Role (`AIMLSecurityMemberRole`)
 
 - Read-only access to AI/ML services (Amazon Bedrock, Amazon SageMaker AI, Amazon Bedrock AgentCore)
 - AWS IAM read permissions for security assessment
@@ -322,8 +297,8 @@ You can check the AWS CodeBuild console to ensure that the assessment has comple
 
 1. **Find the Amazon S3 Bucket Name**:
    - Navigate to **AWS CloudFormation** > **Stacks** in the AWS Console
-   - For single-account deployments using the standalone template (`aiml-security-single-account.yaml`), select the stack you deployed (e.g., `rescoaiml-standalonerole-mgmt`) and find the `AssessmentBucket` output. Results are synced to this bucket under the `{account_id}/` prefix.
-   - For multi-account deployments, select the `resco-aiml-multi-account` stack created in [Step 2: Deploy Central Infrastructure](#step-2-deploy-central-infrastructure) and find the `AssessmentBucket` output
+   - For single-account deployments using the standalone template (`aiml-security-single-account.yaml`), select the stack you deployed (e.g., `aiml-security-single-account`) and find the `AssessmentBucket` output. Results are synced to this bucket under the `{account_id}/` prefix.
+   - For multi-account deployments, select the `aiml-security-multi-account` stack created in [Step 2: Deploy Central Infrastructure](#step-2-deploy-central-infrastructure) and find the `AssessmentBucket` output
    - Go to the **Outputs** tab
    - Copy the Amazon S3 bucket name
 
@@ -378,13 +353,6 @@ You can check the AWS CodeBuild console to ensure that the assessment has comple
 | **Passed** | Resources were checked and found compliant |
 | **N/A** | No resources exist to check (e.g., no notebooks, no guardrails configured) |
 
-### Check ID Convention
-
-Each security check has a unique identifier with a service prefix:
-- **BR-XX**: Amazon Bedrock checks (e.g., BR-01, BR-14)
-- **SM-XX**: Amazon SageMaker checks (e.g., SM-01, SM-16)
-- **AC-XX**: Amazon Bedrock AgentCore checks (e.g., AC-01, AC-13)
-
 ## Customization
 
 ### Adding New Accounts
@@ -392,7 +360,7 @@ Each security check has a unique identifier with a service prefix:
 #### Option A: AWS Console
 
 1. Navigate to **AWS CloudFormation** > **StackSets**
-2. Select `resco-aiml-member-roles` AWS CloudFormation StackSet
+2. Select `aiml-security-member-roles` AWS CloudFormation StackSet
 3. Click **Add stacks to StackSet**
 4. Choose deployment targets:
    - **Deploy to accounts**: Enter specific account IDs
@@ -407,28 +375,6 @@ To add or remove service permissions, edit the member role permissions in `1-aim
 
 Adjust the `ConcurrentAccountScans` parameter based on your organization size and cost considerations.
 
-## Troubleshooting
-
-### Common Issues
-
-1. **AWS CloudFormation StackSet Deployment Failures**: Check service-linked roles and permissions
-2. **Cross-Account Role Assumption**: Verify trust relationships and account IDs
-3. **AWS SAM Deployment Failures**: Check AWS CodeBuild logs for specific errors
-4. **AWS Step Functions Execution**: Monitor state machine executions in each account
-5. **EarlyValidation::ResourceExistenceCheck**: AWS CloudFormation blocks stack creation when a resource with the same physical name already exists outside of AWS CloudFormation management. This typically happens when a previous deployment failed and left behind an orphaned Amazon S3 bucket. To fix:
-   - Find the orphaned bucket: `aws s3 ls | grep resco-aiml-security`
-   - Empty it: `aws s3 rm s3://<bucket-name> --recursive`
-   - Delete version markers if versioned: `aws s3api delete-objects --bucket <bucket-name> --delete "$(aws s3api list-object-versions --bucket <bucket-name> --query '{Objects: Versions[].{Key:Key,VersionId:VersionId}}')"`
-   - Delete the bucket: `aws s3 rb s3://<bucket-name>`
-   - Re-run the AWS CodeBuild project
-
-### Debugging
-
-- Check the AWS CodeBuild project logs in Amazon CloudWatch
-- Verify cross-account role trust policies
-- Ensure Amazon S3 bucket permissions allow cross-account writes
-- Monitor AWS Step Functions executions for individual account assessments
-
 ## Cleanup
 
 ### Single-Account Cleanup
@@ -442,7 +388,7 @@ To remove all resources deployed for single-account assessment:
    - Wait for stack deletion to complete
 
 2. **Delete the AWS CodeBuild infrastructure stack**:
-   - Select the `resco-aiml-single-account` stack (or your custom stack name)
+   - Select the `aiml-security-single-account` stack (or your custom stack name)
    - Click **Delete**
    - Wait for stack deletion to complete
 
@@ -466,25 +412,25 @@ To remove all resources deployed for multi-account assessment:
 
 1. **Delete AWS SAM-deployed stacks in each member account**:
    - For each account that was scanned, navigate to **AWS CloudFormation** > **Stacks**
-   - Select the `resco-aiml-security-{account_id}` stack (e.g., `resco-aiml-security-123456789012`)
-   - For the management account, select `resco-aiml-security-mgmt`
+   - Select the `aiml-security-{account_id}` stack (e.g., `aiml-security-123456789012`)
+   - For the management account, select `aiml-security-mgmt`
    - Click **Delete**
    - Alternatively, use the AWS CLI to delete across accounts:
      ```bash
      # Assume role in member account and delete stack
-     aws cloudformation delete-stack --stack-name resco-aiml-security-<account_id> \
+     aws cloudformation delete-stack --stack-name aiml-security-<account_id> \
        --region <region>
      ```
 
 2. **Delete the central AWS CodeBuild infrastructure stack**:
    - In the management account, navigate to **AWS CloudFormation** > **Stacks**
-   - Select the `resco-aiml-multi-account` stack
+   - Select the `aiml-security-multi-account` stack
    - Click **Delete**
    - Wait for stack deletion to complete
 
 3. **Delete the AWS CloudFormation StackSet member roles**:
    - Navigate to **AWS CloudFormation** > **StackSets**
-   - Select the `resco-aiml-member-roles` AWS CloudFormation StackSet
+   - Select the `aiml-security-member-roles` AWS CloudFormation StackSet
    - Click **Actions** > **Delete stacks from StackSet**
    - Select all deployment targets (OUs or accounts)
    - Wait for stack instances to be deleted
@@ -493,7 +439,7 @@ To remove all resources deployed for multi-account assessment:
 4. **Clean up Amazon S3 buckets** (if stack deletion fails due to non-empty buckets):
    ```bash
    # List and identify assessment buckets
-   aws s3 ls | grep resco-aiml
+   aws s3 ls | grep aiml-security
 
    # Empty each bucket
    aws s3 rm s3://<bucket-name> --recursive
@@ -513,251 +459,35 @@ For a clean removal, delete resources in this order:
 
 1. **Assessment stacks** (auto-created by SAM):
    - Single-account: `aiml-sec-{account_id}` (e.g., `aiml-sec-123456789012`)
-   - Multi-account: `resco-aiml-security-{account_id}` per member account, plus `resco-aiml-security-mgmt` for management account
+   - Multi-account: `aiml-security-{account_id}` per member account, plus `aiml-security-mgmt` for management account
 
 2. **Infrastructure stack** (the stack you deployed manually):
-   - Single-account: Your chosen stack name (e.g., `my-resco-assessment`)
-   - Multi-account: `resco-aiml-multi-account` or your chosen name
+   - Single-account: Your chosen stack name (e.g., `my-aiml-assessment`)
+   - Multi-account: `aiml-security-multi-account` or your chosen name
 
 3. AWS CloudFormation StackSet member roles (multi-account only)
 
 4. Any remaining Amazon S3 buckets manually
 
-## Frequently Asked Questions
+---
 
-### General Questions
+## Documentation
 
-**Q: Does this assessment make any changes to my AWS resources?**
+| Document | Description |
+|----------|-------------|
+| [Security Checks Reference](docs/SECURITY_CHECKS.md) | Complete reference for all 52 security checks with severity levels |
+| [Troubleshooting Guide](docs/TROUBLESHOOTING.md) | Common issues, debugging tips, and FAQ |
+| [Developer Guide](docs/DEVELOPER_GUIDE.md) | Architecture details, adding custom checks, and contributing |
 
-A: No. All security checks are **read-only**. The framework only queries your resources to evaluate their configurations. It does not create, modify, or delete any of your AI/ML workloads or data.
-
-**Q: How long does an assessment take to run?**
-
-A:
-- **Single account**: 5-10 minutes (depending on the number of resources)
-- **Multi-account** (10 accounts): 15-20 minutes
-- **Multi-account** (50+ accounts): 30-45 minutes
-
-The assessment runs in parallel across accounts to minimize total execution time.
-
-**Q: How often should I run security assessments?**
-
-A:
-- **Production AI/ML workloads**: Weekly or bi-weekly
-- **Development/Test environments**: Monthly
-- **After significant changes**: Always (new models, configuration changes, IAM updates)
-- **Compliance requirements**: As mandated by your organization's security policies
-
-You can automate regular assessments using Amazon EventBridge scheduled rules.
-
-**Q: What AWS regions are supported?**
-
-A: The framework supports all standard AWS commercial regions where Amazon Bedrock, Amazon SageMaker AI, or Amazon Bedrock AgentCore are available. AWS GovCloud and AWS China regions may require template modifications.
-
-**Q: Does this work if I don't have any AI/ML resources deployed yet?**
-
-A: Yes. The assessment will run successfully and report findings with status "N/A" (Not Applicable) for checks where no resources exist to assess. This is useful for establishing a security baseline before deploying AI/ML workloads.
-
-### Cost and Billing
-
-**Q: How much does it cost to run this assessment?**
-
-A: **Estimated cost per assessment**: $0.50 - $2.00 for typical usage
-
-Cost breakdown:
-- **AWS Lambda**: $0.10 - $0.50 (pay per execution, typically 5-10 function invocations)
-- **AWS Step Functions**: $0.05 - $0.25 (state transitions)
-- **Amazon S3**: $0.01 - $0.10 (report storage, negligible for most use cases)
-- **AWS CodeBuild**: $0.10 - $0.50 (execution time, billed per minute)
-
-**Multi-account deployments**: Multiply by the number of accounts being assessed. The AWS Organizations API calls are free.
-
-**Q: Are there any ongoing costs when not running assessments?**
-
-A: Minimal ongoing costs:
-- **Amazon S3 storage**: $0.023 per GB/month for storing historical reports
-- **AWS CloudWatch Logs**: $0.50 per GB for log retention (can be configured or disabled)
-- All other resources (AWS Lambda, AWS Step Functions, AWS CodeBuild) are pay-per-use with **no idle costs**
-
-### Customization and Configuration
-
-**Q: Can I customize which security checks are included?**
-
-A: Currently, all 52 checks run by default to provide comprehensive coverage. You can filter results in the generated HTML reports by severity, status, or service. Future versions may support selective check execution.
-
-**Q: Can I add custom security checks?**
-
-A: Yes! See the [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md#adding-new-aiml-service-assessments) for instructions on extending the framework with additional checks. The architecture is designed to be modular and extensible.
-
-**Q: Can I export results to other formats (JSON, CSV, SIEM)?**
-
-A: Yes. The framework generates:
-- **CSV files** for each service (available in the Amazon S3 bucket per account)
-- **HTML reports** for interactive viewing
-- **JSON** (available via the permissions cache and raw Lambda outputs)
-
-You can integrate with SIEM tools by processing the CSV or JSON outputs from the Amazon S3 bucket.
-
-**Q: Can I schedule automated assessments?**
-
-A: Yes. Use Amazon EventBridge to trigger the AWS CodeBuild project on a schedule:
-
-```bash
-aws events put-rule \
-  --name "WeeklyAIMLAssessment" \
-  --schedule-expression "cron(0 2 ? * MON *)"
-
-aws events put-targets \
-  --rule "WeeklyAIMLAssessment" \
-  --targets "Id"="1","Arn"="arn:aws:codebuild:region:account:project/your-project"
-```
-
-### Troubleshooting
-
-**Q: The assessment completed but I don't see any reports in my Amazon S3 bucket.**
-
-A: Common causes:
-1. **Wrong bucket**: Verify you're looking at the bucket from the **Infrastructure Stack** outputs (not the assessment stack)
-2. **Still running**: Check AWS CodeBuild console - the assessment may still be in progress (typically takes 5-10 minutes)
-3. **Permissions issue**: Check AWS CloudWatch Logs for AWS Lambda execution errors
-4. **Wrong prefix**: Look under `{account_id}/` prefix for single-account, `consolidated-reports/` for multi-account
-
-**Q: I see "Access Denied" errors in the AWS CodeBuild logs.**
-
-A: This usually indicates:
-1. **Multi-account**: The member role (`ReSCOAIMLMemberRole`) is not deployed in target accounts via AWS CloudFormation StackSets
-2. **Trust relationship**: The role trust policy doesn't allow the central AWS CodeBuild role to assume it
-3. **Permissions**: The role lacks necessary read permissions for AI/ML services
-
-Solution: Verify AWS CloudFormation StackSet deployment in Step 1 completed successfully across all target accounts.
-
-**Q: The assessment is taking longer than expected.**
-
-A: Performance factors:
-- **Number of resources**: Accounts with hundreds of Amazon SageMaker notebooks or Amazon Bedrock models take longer
-- **API throttling**: AWS API rate limits may slow down assessments in large environments
-- **Concurrent executions**: Multi-account assessments run in parallel (configurable via `ConcurrentAccountScans` parameter)
-
-If assessments consistently timeout, increase the AWS Lambda timeout in the AWS SAM template or reduce concurrent account scans.
-
-### Security and Compliance
-
-**Q: Where is my assessment data stored?**
-
-A: All assessment data remains **entirely within your AWS account**:
-- Reports stored in **your Amazon S3 bucket** (you control retention and access)
-- Logs in **your Amazon CloudWatch Logs** (configurable retention)
-- No data is sent to external services or third parties
-
-**Q: What IAM permissions does the assessment role need?**
-
-A: The framework uses **read-only permissions** only:
-- AI/ML services: `List*`, `Describe*`, `Get*` actions
-- AWS IAM: Read permissions for policy analysis
-- Supporting services: AWS CloudTrail, Amazon GuardDuty, Amazon VPC (read-only)
-
-See [Permissions Required](#permissions-required) for the complete permission list.
-
-**Q: Is this assessment sufficient for compliance requirements (SOC 2, HIPAA, etc.)?**
-
-A: This assessment provides **a security evaluation against AWS best practices** and can support compliance efforts. However:
-- Useful for demonstrating security controls and continuous monitoring
-- Helps identify misconfigurations that could lead to compliance violations
-- /Not a substitute for formal compliance audits
-- Does not cover all compliance framework requirements
-
-Consult with your compliance team to determine how this assessment fits into your overall compliance program.
-
-**Q: Does this framework comply with AWS Well-Architected Framework principles?**
-
-A: Yes. The assessment checks align with the [AWS Well-Architected Framework](https://aws.amazon.com/architecture/well-architected/) Security Pillar, specifically:
-- SEC02: Identity and Access Management
-- SEC03: Detection
-- SEC04: Infrastructure Protection
-- SEC08: Data Protection
+---
 
 ## Contributing
 
-We welcome community contributions! Please see [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) for guidelines.
-
-## Security Checks Reference
-
-### Amazon SageMaker Checks (25)
-
-| Check ID | Check | Description | AWS Security Hub Control |
-|----------|-------|-------------|--------------------------|
-| SM-01 | Internet Access | Checks for direct internet access on notebooks and domains | SageMaker.2 |
-| SM-02 | AWS IAM Permissions | Identifies overly permissive policies, stale access, and SSO configuration | - |
-| SM-03 | Data Protection | Verifies encryption at rest and in transit for notebooks and domains | SageMaker.1 |
-| SM-04 | Amazon GuardDuty Integration | Verifies Amazon GuardDuty runtime threat detection is enabled | - |
-| SM-05 | MLOps Features | Checks MLOps pipelines, experiment tracking, and model registry usage | - |
-| SM-06 | Clarify Usage | Validates SageMaker Clarify for bias detection and explainability | - |
-| SM-07 | Model Monitor | Checks Model Monitor configuration for drift detection | - |
-| SM-08 | Model Registry | Validates model registry usage and permissions | - |
-| SM-09 | Notebook Root Access | Validates root access is disabled on notebooks | SageMaker.3 |
-| SM-10 | Notebook Amazon VPC Deployment | Ensures notebooks are deployed within an Amazon VPC | SageMaker.2 |
-| SM-11 | Model Network Isolation | Checks inference containers have network isolation | SageMaker.4 |
-| SM-12 | Endpoint Instance Count | Verifies endpoints have 2+ instances for HA | SageMaker.5 |
-| SM-13 | Monitoring Network Isolation | Checks monitoring job network isolation | - |
-| SM-14 | Model Container Repository | Validates model container repository access | - |
-| SM-15 | Feature Store Encryption | Checks feature group encryption settings | - |
-| SM-16 | Data Quality Encryption | Validates data quality job encryption | - |
-| SM-17 | Processing Job Encryption | Verifies processing job encryption | - |
-| SM-18 | Transform Job Encryption | Checks transform job volume encryption | - |
-| SM-19 | Hyperparameter Tuning Encryption | Validates hyperparameter tuning job encryption | - |
-| SM-20 | Compilation Job Encryption | Checks compilation job encryption | - |
-| SM-21 | AutoML Network Isolation | Validates AutoML job network isolation | - |
-| SM-22 | Model Approval Workflow | Checks model approval and governance workflow | - |
-| SM-23 | Model Drift Detection | Validates model drift monitoring configuration | - |
-| SM-24 | A/B Testing & Shadow Deployment | Checks for safe deployment patterns | - |
-| SM-25 | ML Lineage Tracking | Validates experiment tracking and lineage | - |
-
-### Amazon Bedrock Checks (14)
-
-| Check ID | Check | Description |
-|----------|-------|-------------|
-| BR-01 | AWS IAM Least Privilege | Identifies roles with AmazonBedrockFullAccess policy |
-| BR-02 | Amazon VPC Endpoint Configuration | Validates Bedrock Amazon VPC endpoints exist for private connectivity |
-| BR-03 | Marketplace Subscription Access | Checks for overly permissive marketplace subscription access |
-| BR-04 | Model Invocation Logging | Checks invocation logging is enabled |
-| BR-05 | Guardrail Configuration | Verifies guardrails are configured and enforced |
-| BR-06 | AWS CloudTrail Logging | Validates AWS CloudTrail logging for Bedrock API calls |
-| BR-07 | Prompt Management | Validates Bedrock Prompt template usage and variants |
-| BR-08 | Agent AWS IAM Configuration | Checks agent execution role permissions |
-| BR-09 | Knowledge Base Encryption | Checks knowledge base encryption settings |
-| BR-10 | Guardrail AWS IAM Enforcement | Verifies guardrails are enforced via AWS IAM conditions |
-| BR-11 | Custom Model Encryption | Validates custom models use customer-managed AWS KMS keys |
-| BR-12 | Invocation Log Encryption | Verifies logs are encrypted with AWS KMS |
-| BR-13 | Flows Guardrails | Validates Bedrock Flows have guardrails attached |
-| BR-14 | Stale Access | Detects unused Bedrock API permissions |
-
-### Amazon Bedrock AgentCore Checks (13)
-
-| Check ID | Check | Description |
-|----------|-------|-------------|
-| AC-01 | Runtime Amazon VPC Configuration | Validates agent runtimes have proper Amazon VPC settings |
-| AC-02 | AWS IAM Full Access | Checks for overly permissive AgentCore AWS IAM policies |
-| AC-03 | Stale Access | Detects unused AgentCore permissions |
-| AC-04 | Observability | Verifies Amazon CloudWatch Logs and AWS X-Ray tracing configuration |
-| AC-05 | Amazon ECR Repository Encryption | Validates Amazon ECR repositories use encryption |
-| AC-06 | Browser Tool Recording | Checks storage configuration for browser tools |
-| AC-07 | Memory Encryption | Checks agent memory encryption with AWS KMS |
-| AC-08 | Amazon VPC Endpoints | Validates Amazon VPC endpoints for AgentCore services |
-| AC-09 | Service-Linked Role | Verifies the AgentCore service-linked role exists |
-| AC-10 | Resource-Based Policies | Checks runtime and gateway resource policies |
-| AC-11 | Policy Engine Encryption | Validates policy engine encryption settings |
-| AC-12 | Gateway Encryption | Verifies gateway encryption settings |
-| AC-13 | Gateway Configuration | Validates gateway security configuration |
+We welcome community contributions! Please see [Developer Guide](docs/DEVELOPER_GUIDE.md) for guidelines.
 
 ## Security
 
-- All roles follow the principle of least privilege
-- Cross-account trust is limited to the specific AWS CodeBuild role
-- Amazon S3 bucket enforces SSL-only access
-- Assessment data is encrypted in transit and at rest
-- No persistent credentials are stored in AWS CodeBuild
-
-See [Security issue notifications](CONTRIBUTING.md#security-issue-notifications) for more information.
+See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for reporting security issues.
 
 ## License
 

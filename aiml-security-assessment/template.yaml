@@ -1,15 +1,15 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  resco-aiml-assessment
+  aiml-security-assessment
 
-  Multi-account SAM Template for resco-aiml-assessment
+  SAM Template for aiml-security-assessment
 
 Resources:
   AIMLAssessmentStateMachine:
-    Type: AWS::Serverless::StateMachine
+    Type: AWS::Serverless::StateMachine # More info about State Machine Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-statemachine.html
     Properties:
-      DefinitionUri: statemachine/resco_assessments.asl.json
+      DefinitionUri: statemachine/assessments.asl.json
       DefinitionSubstitutions:
         CleanupBucketFunction: !GetAtt CleanupBucketFunction.Arn
         IAMPermissionCachingFunction: !GetAtt IAMPermissionCachingFunction.Arn
@@ -18,7 +18,7 @@ Resources:
         AgentCoreSecurityAssessmentFunction: !GetAtt AgentCoreSecurityAssessmentFunction.Arn
         GenerateConsolidatedReportFunction: !GetAtt GenerateConsolidatedReportFunction.Arn
         AIMLAssessmentBucketName: !Ref AIMLAssessmentBucket
-      Policies:
+      Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
         - LambdaInvokePolicy:
             FunctionName: !Ref CleanupBucketFunction
         - LambdaInvokePolicy:
@@ -31,13 +31,14 @@ Resources:
             FunctionName: !Ref AgentCoreSecurityAssessmentFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref GenerateConsolidatedReportFunction
+        #Add S3 Read Write policy
         - S3CrudPolicy:
             BucketName: !Ref AIMLAssessmentBucket
 
   CleanupBucketFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub 'resco-aiml-CleanupBucket'
+      FunctionName: !Sub 'aiml-security-${AWS::StackName}-CleanupBucket'
       CodeUri: functions/security/cleanup_bucket/
       Handler: app.lambda_handler
       Runtime: python3.12
@@ -55,13 +56,13 @@ Resources:
   IAMPermissionCachingFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub 'resco-aiml-IAMPermissionCaching'
+      FunctionName: !Sub 'aiml-security-${AWS::StackName}-IAMPermissionCaching'
       CodeUri: functions/security/iam_permission_caching/
       Handler: app.lambda_handler
       Runtime: python3.12
       Architectures:
         - x86_64
-      Timeout: 600
+      Timeout: 600  # 5 minutes
       MemorySize: 1024
       Environment:
         Variables:
@@ -87,17 +88,16 @@ Resources:
                 - iam:GetServiceLastAccessedDetails
                 - sts:GetCallerIdentity
               Resource: '*'
-
   GenerateConsolidatedReportFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub 'resco-aiml-GenerateReport'
+      FunctionName: !Sub 'aiml-security-${AWS::StackName}-GenerateReport'
       CodeUri: functions/security/generate_consolidated_report/
       Handler: app.lambda_handler
       Runtime: python3.12
       Architectures:
         - x86_64
-      Timeout: 600
+      Timeout: 600  # 5 minutes
       MemorySize: 1024
       Environment:
         Variables:
@@ -105,17 +105,17 @@ Resources:
       Policies:
         - S3CrudPolicy:
             BucketName: !Ref AIMLAssessmentBucket
-
   BedrockSecurityAssessmentFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub 'resco-aiml-BedrockAssessment'
+      FunctionName: !Sub 'aiml-security-${AWS::StackName}-BedrockAssessment'
       CodeUri: functions/security/bedrock_assessments/
       Handler: app.lambda_handler
       Runtime: python3.12
       Architectures:
         - x86_64
-      Timeout: 600
+      # Add S3 Read Write policy
+      Timeout: 600  # 5 minutes
       MemorySize: 1024
       Environment:
         Variables:
@@ -146,7 +146,6 @@ Resources:
               Action:
                 - bedrock:ListGuardrails
                 - bedrock:GetGuardrail
-                - bedrock:ListModelInvocations
                 - bedrock:GetModelInvocationLoggingConfiguration
                 - bedrock:ListPrompts
                 - bedrock:GetPrompt
@@ -193,19 +192,19 @@ Resources:
               Effect: Allow
               Action:
                 - ec2:DescribeVpcEndpoints
-                - ec2:DescribeVpcs
+                - ec2:DescribeVpcs  # Added this permission
               Resource: '*'
-
   SagemakerSecurityAssessmentFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub 'resco-aiml-SagemakerAssessment'
+      FunctionName: !Sub 'aiml-security-${AWS::StackName}-SagemakerAssessment'
       CodeUri: functions/security/sagemaker_assessments/
       Handler: app.lambda_handler
       Runtime: python3.12
       Architectures:
         - x86_64
-      Timeout: 600
+      # Add S3 Read Write policy
+      Timeout: 600  # 5 minutes
       MemorySize: 1024
       Environment:
         Variables:
@@ -286,19 +285,19 @@ Resources:
               Effect: Allow
               Action:
                 - ec2:DescribeVpcEndpoints
-                - ec2:DescribeVpcs
+                - ec2:DescribeVpcs  # Added this permission
               Resource: '*'
 
   AgentCoreSecurityAssessmentFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub 'resco-aiml-AgentCoreAssessment'
+      FunctionName: !Sub 'aiml-security-${AWS::StackName}-AgentCoreAssessment'
       CodeUri: functions/security/agentcore_assessments/
       Handler: app.lambda_handler
       Runtime: python3.12
       Architectures:
         - x86_64
-      Timeout: 600
+      Timeout: 600  # 10 minutes
       MemorySize: 1024
       Environment:
         Variables:
@@ -343,15 +342,6 @@ Resources:
               Action:
                 - iam:GetRole
               Resource: 'arn:aws:iam::*:role/AWSServiceRoleForBedrockAgentCoreNetwork'
-            - Sid: S3BucketPermissions
-              Effect: Allow
-              Action:
-                - s3:ListBucket
-                - s3:GetBucketEncryption
-                - s3:GetBucketVersioning
-                - s3:GetBucketTagging
-                - s3:HeadBucket
-              Resource: 'arn:aws:s3:::*'
             - Sid: EC2Permissions
               Effect: Allow
               Action:
@@ -373,14 +363,28 @@ Resources:
                 - logs:DescribeLogGroups
                 - logs:DescribeLogStreams
               Resource: '*'
+            - Sid: XRayPermissions
+              Effect: Allow
+              Action:
+                - xray:GetTraceSummaries
+              Resource: '*'
             - Sid: CloudWatchPermissions
               Effect: Allow
               Action:
                 - cloudwatch:ListMetrics
                 - cloudwatch:PutMetricData
               Resource: '*'
+            - Sid: S3BucketPermissions
+              Effect: Allow
+              Action:
+                - s3:ListBucket
+                - s3:GetBucketEncryption
+                - s3:GetBucketVersioning
+                - s3:GetBucketTagging
+                - s3:HeadBucket
+              Resource: 'arn:aws:s3:::*'
 
-  # S3 bucket (always created for local storage)
+# Add a S3 bucket to store the AIML assessment results
   AIMLAssessmentBucket:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain

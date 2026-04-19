@@ -2056,7 +2056,7 @@ def lambda_handler(event, context):
         # Publish CloudWatch metrics
         try:
             cloudwatch_client.put_metric_data(
-                Namespace='ReSCO/AgentCore',
+                Namespace='AIMLSecurity/AgentCore',
                 MetricData=[
                     {
                         'MetricName': 'AssessmentDuration',

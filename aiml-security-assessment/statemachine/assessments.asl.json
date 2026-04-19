@@ -1,5 +1,5 @@
 {
-    "Comment": "A state machine that performs ReSCO assessments.",
+    "Comment": "A state machine that performs AI/ML security assessments.",
     "StartAt": "Cleanup S3 Bucket",
     "States": {
         "Cleanup S3 Bucket": {

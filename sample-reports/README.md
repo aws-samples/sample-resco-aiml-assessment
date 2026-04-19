@@ -60,11 +60,11 @@ playwright install chromium
 python sample-reports/scripts/capture_screenshots.py
 ```
 
-See [DEVELOPER_GUIDE.md](../DEVELOPER_GUIDE.md#documentation-and-screenshots) for detailed instructions.
+See [Developer Guide](../docs/DEVELOPER_GUIDE.md#documentation-and-screenshots) for detailed instructions.
 
 ## For Developers
 
-When updating the report template (`resco-aiml-assessment/functions/security/generate_consolidated_report/report_template.py`):
+When updating the report template (`aiml-security-assessment/functions/security/generate_consolidated_report/report_template.py`):
 
 1. Regenerate sample reports with your changes
 2. Run the screenshot script to update documentation images

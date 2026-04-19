@@ -19,7 +19,7 @@ Parameters:
   GitHubRepoUrl:
     Type: String
     Description: GitHub repository URL
-    Default: https://github.com/aws-samples/sample-resco-aiml-assessment
+    Default: https://github.com/aws-samples/sample-aiml-security-assessment
     AllowedPattern: ^https:\/\/github\.com\/[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+(\.git)?$
     ConstraintDescription: Must be a valid GitHub repository URL (e.g., https://github.com/owner/repo or https://github.com/owner/repo.git)
 
@@ -47,7 +47,7 @@ Conditions:
 
 Resources:
   # S3 bucket for assessment results
-  ReSCOAssessmentBucket:
+  AssessmentBucket:
     Type: AWS::S3::Bucket
     Properties:
       VersioningConfiguration:
@@ -62,10 +62,10 @@ Resources:
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
 
-  ReSCOAssessmentBucketPolicy:
+  AssessmentBucketPolicy:
     Type: "AWS::S3::BucketPolicy"
     Properties:
-      Bucket: !Ref ReSCOAssessmentBucket
+      Bucket: !Ref AssessmentBucket
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -74,18 +74,18 @@ Resources:
             Action: "s3:*"
             Effect: Deny
             Resource:
-              - !Sub "${ReSCOAssessmentBucket.Arn}"
-              - !Sub "${ReSCOAssessmentBucket.Arn}/*"
+              - !Sub "${AssessmentBucket.Arn}"
+              - !Sub "${AssessmentBucket.Arn}/*"
             Condition:
               Bool:
                 aws:SecureTransport: false
 
-  # Local ReSCO role for single account assessments
-  ReSCOMemberRole:
+  # Local member role for single account assessments
+  MemberRole:
     Type: "AWS::IAM::Role"
     Properties:
       Path: "/service-role/"
-      RoleName: ReSCOAIMLMemberRole
+      RoleName: AIMLSecurityMemberRole
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -96,9 +96,9 @@ Resources:
               - "sts:AssumeRole"
             Condition:
               ArnEquals:
-                aws:PrincipalArn: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/service-role/ReSCOCodeBuildRole
+                aws:PrincipalArn: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/service-role/CodeBuildRole
       Policies:
-        - PolicyName: ReSCOAIMLAssessmentPermissions
+        - PolicyName: AIMLSecurityAssessmentPermissions
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -228,11 +228,11 @@ Resources:
                 Resource: "*"
 
   # CodeBuild role for running assessments
-  ReSCOCodeBuildRole:
+  CodeBuildRole:
     Type: AWS::IAM::Role
     Properties:
       Path: "/service-role/"
-      RoleName: ReSCOCodeBuildRole
+      RoleName: CodeBuildRole
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -259,7 +259,7 @@ Resources:
               - Action:
                   - sts:AssumeRole
                 Effect: Allow
-                Resource: !GetAtt ReSCOMemberRole.Arn
+                Resource: !GetAtt MemberRole.Arn
         - PolicyName: CloudFormationPermissions
           PolicyDocument:
             Version: "2012-10-17"
@@ -281,7 +281,7 @@ Resources:
                   - cloudformation:ListStacks
                 Effect: Allow
                 Resource:
-                  - !Sub "arn:${AWS::Partition}:cloudformation:*:${AWS::AccountId}:stack/resco-aiml-*/*"
+                  - !Sub "arn:${AWS::Partition}:cloudformation:*:${AWS::AccountId}:stack/aiml-security-*/*"
                   - !Sub "arn:${AWS::Partition}:cloudformation:*:${AWS::AccountId}:stack/aiml-sec-*/*"
                   - !Sub "arn:${AWS::Partition}:cloudformation:*:${AWS::AccountId}:stack/aws-sam-cli-managed-default/*"
               - Action:
@@ -338,7 +338,7 @@ Resources:
                   - iam:PassRole
                 Effect: Allow
                 Resource:
-                  - !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/resco-aiml-*'
+                  - !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/aiml-security-*'
                   - !Sub 'arn:${AWS::Partition}:iam::${AWS::AccountId}:role/aiml-sec-*'
               - Sid: StepFunctionsPermissions
                 Action:
@@ -383,27 +383,27 @@ Resources:
                   - s3:PutObject
                   - s3:GetObject
                 Effect: Allow
-                Resource: !Sub "${ReSCOAssessmentBucket.Arn}/*"
+                Resource: !Sub "${AssessmentBucket.Arn}/*"
               - Action:
                   - s3:GetObject
                   - s3:ListBucket
                 Effect: Allow
                 Resource:
-                  - !Sub "arn:${AWS::Partition}:s3:::resco-aiml-security-*"
-                  - !Sub "arn:${AWS::Partition}:s3:::resco-aiml-security-*/*"
+                  - !Sub "arn:${AWS::Partition}:s3:::aiml-security-*"
+                  - !Sub "arn:${AWS::Partition}:s3:::aiml-security-*/*"
 
   # CodeBuild project for running assessments
-  ReSCOCodeBuild:
+  CodeBuild:
     Type: AWS::CodeBuild::Project
     Properties:
-      Name: ReSCOCodeBuild
+      Name: AIMLSecurityCodeBuild
       Environment:
         ComputeType: BUILD_GENERAL1_SMALL
         Image: "aws/codebuild/amazonlinux2-x86_64-standard:4.0"
         Type: "LINUX_CONTAINER"
         EnvironmentVariables:
           - Name: BUCKET_REPORT
-            Value: !Ref ReSCOAssessmentBucket
+            Value: !Ref AssessmentBucket
             Type: PLAINTEXT
           - Name: GITHUB_REPO_URL
             Value: !Ref GitHubRepoUrl
@@ -411,8 +411,8 @@ Resources:
           - Name: GITHUB_BRANCH
             Value: !Ref GitHubBranch
             Type: PLAINTEXT
-          - Name: RESCO_ROLE
-            Value: ReSCOAIMLMemberRole
+          - Name: MEMBER_ROLE
+            Value: AIMLSecurityMemberRole
             Type: PLAINTEXT
           - Name: MULTI_ACCOUNT_SCAN
             Value: "false"
@@ -423,8 +423,8 @@ Resources:
           - Name: AWS_ACCOUNT_ID
             Value: !Sub ${AWS::AccountId}
             Type: PLAINTEXT
-      Description: Run ReSCO AIML single-account assessment
-      ServiceRole: !GetAtt ReSCOCodeBuildRole.Arn
+      Description: Run AIML Security single-account assessment
+      ServiceRole: !GetAtt CodeBuildRole.Arn
       TimeoutInMinutes: !Ref CodeBuildTimeout
       Artifacts:
         Type: NO_ARTIFACTS
@@ -456,7 +456,7 @@ Resources:
               - Effect: Allow
                 Action:
                   - "codebuild:StartBuild"
-                Resource: !GetAtt ReSCOCodeBuild.Arn
+                Resource: !GetAtt CodeBuild.Arn
 
   CodeBuildStartBuildLambda:
     Type: AWS::Lambda::Function
@@ -512,13 +512,13 @@ Resources:
 
   CodeBuildStartBuild:
     Type: Custom::CodeBuildStartBuild
-    DependsOn: ReSCOAssessmentBucketPolicy
+    DependsOn: AssessmentBucketPolicy
     Properties:
       ServiceToken: !GetAtt CodeBuildStartBuildLambda.Arn
-      ProjectName: !Ref ReSCOCodeBuild
+      ProjectName: !Ref CodeBuild
 
   # SNS topic for notifications (optional)
-  ReSCONotificationTopic:
+  NotificationTopic:
     Condition: CreateEmailNotification
     Type: AWS::SNS::Topic
     Properties:
@@ -526,7 +526,7 @@ Resources:
         - Endpoint: !Ref EmailAddress
           Protocol: email
 
-  ReSCOSnsNotificationsPolicy:
+  SnsNotificationsPolicy:
     Condition: CreateEmailNotification
     Type: AWS::SNS::TopicPolicy
     Properties:
@@ -540,9 +540,9 @@ Resources:
               Service: "events.amazonaws.com"
             Action:
               - sns:Publish
-            Resource: !Ref ReSCONotificationTopic
+            Resource: !Ref NotificationTopic
       Topics:
-        - !Ref ReSCONotificationTopic
+        - !Ref NotificationTopic
 
   CodeBuildStateChangeRule:
     Condition: CreateEmailNotification
@@ -560,25 +560,25 @@ Resources:
             - FAILED
             - STOPPED
           project-name:
-            - !Ref ReSCOCodeBuild
+            - !Ref CodeBuild
       State: ENABLED
       Targets:
         - Id: toSNS
-          Arn: !Ref ReSCONotificationTopic
+          Arn: !Ref NotificationTopic
           InputTransformer:
             InputPathsMap:
               build-status: $.detail.build-status
               bucket: $.detail.additional-information.environment.environment-variables[0].value
             InputTemplate: >-
-              "The ReSCO AIML assessment has <build-status>."
+              "The AIML Security assessment has <build-status>."
 
               "You can view your results in the <bucket> bucket."
 
 Outputs:
   CodeBuildProjectName:
     Description: CodeBuild project name for running assessments
-    Value: !Ref ReSCOCodeBuild
+    Value: !Ref CodeBuild
 
   AssessmentBucket:
     Description: S3 bucket containing assessment results (HTML reports and CSV data)
-    Value: !Ref ReSCOAssessmentBucket
+    Value: !Ref AssessmentBucket

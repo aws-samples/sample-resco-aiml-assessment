@@ -4,7 +4,7 @@ version = 0.1
 
 [default]
 [default.global.parameters]
-stack_name = "resco-aiml-assessment"
+stack_name = "aiml-security-assessment"
 
 [default.build.parameters]
 cached = true

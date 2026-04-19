@@ -2,7 +2,7 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: This template deploys the roles needed for the AIML Security Assessment to run in each member account.
 
 Parameters:
-  ReSCOAccountID:
+  ManagementAccountID:
     Description: "Specifies the account ID where AIML Security Assessment will run from."
     Type: String
     Default: "012345678910"
@@ -10,24 +10,24 @@ Parameters:
     ConstraintDescription: Enter the 12 digit account ID with no spaces.
 
 Resources:
-  ReSCOMemberRole:
+  MemberRole:
     Type: "AWS::IAM::Role"
     Properties:
       Path: "/service-role/"
-      RoleName: ReSCOAIMLMemberRole
+      RoleName: AIMLSecurityMemberRole
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
           - Effect: Allow
             Principal:
-              AWS: !Sub "arn:${AWS::Partition}:iam::${ReSCOAccountID}:root"
+              AWS: !Sub "arn:${AWS::Partition}:iam::${ManagementAccountID}:root"
             Action:
               - "sts:AssumeRole"
             Condition:
               ArnEquals:
-                aws:PrincipalArn: !Sub arn:${AWS::Partition}:iam::${ReSCOAccountID}:role/service-role/ReSCOMultiAccountCodeBuildRole
+                aws:PrincipalArn: !Sub arn:${AWS::Partition}:iam::${ManagementAccountID}:role/service-role/MultiAccountCodeBuildRole
       Policies:
-        - PolicyName: ReSCOAIMLAssessmentPermissions
+        - PolicyName: AIMLSecurityAssessmentPermissions
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -209,13 +209,13 @@ Resources:
                   - s3:DeleteObject
                   - s3:ListBucket
                 Resource:
-                  - "arn:aws:s3:::*resco*assessment*"
-                  - "arn:aws:s3:::*resco*assessment*/*"
+                  - "arn:aws:s3:::*aiml*security*assessment*"
+                  - "arn:aws:s3:::*aiml*security*assessment*/*"
               # Allow Lambda execution roles to access central bucket
               - Effect: Allow
                 Action:
                   - sts:AssumeRole
-                Resource: "arn:aws:iam::*:role/resco-aiml-security-*"
+                Resource: "arn:aws:iam::*:role/aiml-security-*"
               # SAM/CloudFormation deployment permissions (required for multi-account flow)
               - Effect: Allow
                 Action:
@@ -232,7 +232,7 @@ Resources:
                   - cloudformation:GetTemplateSummary
                   - cloudformation:ListStackResources
                 Resource:
-                  - !Sub "arn:${AWS::Partition}:cloudformation:*:${AWS::AccountId}:stack/resco-aiml-security-*/*"
+                  - !Sub "arn:${AWS::Partition}:cloudformation:*:${AWS::AccountId}:stack/aiml-security-*/*"
                   - !Sub "arn:${AWS::Partition}:cloudformation:*:${AWS::AccountId}:stack/aws-sam-cli-managed-default/*"
               - Effect: Allow
                 Action:
@@ -256,7 +256,7 @@ Resources:
                   - lambda:ListTags
                   - lambda:InvokeFunction
                 Resource:
-                  - !Sub "arn:${AWS::Partition}:lambda:*:${AWS::AccountId}:function:resco-aiml-*"
+                  - !Sub "arn:${AWS::Partition}:lambda:*:${AWS::AccountId}:function:aiml-security-*"
               # IAM role management for SAM-deployed Lambda roles
               - Effect: Allow
                 Action:
@@ -272,7 +272,7 @@ Resources:
                   - iam:TagRole
                   - iam:UntagRole
                 Resource:
-                  - !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/resco-aiml-*"
+                  - !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/aiml-security-*"
               # Step Functions deployment permissions
               - Effect: Allow
                 Action:
@@ -311,12 +311,12 @@ Resources:
                   - s3:DeleteObject
                   - s3:DeleteObjectVersion
                 Resource:
-                  - "arn:aws:s3:::resco-aiml-security-*"
-                  - "arn:aws:s3:::resco-aiml-security-*/*"
+                  - "arn:aws:s3:::aiml-security-*"
+                  - "arn:aws:s3:::aiml-security-*/*"
                   - "arn:aws:s3:::aws-sam-cli-managed-default-*"
                   - "arn:aws:s3:::aws-sam-cli-managed-default-*/*"
 
 Outputs:
-  ReSCOMemberRoleArn:
-    Description: ARN of the ReSCO AIML Member Role
-    Value: !GetAtt ReSCOMemberRole.Arn
+  MemberRoleArn:
+    Description: ARN of the AIML Security Member Role
+    Value: !GetAtt MemberRole.Arn

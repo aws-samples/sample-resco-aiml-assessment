@@ -5,7 +5,7 @@
 .mcp.json
 
 # AWS SAM build artifacts
-resco-aiml-assessment/.aws-sam/
+aiml-security-assessment/.aws-sam/
 
 # Python
 __pycache__/

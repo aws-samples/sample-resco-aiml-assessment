@@ -268,7 +268,7 @@ def get_html_template() -> str:
             <div class="sidebar-footer">
                 <p>Generated: {date_display}</p>
                 <p>{account_info}</p>
-                <p style="margin-top: 8px;"><a href="https://github.com/aws-samples/sample-resco-aiml-assessment">GitHub Repository</a></p>
+                <p style="margin-top: 8px;"><a href="https://github.com/aws-samples/sample-aiml-security-assessment">GitHub Repository</a></p>
             </div>
         </aside>
         <main class="main">

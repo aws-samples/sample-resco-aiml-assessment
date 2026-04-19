@@ -23,9 +23,6 @@
   - [2. Integration Testing](#2-integration-testing)
   - [3. Multi-Account Testing](#3-multi-account-testing)
 - [Monitoring and Debugging](#monitoring-and-debugging)
-  - [Amazon CloudWatch Logs](#amazon-cloudwatch-logs)
-  - [Common Issues](#common-issues)
-  - [Debugging Tips](#debugging-tips)
 - [Development Roadmap](#development-roadmap)
   - [Current Status](#current-status)
   - [Potential Additions](#potential-additions)
@@ -46,30 +43,38 @@
 
 The AI/ML Security Assessment Framework is a serverless, multi-account security assessment solution for AWS AI/ML workloads. It performs 52 security checks across Amazon Bedrock, Amazon SageMaker AI, and Amazon Bedrock AgentCore, generating interactive HTML reports with findings and remediation guidance.
 
+### Security Design Principles
+
+- All roles follow the principle of least privilege
+- Cross-account trust is limited to the specific AWS CodeBuild role
+- Amazon S3 bucket enforces SSL-only access
+- Assessment data is encrypted in transit and at rest
+- No persistent credentials are stored in AWS CodeBuild
+
 ## Architecture Diagrams
 
 ### Phase 1: Deployment Setup (AWS CloudFormation)
-![Deployment Phase](diagrams/deployment-phase.png)
+![Deployment Phase](./diagrams/deployment-phase.png)
 
 ### Phase 2: Assessment Execution (AWS CodeBuild)
-![Execution Phase](diagrams/execution-phase.png)
+![Execution Phase](./diagrams/execution-phase.png)
 
 ### Service-Level Assessment Architecture
-![Service-Level Architecture](diagrams/service-level-architecture.png)
+![Service-Level Architecture](./diagrams/service-level-architecture.png)
 
 ## Two-Phase Architecture
 
 ### Phase 1: Infrastructure Deployment
 
 #### Step 1: Member Account Roles (`1-aiml-security-member-roles.yaml`)
-- **AWS CloudFormation StackSets Deployment**: Deploys `ReSCOAIMLMemberRole` to all target accounts
+- **AWS CloudFormation StackSets Deployment**: Deploys `AIMLSecurityMemberRole` to all target accounts
 - **Cross-Account Trust**: Establishes trust relationship with central management account
 - **Assessment Permissions**: Grants read-only access to AI/ML services (Amazon Bedrock, Amazon SageMaker AI, Amazon Bedrock AgentCore) for security assessment
 
 #### Step 2: Central Infrastructure (`2-aiml-security-codebuild.yaml`)
 - **AWS CodeBuild Project**: Orchestrates multi-account deployments and assessments
 - **Amazon S3 Bucket**: Central storage for consolidated assessment results
-- **AWS IAM Role**: `ReSCOMultiAccountCodeBuildRole` with cross-account access permissions
+- **AWS IAM Role**: `MultiAccountCodeBuildRole` with cross-account access permissions
 - **Amazon SNS Topic**: Optional email notifications for assessment completion
 - **Amazon EventBridge Rules**: Automated workflow triggers
 - **AWS Lambda Trigger**: Automatically starts AWS CodeBuild after stack creation
@@ -78,15 +83,15 @@ The AI/ML Security Assessment Framework is a serverless, multi-account security 
 
 #### AWS CodeBuild Execution Flow
 1. **Account Discovery**: Lists active accounts from AWS Organizations
-2. **Role Assumption**: Assumes `ReSCOAIMLMemberRole` in each target account
+2. **Role Assumption**: Assumes `AIMLSecurityMemberRole` in each target account
 3. **AWS SAM Deployment**: Deploys the AI/ML assessment stack via AWS SAM
 4. **Assessment Execution**: Triggers AWS Step Functions workflow in each account
 5. **Results Consolidation**: Collects and consolidates results from all accounts
 
 #### Project Structure
 ```
-sample-resco-aiml-assessment/
-├── resco-aiml-assessment/
+sample-aiml-security-assessment/
+├── aiml-security-assessment/
 │   ├── functions/security/
 │   │   ├── bedrock_assessments/      # Bedrock security checks (14)
 │   │   ├── sagemaker_assessments/    # SageMaker security checks (25)
@@ -95,9 +100,25 @@ sample-resco-aiml-assessment/
 │   │   ├── cleanup_bucket/           # Amazon S3 cleanup
 │   │   └── generate_consolidated_report/  # HTML/CSV report generation
 │   ├── statemachine/                 # AWS Step Functions definition
-│   └── template.yaml                 # AWS SAM template
+│   ├── images/                       # SAM application images
+│   ├── template.yaml                 # AWS SAM template (single-account)
+│   ├── template-multi-account.yaml   # AWS SAM template (multi-account)
+│   ├── samconfig.toml                # SAM deployment configuration
+│   ├── envvars.json                  # Environment variables for local testing
+│   └── testfile.json                 # Test event file for local invocation
 ├── deployment/                       # AWS CloudFormation templates
+├── docs/                             # Documentation
+│   ├── DEVELOPER_GUIDE.md            # This guide
+│   ├── SECURITY_CHECKS.md            # Security checks reference
+│   ├── TROUBLESHOOTING.md            # Troubleshooting guide
+│   ├── diagrams/                     # Architecture diagrams
+│   └── icons/                        # AWS service icons
+├── sample-reports/                   # Sample assessment reports
+│   ├── scripts/                      # Screenshot capture scripts
+│   ├── *.html                        # Sample HTML reports
+│   └── *.png                         # Report screenshots
 ├── buildspec.yml                     # AWS CodeBuild orchestration
+├── buildspec-modular-example.yml     # Modular buildspec example
 └── consolidate_html_reports.py       # Multi-account report consolidation
 ```
 
@@ -114,7 +135,7 @@ sample-resco-aiml-assessment/
 # buildspec.yml execution flow
 1. Get active accounts from AWS Organizations
 2. For each account:
-   - Assume ReSCOAIMLMemberRole
+   - Assume AIMLSecurityMemberRole
    - Deploy AI/ML assessment stack via AWS SAM
    - Start AWS Step Functions execution
 3. Wait for completion and consolidate results
@@ -156,12 +177,7 @@ sample-resco-aiml-assessment/
 
 ## Assessment Structure
 
-The framework includes **52 security checks** across three AI/ML services:
-- **Amazon Bedrock Assessment AWS Lambda**: 14 checks (BR-01 to BR-14)
-- **Amazon SageMaker Assessment AWS Lambda**: 25 checks (SM-01 to SM-25)
-- **Amazon Bedrock AgentCore Assessment AWS Lambda**: 13 checks (AC-01 to AC-13)
-
-For the complete list of checks with descriptions, see the [Security Checks Reference](README.md#security-checks-reference) in the main README.
+The framework includes **52 security checks** across three AI/ML services. For the complete list of checks with descriptions, see the [Security Checks Reference](SECURITY_CHECKS.md).
 
 ### AWS Lambda Functions
 
@@ -187,8 +203,8 @@ To add a new AI/ML service (e.g., Amazon Comprehend, Amazon Textract):
 1. **Create Function Directory** (One function per service):
 ```bash
 # Example: Adding Comprehend security assessment
-mkdir -p resco-aiml-assessment/functions/security/comprehend_assessments
-cd resco-aiml-assessment/functions/security/comprehend_assessments
+mkdir -p aiml-security-assessment/functions/security/comprehend_assessments
+cd aiml-security-assessment/functions/security/comprehend_assessments
 ```
 
 2. **Create Function Files**:
@@ -289,7 +305,7 @@ def create_finding(check_id, finding_name, finding_details, resolution, referenc
 
 ### Step 2: Update AWS SAM Template
 
-Add your new function to `resco-aiml-assessment/template.yaml`:
+Add your new function to `aiml-security-assessment/template.yaml`:
 
 ```yaml
   ComprehendSecurityAssessmentFunction:
@@ -319,7 +335,7 @@ Add your new function to `resco-aiml-assessment/template.yaml`:
 
 ### Step 3: Update AWS Step Functions Definition
 
-Add new service to the parallel execution in `resco-aiml-assessment/statemachine/aiml_security_assessments.asl.json`:
+Add new service to the parallel execution in `aiml-security-assessment/statemachine/aiml_security_assessments.asl.json`:
 
 ```json
 {
@@ -373,7 +389,7 @@ Add required permissions to member role template:
 Test your new assessment function locally:
 
 ```bash
-cd resco-aiml-assessment
+cd aiml-security-assessment
 sam build
 sam local invoke ComprehendSecurityAssessmentFunction --event testfile.json
 ```
@@ -435,7 +451,7 @@ except Exception as e:
 ### 1. Local Testing
 ```bash
 # Test individual function
-cd resco-aiml-assessment
+cd aiml-security-assessment
 sam build
 sam local invoke NewServiceSecurityAssessmentFunction --event test-event.json
 ```
@@ -443,7 +459,7 @@ sam local invoke NewServiceSecurityAssessmentFunction --event test-event.json
 ### 2. Integration Testing
 ```bash
 # Deploy to test account
-sam deploy --stack-name resco-test --capabilities CAPABILITY_IAM
+sam deploy --stack-name aiml-security-test --capabilities CAPABILITY_IAM
 
 # Execute AWS Step Functions
 aws stepfunctions start-execution \
@@ -459,36 +475,12 @@ aws stepfunctions start-execution \
 
 ## Monitoring and Debugging
 
-### Amazon CloudWatch Logs
-- **AWS CodeBuild Logs**: `/aws/codebuild/ReSCOMultiAccountCodeBuild`
-- **AWS Lambda Logs**: `/aws/lambda/[FunctionName]-[AccountId]`
-- **AWS Step Functions**: View execution history in AWS console
-
-### Common Issues
-1. **Permission Errors**: Check AWS IAM roles and trust relationships
-2. **Timeout Issues**: Increase AWS Lambda timeout or optimize code
-3. **API Throttling**: Implement exponential backoff and retries
-4. **Cross-Account Access**: Verify role assumption and trust policies
-
-### Debugging Tips
-```python
-# Enable debug logging
-import logging
-logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
-
-# Log assessment progress
-logger.info(f"Starting assessment for account: {account_id}")
-logger.debug(f"Found {len(resources)} resources to assess")
-```
+For detailed troubleshooting guidance, common issues, and debugging tips, see the [Troubleshooting Guide](TROUBLESHOOTING.md).
 
 ## Development Roadmap
 
 ### Current Status
-- **AI/ML Assessment**: 52 security checks across three services
-  - Amazon Bedrock: 14 checks (BR-01 to BR-14)
-  - Amazon SageMaker AI: 25 checks (SM-01 to SM-25)
-  - Amazon Bedrock AgentCore: 13 checks (AC-01 to AC-13)
+- **AI/ML Assessment**: 52 security checks across three services (see [Security Checks Reference](SECURITY_CHECKS.md))
 
 ### Potential Additions
 - **Amazon Comprehend**: Data privacy, access controls, entity recognition security
@@ -509,7 +501,7 @@ logger.debug(f"Found {len(resources)} resources to assess")
 Report generation uses a single shared template (`report_template.py`) for both deployment modes:
 
 ```
-resco-aiml-assessment/functions/security/generate_consolidated_report/
+aiml-security-assessment/functions/security/generate_consolidated_report/
 ├── app.py              # Lambda handler (single-account)
 ├── report_template.py  # Shared HTML/CSS/JS template
 └── ...
