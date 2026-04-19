@@ -1,0 +1,6 @@
+# Development dependencies for documentation and tooling
+# Install with: pip install -r dev-requirements.txt
+
+# Screenshot capture and optimization
+playwright>=1.40.0
+pillow>=10.0.0

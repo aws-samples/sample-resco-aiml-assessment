@@ -1,87 +1,137 @@
-# ReSCO Assessment Framework - Developer Guide
+# AI/ML Security Assessment Framework - Developer Guide
+
+## Table of Contents
+
+- [Architecture Overview](#architecture-overview)
+  - [Architecture Diagrams](#architecture-diagrams)
+  - [Two-Phase Architecture](#two-phase-architecture)
+  - [Assessment Execution Workflow](#assessment-execution-workflow)
+- [Assessment Structure](#assessment-structure)
+  - [AWS Lambda Functions](#aws-lambda-functions)
+- [Adding New AI/ML Service Assessments](#adding-new-aiml-service-assessments)
+  - [Step 1: Create Service Assessment Function](#step-1-create-service-assessment-function)
+  - [Step 2: Update AWS SAM Template](#step-2-update-aws-sam-template)
+  - [Step 3: Update AWS Step Functions Definition](#step-3-update-aws-step-functions-definition)
+  - [Step 4: Update AWS IAM Permissions](#step-4-update-aws-iam-permissions)
+  - [Step 5: Test Locally](#step-5-test-locally)
+- [Assessment Best Practices](#assessment-best-practices)
+  - [1. Security Check Implementation](#1-security-check-implementation)
+  - [2. Performance Optimization](#2-performance-optimization)
+  - [3. Error Handling](#3-error-handling)
+- [Testing Your Extensions](#testing-your-extensions)
+  - [1. Local Testing](#1-local-testing)
+  - [2. Integration Testing](#2-integration-testing)
+  - [3. Multi-Account Testing](#3-multi-account-testing)
+- [Monitoring and Debugging](#monitoring-and-debugging)
+  - [Amazon CloudWatch Logs](#amazon-cloudwatch-logs)
+  - [Common Issues](#common-issues)
+  - [Debugging Tips](#debugging-tips)
+- [Development Roadmap](#development-roadmap)
+  - [Current Status](#current-status)
+  - [Potential Additions](#potential-additions)
+  - [Development Pattern](#development-pattern)
+- [Report Generation Architecture](#report-generation-architecture)
+  - [Shared Template Module](#shared-template-module)
+  - [How It Works](#how-it-works)
+  - [Modifying the Report Template](#modifying-the-report-template)
+- [Documentation and Screenshots](#documentation-and-screenshots)
+  - [Updating Sample Reports](#updating-sample-reports)
+  - [Documentation Best Practices](#documentation-best-practices)
+- [Support and Resources](#support-and-resources)
+  - [Documentation](#documentation)
+
+---
 
 ## Architecture Overview
 
-The ReSCO (Resilience, Security, and Cost Optimization) Assessment Framework is a modular, serverless, multi-account solution built on AWS. The framework is organized into separate assessment modules, each focusing on a specific dimension of AWS workload evaluation.
+The AI/ML Security Assessment Framework is a serverless, multi-account security assessment solution for AWS AI/ML workloads. It performs 52 security checks across Amazon Bedrock, Amazon SageMaker AI, and Amazon Bedrock AgentCore, generating interactive HTML reports with findings and remediation guidance.
 
 ## Architecture Diagrams
 
-### Phase 1: Deployment Setup (CloudFormation)
-![ReSCO Deployment Phase](diagrams/deployment-phase.png)
+### Phase 1: Deployment Setup (AWS CloudFormation)
+![Deployment Phase](diagrams/deployment-phase.png)
 
-### Phase 2: Assessment Execution (CodeBuild)
-![ReSCO Execution Phase](diagrams/execution-phase.png)
+### Phase 2: Assessment Execution (AWS CodeBuild)
+![Execution Phase](diagrams/execution-phase.png)
 
 ### Service-Level Assessment Architecture
-![ReSCO Service-Level Architecture](diagrams/service-level-architecture.png)
+![Service-Level Architecture](diagrams/service-level-architecture.png)
 
 ## Two-Phase Architecture
 
 ### Phase 1: Infrastructure Deployment
 
 #### Step 1: Member Account Roles (`1-aiml-security-member-roles.yaml`)
-- **StackSets Deployment**: Deploys `ReSCOAIMLMemberRole` to all target accounts
+- **AWS CloudFormation StackSets Deployment**: Deploys `ReSCOAIMLMemberRole` to all target accounts
 - **Cross-Account Trust**: Establishes trust relationship with central management account
-- **Assessment Permissions**: Grants read-only access to AWS services for assessment
+- **Assessment Permissions**: Grants read-only access to AI/ML services (Amazon Bedrock, Amazon SageMaker AI, Amazon Bedrock AgentCore) for security assessment
 
 #### Step 2: Central Infrastructure (`2-aiml-security-codebuild.yaml`)
-- **CodeBuild Project**: Orchestrates multi-account deployments and assessments
-- **S3 Bucket**: Central storage for consolidated assessment results
-- **IAM Role**: `ReSCOMultiAccountCodeBuildRole` with cross-account access permissions
-- **SNS Topic**: Optional email notifications for assessment completion
-- **EventBridge Rules**: Automated workflow triggers
-- **Lambda Trigger**: Automatically starts CodeBuild after stack creation
+- **AWS CodeBuild Project**: Orchestrates multi-account deployments and assessments
+- **Amazon S3 Bucket**: Central storage for consolidated assessment results
+- **AWS IAM Role**: `ReSCOMultiAccountCodeBuildRole` with cross-account access permissions
+- **Amazon SNS Topic**: Optional email notifications for assessment completion
+- **Amazon EventBridge Rules**: Automated workflow triggers
+- **AWS Lambda Trigger**: Automatically starts AWS CodeBuild after stack creation
 
-### Phase 2: Assessment Execution (CodeBuild Orchestration)
+### Phase 2: Assessment Execution (AWS CodeBuild Orchestration)
 
-#### CodeBuild Execution Flow
+#### AWS CodeBuild Execution Flow
 1. **Account Discovery**: Lists active accounts from AWS Organizations
 2. **Role Assumption**: Assumes `ReSCOAIMLMemberRole` in each target account
-3. **Module Deployment**: Conditionally deploys selected assessment modules
-4. **Assessment Execution**: Triggers Step Functions for each deployed module
+3. **AWS SAM Deployment**: Deploys the AI/ML assessment stack via AWS SAM
+4. **Assessment Execution**: Triggers AWS Step Functions workflow in each account
 5. **Results Consolidation**: Collects and consolidates results from all accounts
 
-#### Assessment Modules (Monorepo Structure)
+#### Project Structure
 ```
-resco-assessments/
-├── resco-aiml-assessment/          # AI/ML services (Bedrock, SageMaker, AgentCore)
-├── resco-security-assessment/      # General security assessments
-├── resco-resilience-assessment/    # DR, backup, fault tolerance
-├── resco-cost-assessment/          # Cost optimization assessments
-└── deployment/                     # Shared deployment templates
+sample-resco-aiml-assessment/
+├── resco-aiml-assessment/
+│   ├── functions/security/
+│   │   ├── bedrock_assessments/      # Bedrock security checks (14)
+│   │   ├── sagemaker_assessments/    # SageMaker security checks (25)
+│   │   ├── agentcore_assessments/    # AgentCore security checks (13)
+│   │   ├── iam_permission_caching/   # AWS IAM permissions cache
+│   │   ├── cleanup_bucket/           # Amazon S3 cleanup
+│   │   └── generate_consolidated_report/  # HTML/CSV report generation
+│   ├── statemachine/                 # AWS Step Functions definition
+│   └── template.yaml                 # AWS SAM template
+├── deployment/                       # AWS CloudFormation templates
+├── buildspec.yml                     # AWS CodeBuild orchestration
+└── consolidate_html_reports.py       # Multi-account report consolidation
 ```
 
-#### Member Account Resources (Deployed by CodeBuild)
-- **SAM Applications**: Multiple assessment modules deployed conditionally
-- **Step Functions**: One workflow per assessment module (AI/ML, Security, Resilience, Cost)
-- **Lambda Functions**: One function per AWS service assessment
-- **Local S3 Bucket**: Temporary storage for account-specific results
+#### Member Account Resources (Deployed by AWS SAM)
+- **AWS SAM Application**: AI/ML security assessment stack
+- **AWS Step Functions**: Single workflow orchestrating all assessments
+- **AWS Lambda Functions**: One per service (Amazon Bedrock, Amazon SageMaker AI, Amazon Bedrock AgentCore) plus utilities
+- **Local Amazon S3 Bucket**: Storage for account-specific results
 
 ### Assessment Execution Workflow
 
-#### CodeBuild Orchestration
+#### AWS CodeBuild Orchestration
 ```bash
 # buildspec.yml execution flow
-1. Get active accounts from Organizations
+1. Get active accounts from AWS Organizations
 2. For each account:
    - Assume ReSCOAIMLMemberRole
-   - Deploy selected assessment modules
-   - Start Step Functions execution
+   - Deploy AI/ML assessment stack via AWS SAM
+   - Start AWS Step Functions execution
 3. Wait for completion and consolidate results
 ```
 
-#### Step Functions (Per Module)
+#### AWS Step Functions (Per Module)
 ```json
 {
   "Comment": "AI/ML Assessment Module",
-  "StartAt": "Cleanup S3 Bucket",
+  "StartAt": "Cleanup Amazon S3 Bucket",
   "States": {
-    "Cleanup S3 Bucket": {
+    "Cleanup Amazon S3 Bucket": {
       "Type": "Task",
       "Resource": "arn:aws:states:::lambda:invoke",
-      "Next": "IAM Permission Caching"
+      "Next": "AWS IAM Permission Caching"
     },
-    "IAM Permission Caching": {
+    "AWS IAM Permission Caching": {
       "Type": "Task",
       "Resource": "arn:aws:states:::lambda:invoke",
       "Next": "Parallel Service Assessments"
@@ -89,9 +139,9 @@ resco-assessments/
     "Parallel Service Assessments": {
       "Type": "Parallel",
       "Branches": [
-        {"StartAt": "Bedrock Assessment", "States": {...}},
-        {"StartAt": "SageMaker Assessment", "States": {...}},
-        {"StartAt": "AgentCore Assessment", "States": {...}}
+        {"StartAt": "Amazon Bedrock Assessment", "States": {...}},
+        {"StartAt": "Amazon SageMaker Assessment", "States": {...}},
+        {"StartAt": "Amazon Bedrock AgentCore Assessment", "States": {...}}
       ],
       "Next": "Generate Consolidated Report"
     },
@@ -104,37 +154,41 @@ resco-assessments/
 }
 ```
 
-## Assessment Module Structure 
+## Assessment Structure
 
-### 1. AI/ML Assessment (`resco-aiml-assessment/`)
-
-The AI/ML assessment module includes **52 security checks** across three services:
-- **Bedrock Assessment Lambda**: 14 checks (BR-01 to BR-14)
-- **SageMaker Assessment Lambda**: 25 checks (SM-01 to SM-25)
-- **AgentCore Assessment Lambda**: 13 checks (AC-01 to AC-13)
+The framework includes **52 security checks** across three AI/ML services:
+- **Amazon Bedrock Assessment AWS Lambda**: 14 checks (BR-01 to BR-14)
+- **Amazon SageMaker Assessment AWS Lambda**: 25 checks (SM-01 to SM-25)
+- **Amazon Bedrock AgentCore Assessment AWS Lambda**: 13 checks (AC-01 to AC-13)
 
 For the complete list of checks with descriptions, see the [Security Checks Reference](README.md#security-checks-reference) in the main README.
 
-**Future Modules:**
-- **Comprehend Assessment Lambda**: Data privacy, Access controls
-- **Textract Assessment Lambda**: Document processing security
+### AWS Lambda Functions
 
+Each assessment AWS Lambda function:
+1. Receives execution context from AWS Step Functions
+2. Reads cached AWS IAM permissions from Amazon S3
+3. Performs security checks against AWS APIs
+4. Generates CSV report with findings
+5. Uploads results to Amazon S3
+6. Returns findings summary to AWS Step Functions
 
-## Adding New Assessment Services
+**Additional Functions:**
+- **AWS IAM Permission Caching**: Pre-fetches AWS IAM policies to optimize assessment
+- **Cleanup Bucket**: Removes old assessment data
+- **Generate Consolidated Report**: Creates HTML report from CSV findings
 
-### Step 1: Choose Assessment Module
+## Adding New AI/ML Service Assessments
 
-Determine which module your new service belongs to:
-- **AI/ML services** → `resco-aiml-assessment/`
+To add a new AI/ML service (e.g., Amazon Comprehend, Amazon Textract):
 
-
-### Step 2: Create Service Assessment Function
+### Step 1: Create Service Assessment Function
 
 1. **Create Function Directory** (One function per service):
 ```bash
-# Example: Adding EKS security assessment
-mkdir -p resco-security-assessment/functions/security/eks_assessment
-cd resco-security-assessment/functions/security/eks_assessment
+# Example: Adding Comprehend security assessment
+mkdir -p resco-aiml-assessment/functions/security/comprehend_assessments
+cd resco-aiml-assessment/functions/security/comprehend_assessments
 ```
 
 2. **Create Function Files**:
@@ -233,18 +287,16 @@ def create_finding(check_id, finding_name, finding_details, resolution, referenc
     }
 ```
 
-### Step 3: Update SAM Template
+### Step 2: Update AWS SAM Template
 
-Add your new function to the appropriate module's `template.yaml`:
-
-**For Security Assessment** (`resco-security-assessment/template.yaml`):
+Add your new function to `resco-aiml-assessment/template.yaml`:
 
 ```yaml
-  NewServiceSecurityAssessmentFunction:
+  ComprehendSecurityAssessmentFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: NewServiceSecurityAssessment
-      CodeUri: functions/security/new_service_assessments/
+      FunctionName: !Sub 'ComprehendSecurityAssessment-${AWS::AccountId}'
+      CodeUri: functions/security/comprehend_assessments/
       Handler: app.lambda_handler
       Runtime: python3.12
       Timeout: 600
@@ -256,20 +308,18 @@ Add your new function to the appropriate module's `template.yaml`:
         - S3CrudPolicy:
             BucketName: !Ref AIMLAssessmentBucket
         - Statement:
-            - Sid: NewServicePermissions
+            - Sid: ComprehendReadPermissions
               Effect: Allow
               Action:
-                - newservice:List*
-                - newservice:Describe*
-                - newservice:Get*
+                - comprehend:List*
+                - comprehend:Describe*
+                - comprehend:Get*
               Resource: '*'
 ```
 
-### Step 4: Update Step Functions Definition
+### Step 3: Update AWS Step Functions Definition
 
-Add new service to the module's parallel execution:
-
-**For Security Assessment** (`resco-security-assessment/statemachine/security_assessments.asl.json`):
+Add new service to the parallel execution in `resco-aiml-assessment/statemachine/aiml_security_assessments.asl.json`:
 
 ```json
 {
@@ -277,71 +327,65 @@ Add new service to the module's parallel execution:
     "Type": "Parallel",
     "Branches": [
       {
-        "StartAt": "EC2 Security Assessment",
-        "States": {"EC2 Security Assessment": {"Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "End": true}}
+        "StartAt": "Bedrock Security Assessment",
+        "States": {"Bedrock Security Assessment": {"Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "End": true}}
       },
       {
-        "StartAt": "RDS Security Assessment",
-        "States": {"RDS Security Assessment": {"Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "End": true}}
+        "StartAt": "SageMaker Security Assessment",
+        "States": {"SageMaker Security Assessment": {"Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "End": true}}
       },
       {
-        "StartAt": "EKS Security Assessment",
-        "States": {"EKS Security Assessment": {"Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "End": true}}
+        "StartAt": "AgentCore Security Assessment",
+        "States": {"AgentCore Security Assessment": {"Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "End": true}}
+      },
+      {
+        "StartAt": "Comprehend Security Assessment",
+        "States": {"Comprehend Security Assessment": {"Type": "Task", "Resource": "arn:aws:states:::lambda:invoke", "End": true}}
       }
     ]
   }
 }
 ```
 
-### Step 5: Update Buildspec Configuration
+### Step 4: Update AWS IAM Permissions
 
-Add deployment logic to `buildspec.yml`:
-
-```bash
-# Add environment variable for new assessment type
-DEPLOY_SECURITY_ASSESSMENT=${DEPLOY_SECURITY_ASSESSMENT:-false}
-
-# Add conditional deployment logic
-if [[ $DEPLOY_SECURITY_ASSESSMENT = 'true' ]]; then
-  echo "Deploying Security Assessment"
-  cd resco-security-assessment
-  sam build --use-container
-  sam deploy --template-file .aws-sam/build/template.yaml \
-    --stack-name resco-security-$accountId \
-    --capabilities CAPABILITY_IAM \
-    --parameter-overrides BucketName=$BUCKET_REPORT
-fi
-```
-
-### Step 6: Update IAM Permissions
-
-Add required permissions to both member role templates:
+Add required permissions to member role template:
 
 **In `deployment/1-aiml-security-member-roles.yaml`**:
 ```yaml
 - Effect: Allow
   Action:
-    - newservice:List*
-    - newservice:Describe*
-    - newservice:Get*
+    - comprehend:List*
+    - comprehend:Describe*
+    - comprehend:Get*
   Resource: '*'
 ```
 
-**In `deployment/2-aiml-security-codebuild.yaml`** (for single account mode):
+**In `deployment/aiml-security-single-account.yaml`** (for single account mode):
 ```yaml
-- newservice:List*
-- newservice:Describe*
-- newservice:Get*
+- comprehend:List*
+- comprehend:Describe*
+- comprehend:Get*
+```
+
+### Step 5: Test Locally
+
+Test your new assessment function locally:
+
+```bash
+cd resco-aiml-assessment
+sam build
+sam local invoke ComprehendSecurityAssessmentFunction --event testfile.json
 ```
 
 ## Assessment Best Practices
 
 ### 1. Security Check Implementation
-- **Use Cached Permissions**: Always use the IAM permission cache to avoid API throttling
+- **Use Cached Permissions**: Always use the AWS IAM permission cache to avoid API throttling
 - **Handle Exceptions**: Implement proper error handling and logging
 - **Follow Least Privilege**: Only request necessary permissions
 - **Standardize Findings**: Use the `create_finding()` function for consistent output
-- **Check ID Convention**: Use service prefixes for check IDs (BR-XX for Bedrock, SM-XX for SageMaker, AC-XX for AgentCore)
+- **Check ID Convention**: Use service prefixes for check IDs (BR-XX for Amazon Bedrock, SM-XX for Amazon SageMaker AI, AC-XX for Amazon Bedrock AgentCore)
 - **Status Semantics**: Use correct status values:
   - `Failed`: Resources were checked and found non-compliant
   - `Passed`: Resources were checked and found compliant
@@ -357,7 +401,7 @@ Add required permissions to both member role templates:
 - **Batch API Calls**: Use pagination and batch operations where possible
 - **Implement Retries**: Use exponential backoff for AWS API calls
 - **Cache Results**: Store intermediate results to avoid redundant API calls
-- **Set Appropriate Timeouts**: Configure Lambda timeout based on assessment complexity
+- **Set Appropriate Timeouts**: Configure AWS Lambda timeout based on assessment complexity
 
 ### 3. Error Handling
 ```python
@@ -401,28 +445,28 @@ sam local invoke NewServiceSecurityAssessmentFunction --event test-event.json
 # Deploy to test account
 sam deploy --stack-name resco-test --capabilities CAPABILITY_IAM
 
-# Execute Step Functions
+# Execute AWS Step Functions
 aws stepfunctions start-execution \
   --state-machine-arn arn:aws:states:region:account:stateMachine:TestStateMachine \
   --input '{"accountId":"123456789012"}'
 ```
 
 ### 3. Multi-Account Testing
-1. Deploy member roles to test accounts using StackSets
+1. Deploy member roles to test accounts using AWS CloudFormation StackSets
 2. Deploy central infrastructure with test parameters
-3. Monitor CodeBuild logs for deployment and execution status
-4. Verify results in central S3 bucket
+3. Monitor AWS CodeBuild logs for deployment and execution status
+4. Verify results in central Amazon S3 bucket
 
 ## Monitoring and Debugging
 
-### CloudWatch Logs
-- **CodeBuild Logs**: `/aws/codebuild/ReSCOMultiAccountCodeBuild`
-- **Lambda Logs**: `/aws/lambda/[FunctionName]`
-- **Step Functions**: View execution history in console
+### Amazon CloudWatch Logs
+- **AWS CodeBuild Logs**: `/aws/codebuild/ReSCOMultiAccountCodeBuild`
+- **AWS Lambda Logs**: `/aws/lambda/[FunctionName]-[AccountId]`
+- **AWS Step Functions**: View execution history in AWS console
 
 ### Common Issues
-1. **Permission Errors**: Check IAM roles and trust relationships
-2. **Timeout Issues**: Increase Lambda timeout or optimize code
+1. **Permission Errors**: Check AWS IAM roles and trust relationships
+2. **Timeout Issues**: Increase AWS Lambda timeout or optimize code
 3. **API Throttling**: Implement exponential backoff and retries
 4. **Cross-Account Access**: Verify role assumption and trust policies
 
@@ -438,17 +482,25 @@ logger.info(f"Starting assessment for account: {account_id}")
 logger.debug(f"Found {len(resources)} resources to assess")
 ```
 
-## Module Development Roadmap
+## Development Roadmap
 
 ### Current Status
-- **AI/ML Assessment**: 52 security checks across Bedrock (14), SageMaker (25), and AgentCore (13) Lambdas (Active)
+- **AI/ML Assessment**: 52 security checks across three services
+  - Amazon Bedrock: 14 checks (BR-01 to BR-14)
+  - Amazon SageMaker AI: 25 checks (SM-01 to SM-25)
+  - Amazon Bedrock AgentCore: 13 checks (AC-01 to AC-13)
 
+### Potential Additions
+- **Amazon Comprehend**: Data privacy, access controls, entity recognition security
+- **Amazon Textract**: Document processing security, PII detection
+- **Amazon Rekognition**: Image analysis security, content moderation
+- **Amazon Polly/Amazon Transcribe**: Voice AI security assessments
 
-### Service-Level Development Pattern
-- Each AWS service gets its own dedicated Lambda function
-- Step Functions orchestrates parallel execution of service assessments
-- Results are consolidated at the module level
-- Buildspec orchestrates module deployment across accounts
+### Development Pattern
+- Each AWS AI/ML service gets its own dedicated AWS Lambda function
+- AWS Step Functions orchestrates parallel execution of service assessments
+- Results are consolidated into a single HTML/CSV report
+- AWS CodeBuild orchestrates deployment and execution across multiple accounts
 
 ## Report Generation Architecture
 
@@ -469,8 +521,8 @@ consolidate_html_reports.py  # CodeBuild script (multi-account)
 
 | Component | Mode | Description |
 |-----------|------|-------------|
-| `app.py` (Lambda) | `mode='single'` | Generates per-account HTML reports during Step Functions execution |
-| `consolidate_html_reports.py` | `mode='multi'` | Consolidates all account reports in CodeBuild post-build phase |
+| `app.py` (AWS Lambda) | `mode='single'` | Generates per-account HTML reports during AWS Step Functions execution |
+| `consolidate_html_reports.py` | `mode='multi'` | Consolidates all account reports in AWS CodeBuild post-build phase |
 
 Both call `generate_html_report()` from `report_template.py` with different parameters.
 
@@ -485,6 +537,125 @@ To update report styling, layout, or features:
    - `generate_table_rows()` - Finding row generation
    - `generate_html_report()` - Main entry point with `mode` parameter ('single' or 'multi')
 
+## Documentation and Screenshots
+
+### Updating Sample Reports
+
+When you modify the report template or add new features, update the sample reports and screenshots:
+
+#### 1. Generate New Sample Reports
+
+After making changes to `report_template.py`, regenerate sample reports:
+
+```bash
+# Single-account mode
+python test_generate_report.py --mode single --output sample-reports/security_assessment_single_account.html
+
+# Multi-account mode
+python test_generate_report.py --mode multi --output sample-reports/security_assessment_multi_account.html
+```
+
+#### 2. Capture Screenshots
+
+The repository includes an automated screenshot capture tool:
+
+```bash
+# Activate virtual environment
+source .venv/bin/activate
+
+# Install dependencies (first time only)
+pip install -r sample-reports/dev-requirements.txt
+playwright install chromium
+
+# Capture and optimize screenshots
+python sample-reports/scripts/capture_screenshots.py
+```
+
+**What the script does:**
+- Opens HTML reports in a headless browser
+- Captures key views (dashboard, findings table, dark mode)
+- Automatically optimizes images (target: 200-300KB each)
+- Converts large PNGs to JPEG if needed
+- Saves screenshots in `sample-reports/` folder
+
+**What gets generated:**
+
+The script captures 4 screenshots:
+- `dashboard-overview-light.png` - Executive dashboard in light mode
+- `dashboard-overview-dark.png` - Executive dashboard in dark mode  
+- `findings-table.png` - Detailed findings table with filters
+- `multi-account-summary.png` - Multi-account consolidated view
+
+All screenshots are automatically optimized (target: 200-300KB each, ~600KB total).
+
+**Customization:**
+
+Edit `sample-reports/scripts/capture_screenshots.py` to customize:
+
+```python
+# Viewport size
+VIEWPORT_WIDTH = 1440
+VIEWPORT_HEIGHT = 900
+
+# Image quality
+JPEG_QUALITY = 85       # Range: 1-100
+PNG_OPTIMIZE = True
+
+# Add new screenshots to SCREENSHOTS list
+SCREENSHOTS = [
+    {
+        "name": "my-screenshot",
+        "file": "security_assessment_single_account.html",
+        "description": "My Custom View",
+        "actions": [
+            {"type": "wait", "selector": ".element", "timeout": 2000},
+            {"type": "click", "selector": ".button"},
+            {"type": "scroll", "position": 500},
+        ],
+        "clip": {"x": 0, "y": 0, "width": 1440, "height": 800},
+    }
+]
+```
+
+**Available action types:**
+- `wait` - Wait for selector (e.g., `{"type": "wait", "selector": ".metrics", "timeout": 2000}`)
+- `click` - Click element (e.g., `{"type": "click", "selector": ".theme-toggle"}`)
+- `scroll` - Scroll to position (e.g., `{"type": "scroll", "position": 500}`)
+- `wait_time` - Wait milliseconds (e.g., `{"type": "wait_time", "ms": 300}`)
+
+**Troubleshooting:**
+
+| Issue | Solution |
+|-------|----------|
+| `playwright not installed` | `pip install playwright && playwright install chromium` |
+| Sample reports not found | Run from repository root |
+| Screenshots too large | Lower `JPEG_QUALITY` or reduce viewport size |
+| Browser launch fails | Run `playwright install-deps` (Linux only) |
+
+#### 3. Update README
+
+After generating new screenshots, update the README to reference them:
+
+```markdown
+### Sample Assessment Reports
+
+**Preview:**
+
+![Executive Dashboard](sample-reports/dashboard-overview-light.png)
+*Executive summary with severity counts and service breakdown*
+
+![Findings Table](sample-reports/findings-table.png)
+*Interactive findings table with filtering capabilities*
+```
+
+### Documentation Best Practices
+
+- **Keep screenshots optimized**: Target 200-300KB per image
+- **Use descriptive filenames**: `dashboard-overview-light.png`, not `screenshot1.png`
+- **Update both HTML and screenshots** when making UI changes
+- **Test screenshots render correctly** in GitHub's markdown preview
+- **All screenshot tooling**: Located in `sample-reports/` for easy organization
+
 ## Support and Resources
 
 ### Documentation
@@ -494,4 +665,4 @@ To update report styling, layout, or features:
 
 ---
 
-This developer guide provides the foundation for extending the ReSCO Assessment Framework. As you add new services and capabilities, please update this documentation to help future contributors understand and build upon your work.
+This developer guide provides the foundation for extending the AI/ML Security Assessment Framework. As you add new AI/ML services and security checks, please update this documentation to help future contributors understand and build upon your work.
