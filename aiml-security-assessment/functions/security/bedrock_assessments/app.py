@@ -1380,7 +1380,7 @@ def check_bedrock_custom_model_encryption() -> Dict[str, Any]:
                         finding_name="Bedrock Custom Model Encryption Check",
                         finding_details="No custom/fine-tuned models found in the account",
                         resolution="No action required",
-                        reference="https://docs.aws.amazon.com/bedrock/latest/userguide/custom-models-security.html",
+                        reference="https://docs.aws.amazon.com/bedrock/latest/userguide/encryption-custom-job.html",
                         severity='Informational',
                         status='N/A'
                     )
@@ -1438,7 +1438,7 @@ def check_bedrock_custom_model_encryption() -> Dict[str, Any]:
                             finding_name="Bedrock Custom Model Encryption Review",
                             finding_details=f"Custom model '{model['name']}' should be reviewed for customer-managed KMS encryption. Model artifacts and training data should use CMK.",
                             resolution="1. Use customer-managed KMS keys for training job output\n2. Ensure S3 buckets with training data use CMK encryption\n3. For future models, specify KMS key in customization job configuration",
-                            reference="https://docs.aws.amazon.com/bedrock/latest/userguide/custom-models-security.html",
+                            reference="https://docs.aws.amazon.com/bedrock/latest/userguide/encryption-custom-job.html",
                             severity='Medium',
                             status='Failed'
                         )
@@ -1450,7 +1450,7 @@ def check_bedrock_custom_model_encryption() -> Dict[str, Any]:
                         finding_name="Bedrock Custom Model Encryption Check",
                         finding_details=f"All {len(custom_models)} custom models reviewed",
                         resolution="No action required",
-                        reference="https://docs.aws.amazon.com/bedrock/latest/userguide/custom-models-security.html",
+                        reference="https://docs.aws.amazon.com/bedrock/latest/userguide/encryption-custom-job.html",
                         severity='Informational',
                         status='Passed'
                     )
@@ -1464,7 +1464,7 @@ def check_bedrock_custom_model_encryption() -> Dict[str, Any]:
                     finding_name="Bedrock Custom Model Encryption Check",
                     finding_details=f"Unable to list custom models: {str(e)}",
                     resolution="Verify permissions to access Bedrock custom models",
-                    reference="https://docs.aws.amazon.com/bedrock/latest/userguide/custom-models-security.html",
+                    reference="https://docs.aws.amazon.com/bedrock/latest/userguide/model-customization-iam-role.html",
                     severity='Low',
                     status='N/A'
                 )

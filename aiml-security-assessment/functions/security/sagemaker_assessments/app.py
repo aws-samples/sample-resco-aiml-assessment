@@ -1394,7 +1394,7 @@ def check_sagemaker_endpoint_instance_count() -> Dict[str, Any]:
                         finding_name='SageMaker Endpoint Single Instance',
                         finding_details=f"Endpoint '{endpoint['endpoint_name']}' variant '{endpoint['variant_name']}' has only {endpoint['instance_count']} instance(s). Single instance creates availability risk and no failover capability.",
                         resolution="Configure production endpoints with at least 2 instances across multiple Availability Zones for high availability and fault tolerance.",
-                        reference="https://docs.aws.amazon.com/sagemaker/latest/dg/endpoint-scaling.html",
+                        reference="https://docs.aws.amazon.com/sagemaker/latest/dg/endpoint-auto-scaling.html",
                         severity='Medium',
                         status='Failed'
                     )
@@ -1408,7 +1408,7 @@ def check_sagemaker_endpoint_instance_count() -> Dict[str, Any]:
                         finding_name='SageMaker Endpoint Instance Count Check',
                         finding_details=f"All {len(endpoints_multi_instance)} endpoint variants have multiple instances",
                         resolution='No action required',
-                        reference="https://docs.aws.amazon.com/sagemaker/latest/dg/endpoint-scaling.html",
+                        reference="https://docs.aws.amazon.com/sagemaker/latest/dg/endpoint-auto-scaling.html",
                         severity='Informational',
                         status='Passed'
                     )
@@ -1421,7 +1421,7 @@ def check_sagemaker_endpoint_instance_count() -> Dict[str, Any]:
                         finding_name='SageMaker Endpoint Instance Count Check',
                         finding_details="No InService endpoints found",
                         resolution='No action required',
-                        reference="https://docs.aws.amazon.com/sagemaker/latest/dg/endpoint-scaling.html",
+                        reference="https://docs.aws.amazon.com/sagemaker/latest/dg/endpoint-auto-scaling.html",
                         severity='Informational',
                         status='N/A'
                     )

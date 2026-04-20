@@ -975,7 +975,7 @@ def check_agentcore_encryption() -> List[Dict[str, Any]]:
                             finding_name="AgentCore ECR Repository Encryption",
                             finding_details=f"ECR repository '{repo_name}' does not have encryption enabled",
                             resolution="Enable encryption with customer-managed KMS keys for better control",
-                            reference="https://docs.aws.amazon.com/bedrock/latest/userguide/key-management.html",
+                            reference="https://docs.aws.amazon.com/bedrock/latest/userguide/security-encryption.html",
                             severity=SeverityEnum.HIGH,
                             status=StatusEnum.FAILED
                         ))
@@ -985,7 +985,7 @@ def check_agentcore_encryption() -> List[Dict[str, Any]]:
                             finding_name="AgentCore ECR Repository AWS-Managed Keys",
                             finding_details=f"ECR repository '{repo_name}' uses AWS-managed keys instead of customer-managed KMS keys",
                             resolution="Consider using customer-managed KMS keys for better control and audit capabilities",
-                            reference="https://docs.aws.amazon.com/bedrock/latest/userguide/key-management.html",
+                            reference="https://docs.aws.amazon.com/bedrock/latest/userguide/security-encryption.html",
                             severity=SeverityEnum.LOW,
                             status=StatusEnum.FAILED
                         ))
