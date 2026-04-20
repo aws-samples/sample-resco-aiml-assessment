@@ -43,7 +43,7 @@ class TestHtmlReportGeneration(unittest.TestCase):
                         "Finding_Details": "Guardrails are properly configured for content filtering.",
                         "Resolution": "No action required",
                         "Reference": "https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails.html",
-                        "Severity": "N/A",
+                        "Severity": "Informational",
                         "Status": "Passed"
                     }
                 ]
@@ -91,7 +91,7 @@ class TestHtmlReportGeneration(unittest.TestCase):
                         "Finding_Details": "AWS IAM Identity Center is properly configured.",
                         "Resolution": "No action required",
                         "Reference": "https://docs.aws.amazon.com/singlesignon/latest/userguide/what-is.html",
-                        "Severity": "N/A",
+                        "Severity": "Informational",
                         "Status": "Passed"
                     }
                 ]

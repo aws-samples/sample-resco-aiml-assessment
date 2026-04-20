@@ -214,7 +214,7 @@ def check_agentcore_vpc_configuration() -> List[Dict[str, Any]]:
             finding_details="AgentCore client not available in this region",
             resolution="Deploy in a region where Amazon Bedrock AgentCore is available",
             reference="https://aws.github.io/bedrock-agentcore-starter-toolkit/",
-            severity=SeverityEnum.NA,
+            severity=SeverityEnum.INFORMATIONAL,
             status=StatusEnum.NA
         ))
         return findings
@@ -313,7 +313,7 @@ def check_agentcore_vpc_configuration() -> List[Dict[str, Any]]:
                 finding_details="No AgentCore resources found or all resources have proper VPC configuration",
                 resolution="No action required",
                 reference="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/security/agentcore-vpc.md",
-                severity=SeverityEnum.NA,
+                severity=SeverityEnum.INFORMATIONAL,
                 status=StatusEnum.NA
             ))
             
@@ -362,7 +362,7 @@ def check_agentcore_full_access_roles(permission_cache: Dict[str, Any]) -> List[
                 finding_details="No IAM role permissions found in cache",
                 resolution="No action required",
                 reference="https://docs.aws.amazon.com/bedrock/latest/userguide/security-iam-awsmanpol.html",
-                severity=SeverityEnum.NA,
+                severity=SeverityEnum.INFORMATIONAL,
                 status=StatusEnum.NA
             ))
             return findings
@@ -447,7 +447,7 @@ def check_agentcore_full_access_roles(permission_cache: Dict[str, Any]) -> List[
                 finding_details="No roles with overly permissive AgentCore access found",
                 resolution="No action required",
                 reference="https://docs.aws.amazon.com/bedrock/latest/userguide/security-iam-awsmanpol.html",
-                severity=SeverityEnum.NA,
+                severity=SeverityEnum.INFORMATIONAL,
                 status=StatusEnum.NA
             ))
 
@@ -501,7 +501,7 @@ def check_stale_agentcore_access(permission_cache: Dict[str, Any]) -> List[Dict[
                 finding_details="No IAM permissions found in cache",
                 resolution="No action required",
                 reference="https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_last-accessed.html",
-                severity=SeverityEnum.NA,
+                severity=SeverityEnum.INFORMATIONAL,
                 status=StatusEnum.NA
             ))
             return findings
@@ -623,7 +623,7 @@ def check_stale_agentcore_access(permission_cache: Dict[str, Any]) -> List[Dict[
                 finding_details="No IAM principals with AgentCore permissions found",
                 resolution="No action required",
                 reference="https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_last-accessed.html",
-                severity=SeverityEnum.NA,
+                severity=SeverityEnum.INFORMATIONAL,
                 status=StatusEnum.NA
             ))
             return findings
@@ -779,7 +779,7 @@ def check_stale_agentcore_access(permission_cache: Dict[str, Any]) -> List[Dict[
                 finding_details=f"All {len(agentcore_principals)} principals with AgentCore permissions have accessed the service within the last 60 days",
                 resolution="No action required",
                 reference="https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_last-accessed.html",
-                severity=SeverityEnum.NA,
+                severity=SeverityEnum.INFORMATIONAL,
                 status=StatusEnum.PASSED
             ))
 
@@ -820,7 +820,7 @@ def check_agentcore_observability() -> List[Dict[str, Any]]:
             finding_details="AgentCore client not available in this region",
             resolution="Deploy in a region where Amazon Bedrock AgentCore is available",
             reference="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/observability/",
-            severity=SeverityEnum.NA,
+            severity=SeverityEnum.INFORMATIONAL,
             status=StatusEnum.NA
         ))
         return findings
@@ -911,7 +911,7 @@ def check_agentcore_observability() -> List[Dict[str, Any]]:
                 finding_details="No AgentCore resources found or all resources have proper observability configuration",
                 resolution="No action required",
                 reference="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/observability/",
-                severity=SeverityEnum.NA,
+                severity=SeverityEnum.INFORMATIONAL,
                 status=StatusEnum.NA
             ))
 
@@ -1004,7 +1004,7 @@ def check_agentcore_encryption() -> List[Dict[str, Any]]:
                 finding_details="No AgentCore resources found or all resources have proper encryption configuration",
                 resolution="No action required",
                 reference="https://docs.aws.amazon.com/bedrock/latest/userguide/key-management.html",
-                severity=SeverityEnum.NA,
+                severity=SeverityEnum.INFORMATIONAL,
                 status=StatusEnum.NA
             ))
 
@@ -1044,7 +1044,7 @@ def check_browser_tool_recording() -> List[Dict[str, Any]]:
             finding_details="AgentCore client not available in this region",
             resolution="Deploy in a region where Amazon Bedrock AgentCore is available",
             reference="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/browser/",
-            severity=SeverityEnum.NA,
+            severity=SeverityEnum.INFORMATIONAL,
             status=StatusEnum.NA
         ))
         return findings
@@ -1065,7 +1065,7 @@ def check_browser_tool_recording() -> List[Dict[str, Any]]:
                 finding_details="No AgentCore Runtimes found to check browser tool configuration",
                 resolution="No action required",
                 reference="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/browser/",
-                severity=SeverityEnum.NA,
+                severity=SeverityEnum.INFORMATIONAL,
                 status=StatusEnum.NA
             ))
             return findings
@@ -1106,7 +1106,7 @@ def check_browser_tool_recording() -> List[Dict[str, Any]]:
                 finding_details=f"All {len(runtimes)} Runtimes have proper storage configuration",
                 resolution="No action required",
                 reference="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/browser/",
-                severity=SeverityEnum.NA,
+                severity=SeverityEnum.INFORMATIONAL,
                 status=StatusEnum.PASSED
             ))
 
@@ -1147,7 +1147,7 @@ def check_agentcore_memory_configuration() -> List[Dict[str, Any]]:
             finding_details="AgentCore client not available in this region",
             resolution="Deploy in a region where Amazon Bedrock AgentCore is available",
             reference="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/memory/",
-            severity=SeverityEnum.NA,
+            severity=SeverityEnum.INFORMATIONAL,
             status=StatusEnum.NA
         ))
         return findings
@@ -1166,7 +1166,7 @@ def check_agentcore_memory_configuration() -> List[Dict[str, Any]]:
                 finding_details="No Memory resources found",
                 resolution="No action required",
                 reference="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/memory/",
-                severity=SeverityEnum.NA,
+                severity=SeverityEnum.INFORMATIONAL,
                 status=StatusEnum.NA
             ))
             return findings
@@ -1206,7 +1206,7 @@ def check_agentcore_memory_configuration() -> List[Dict[str, Any]]:
                 finding_details=f"All {len(memories)} Memory resources have proper configuration",
                 resolution="No action required",
                 reference="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/memory/",
-                severity=SeverityEnum.NA,
+                severity=SeverityEnum.INFORMATIONAL,
                 status=StatusEnum.PASSED
             ))
 
@@ -1265,7 +1265,7 @@ def check_agentcore_vpc_endpoints() -> List[Dict[str, Any]]:
                 finding_details="No VPCs found in the account",
                 resolution="No action required",
                 reference="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/vpc.html",
-                severity=SeverityEnum.NA,
+                severity=SeverityEnum.INFORMATIONAL,
                 status=StatusEnum.NA
             ))
             return findings
@@ -1323,7 +1323,7 @@ def check_agentcore_vpc_endpoints() -> List[Dict[str, Any]]:
                     finding_details=f"AgentCore VPC endpoints configured: {endpoint_details}",
                     resolution="No action required",
                     reference="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/vpc.html",
-                    severity=SeverityEnum.NA,
+                    severity=SeverityEnum.INFORMATIONAL,
                     status=StatusEnum.PASSED
                 ))
 
@@ -1385,7 +1385,7 @@ def check_agentcore_service_linked_role() -> List[Dict[str, Any]]:
                     finding_details=f"Service-linked role '{slr_name}' exists and is properly configured for AgentCore VPC networking",
                     resolution="No action required",
                     reference="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/agentcore-vpc.html",
-                    severity=SeverityEnum.NA,
+                    severity=SeverityEnum.INFORMATIONAL,
                     status=StatusEnum.PASSED
                 ))
             else:
@@ -1446,7 +1446,7 @@ def check_agentcore_resource_based_policies() -> List[Dict[str, Any]]:
             finding_details="AgentCore client not available in this region",
             resolution="Deploy in a region where Amazon Bedrock AgentCore is available",
             reference="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/security_iam_service-with-iam.html",
-            severity=SeverityEnum.NA,
+            severity=SeverityEnum.INFORMATIONAL,
             status=StatusEnum.NA
         ))
         return findings
@@ -1566,7 +1566,7 @@ def check_agentcore_resource_based_policies() -> List[Dict[str, Any]]:
                     finding_details=f"Resource-based policies configured on: {', '.join(resources_with_rbp)}",
                     resolution="No action required",
                     reference="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/security_iam_service-with-iam.html",
-                    severity=SeverityEnum.NA,
+                    severity=SeverityEnum.INFORMATIONAL,
                     status=StatusEnum.PASSED
                 ))
             else:
@@ -1576,7 +1576,7 @@ def check_agentcore_resource_based_policies() -> List[Dict[str, Any]]:
                     finding_details="No AgentCore resources found to check for resource-based policies",
                     resolution="No action required",
                     reference="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/security_iam_service-with-iam.html",
-                    severity=SeverityEnum.NA,
+                    severity=SeverityEnum.INFORMATIONAL,
                     status=StatusEnum.NA
                 ))
 
@@ -1614,7 +1614,7 @@ def check_agentcore_policy_engine_encryption() -> List[Dict[str, Any]]:
             finding_details="AgentCore client not available in this region",
             resolution="Deploy in a region where Amazon Bedrock AgentCore is available",
             reference="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/policy-encryption.html",
-            severity=SeverityEnum.NA,
+            severity=SeverityEnum.INFORMATIONAL,
             status=StatusEnum.NA
         ))
         return findings
@@ -1634,7 +1634,7 @@ def check_agentcore_policy_engine_encryption() -> List[Dict[str, Any]]:
                     finding_details="No Policy Engines found",
                     resolution="No action required",
                     reference="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/policy-encryption.html",
-                    severity=SeverityEnum.NA,
+                    severity=SeverityEnum.INFORMATIONAL,
                     status=StatusEnum.NA
                 ))
                 return findings
@@ -1685,7 +1685,7 @@ def check_agentcore_policy_engine_encryption() -> List[Dict[str, Any]]:
                     finding_details=f"Policy Engines with CMK encryption: {', '.join(engines_with_cmk)}",
                     resolution="No action required",
                     reference="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/policy-encryption.html",
-                    severity=SeverityEnum.NA,
+                    severity=SeverityEnum.INFORMATIONAL,
                     status=StatusEnum.PASSED
                 ))
 
@@ -1696,7 +1696,7 @@ def check_agentcore_policy_engine_encryption() -> List[Dict[str, Any]]:
                     finding_details=f"Checked {len(policy_engines)} Policy Engines",
                     resolution="No action required",
                     reference="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/policy-encryption.html",
-                    severity=SeverityEnum.NA,
+                    severity=SeverityEnum.INFORMATIONAL,
                     status=StatusEnum.NA
                 ))
 
@@ -1708,7 +1708,7 @@ def check_agentcore_policy_engine_encryption() -> List[Dict[str, Any]]:
                 finding_details="Policy Engine APIs not yet available in bedrock-agentcore-control client",
                 resolution="N/A - Check may need to be updated when APIs become available",
                 reference="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/policy-encryption.html",
-                severity=SeverityEnum.NA,
+                severity=SeverityEnum.INFORMATIONAL,
                 status=StatusEnum.NA
             ))
 
@@ -1746,7 +1746,7 @@ def check_agentcore_gateway_encryption() -> List[Dict[str, Any]]:
             finding_details="AgentCore client not available in this region",
             resolution="Deploy in a region where Amazon Bedrock AgentCore is available",
             reference="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/data-encryption.html",
-            severity=SeverityEnum.NA,
+            severity=SeverityEnum.INFORMATIONAL,
             status=StatusEnum.NA
         ))
         return findings
@@ -1765,7 +1765,7 @@ def check_agentcore_gateway_encryption() -> List[Dict[str, Any]]:
                     finding_details="No Gateways found",
                     resolution="No action required",
                     reference="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/data-encryption.html",
-                    severity=SeverityEnum.NA,
+                    severity=SeverityEnum.INFORMATIONAL,
                     status=StatusEnum.NA
                 ))
                 return findings
@@ -1816,7 +1816,7 @@ def check_agentcore_gateway_encryption() -> List[Dict[str, Any]]:
                     finding_details=f"Gateways with CMK encryption: {', '.join(gateways_with_cmk)}",
                     resolution="No action required",
                     reference="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/data-encryption.html",
-                    severity=SeverityEnum.NA,
+                    severity=SeverityEnum.INFORMATIONAL,
                     status=StatusEnum.PASSED
                 ))
 
@@ -1827,7 +1827,7 @@ def check_agentcore_gateway_encryption() -> List[Dict[str, Any]]:
                     finding_details=f"Checked {len(gateways)} Gateways",
                     resolution="No action required",
                     reference="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/data-encryption.html",
-                    severity=SeverityEnum.NA,
+                    severity=SeverityEnum.INFORMATIONAL,
                     status=StatusEnum.NA
                 ))
 
@@ -1838,7 +1838,7 @@ def check_agentcore_gateway_encryption() -> List[Dict[str, Any]]:
                 finding_details="Gateway APIs not yet available in bedrock-agentcore-control client",
                 resolution="N/A - Check may need to be updated when APIs become available",
                 reference="https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/data-encryption.html",
-                severity=SeverityEnum.NA,
+                severity=SeverityEnum.INFORMATIONAL,
                 status=StatusEnum.NA
             ))
 
@@ -1876,7 +1876,7 @@ def check_agentcore_gateway_configuration() -> List[Dict[str, Any]]:
             finding_details="AgentCore client not available in this region",
             resolution="Deploy in a region where Amazon Bedrock AgentCore is available",
             reference="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/gateway/",
-            severity=SeverityEnum.NA,
+            severity=SeverityEnum.INFORMATIONAL,
             status=StatusEnum.NA
         ))
         return findings
@@ -1897,7 +1897,7 @@ def check_agentcore_gateway_configuration() -> List[Dict[str, Any]]:
                     finding_details="No Gateway resources found",
                     resolution="No action required",
                     reference="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/gateway/",
-                    severity=SeverityEnum.NA,
+                    severity=SeverityEnum.INFORMATIONAL,
                     status=StatusEnum.NA
                 ))
                 return findings
@@ -1920,7 +1920,7 @@ def check_agentcore_gateway_configuration() -> List[Dict[str, Any]]:
                 finding_details=f"Found {len(gateways)} Gateway resources",
                 resolution="No action required",
                 reference="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/gateway/",
-                severity=SeverityEnum.NA,
+                severity=SeverityEnum.INFORMATIONAL,
                 status=StatusEnum.PASSED
             ))
 
@@ -1933,7 +1933,7 @@ def check_agentcore_gateway_configuration() -> List[Dict[str, Any]]:
                 finding_details="Gateway API not yet available in bedrock-agentcore-control",
                 resolution="N/A - Gateway management may be done through other means",
                 reference="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/gateway/",
-                severity=SeverityEnum.NA,
+                severity=SeverityEnum.INFORMATIONAL,
                 status=StatusEnum.NA
             ))
 
@@ -1945,7 +1945,7 @@ def check_agentcore_gateway_configuration() -> List[Dict[str, Any]]:
                     finding_details="No Gateway resources found",
                     resolution="No action required",
                     reference="https://aws.github.io/bedrock-agentcore-starter-toolkit/user-guide/gateway/",
-                    severity=SeverityEnum.NA,
+                    severity=SeverityEnum.INFORMATIONAL,
                     status=StatusEnum.NA
                 ))
             else:

@@ -172,7 +172,7 @@ def check_sagemaker_internet_access() -> Dict[str, Any]:
                 finding_details= 'All SageMaker resources are properly configured to use VPC connectivity',
                 resolution='No action required',
                 reference="https://docs.aws.amazon.com/sagemaker/latest/dg/infrastructure-security.html",
-                severity='N/A',
+                severity='Informational',
                 status='Passed'
             ))
 
@@ -227,7 +227,7 @@ def check_guardduty_enabled() -> Dict[str, Any]:
                     finding_details='Amazon GuardDuty is properly enabled and monitoring for security threats in SageMaker workloads.',
                     resolution='No action required',
                     reference='https://docs.aws.amazon.com/guardduty/latest/ug/ai-protection.html',
-                    severity='N/A',
+                    severity='Informational',
                     status='Passed'
                 )
             )
@@ -422,7 +422,7 @@ def check_sagemaker_iam_permissions(permission_cache) -> Dict[str, Any]:
                     finding_details='No issues found with IAM permissions, SSO is enabled, and no stale access detected',
                     resolution='No action required',
                     reference="https://docs.aws.amazon.com/sagemaker-unified-studio/latest/adminguide/security-iam.html",
-                    severity='N/A',
+                    severity='Informational',
                     status='Passed'
                 )
             )
@@ -649,7 +649,7 @@ def check_sagemaker_data_protection() -> Dict[str, Any]:
                     finding_details='All resources use appropriate encryption configurations',
                     resolution='No action required',
                     reference="https://docs.aws.amazon.com/sagemaker/latest/dg/security.html",
-                    severity='N/A',
+                    severity='Informational',
                     status='Passed'
                 )
             )
@@ -821,7 +821,7 @@ def check_sagemaker_mlops_utilization(permission_cache) -> Dict[str, Any]:
                     finding_details='All SageMaker MLOps features are properly utilized',
                     resolution='No action required',
                     reference='https://docs.aws.amazon.com/sagemaker/latest/dg/mlops.html',
-                    severity='N/A',
+                    severity='Informational',
                     status='Passed'
                 ))
 
@@ -933,7 +933,7 @@ def check_sagemaker_clarify_usage(permission_cache) -> Dict[str, Any]:
                     finding_details='SageMaker Clarify is properly utilized',
                     resolution='No action required',
                     reference='https://docs.aws.amazon.com/sagemaker/latest/dg/clarify-configure-processing-jobs.html',
-                    severity='N/A',
+                    severity='Informational',
                     status='Passed'
                 )
             )
@@ -1023,7 +1023,7 @@ def check_sagemaker_model_monitor_usage(permission_cache) -> Dict[str, Any]:
                     finding_details='SageMaker Model Monitor is actively tracking model performance',
                     resolution='No action required',
                     reference='https://docs.aws.amazon.com/sagemaker/latest/dg/model-monitor.html',
-                    severity='N/A',
+                    severity='Informational',
                     status='Passed'
                 )
             )
@@ -1102,7 +1102,7 @@ def check_sagemaker_notebook_root_access() -> Dict[str, Any]:
                         finding_details=f"All {len(notebooks_without_root)} notebook instances have root access disabled",
                         resolution='No action required',
                         reference="https://docs.aws.amazon.com/sagemaker/latest/dg/nbi-root-access.html",
-                        severity='N/A',
+                        severity='Informational',
                         status='Passed'
                     )
                 )
@@ -1115,7 +1115,7 @@ def check_sagemaker_notebook_root_access() -> Dict[str, Any]:
                         finding_details="No notebook instances found",
                         resolution='No action required',
                         reference="https://docs.aws.amazon.com/sagemaker/latest/dg/nbi-root-access.html",
-                        severity='N/A',
+                        severity='Informational',
                         status='N/A'
                     )
                 )
@@ -1196,7 +1196,7 @@ def check_sagemaker_notebook_vpc_deployment() -> Dict[str, Any]:
                         finding_details=f"All {len(notebooks_with_vpc)} notebook instances are deployed in custom VPCs",
                         resolution='No action required',
                         reference="https://docs.aws.amazon.com/sagemaker/latest/dg/appendix-notebook-and-internet-access.html",
-                        severity='N/A',
+                        severity='Informational',
                         status='Passed'
                     )
                 )
@@ -1209,7 +1209,7 @@ def check_sagemaker_notebook_vpc_deployment() -> Dict[str, Any]:
                         finding_details="No notebook instances found",
                         resolution='No action required',
                         reference="https://docs.aws.amazon.com/sagemaker/latest/dg/appendix-notebook-and-internet-access.html",
-                        severity='N/A',
+                        severity='Informational',
                         status='N/A'
                     )
                 )
@@ -1304,7 +1304,7 @@ def check_sagemaker_model_network_isolation() -> Dict[str, Any]:
                         finding_details=f"All {len(models_with_isolation)} models have network isolation enabled",
                         resolution='No action required',
                         reference="https://docs.aws.amazon.com/sagemaker/latest/dg/mkt-algo-model-internet-free.html",
-                        severity='N/A',
+                        severity='Informational',
                         status='Passed'
                     )
                 )
@@ -1317,7 +1317,7 @@ def check_sagemaker_model_network_isolation() -> Dict[str, Any]:
                         finding_details="No models found",
                         resolution='No action required',
                         reference="https://docs.aws.amazon.com/sagemaker/latest/dg/mkt-algo-model-internet-free.html",
-                        severity='N/A',
+                        severity='Informational',
                         status='N/A'
                     )
                 )
@@ -1409,7 +1409,7 @@ def check_sagemaker_endpoint_instance_count() -> Dict[str, Any]:
                         finding_details=f"All {len(endpoints_multi_instance)} endpoint variants have multiple instances",
                         resolution='No action required',
                         reference="https://docs.aws.amazon.com/sagemaker/latest/dg/endpoint-scaling.html",
-                        severity='N/A',
+                        severity='Informational',
                         status='Passed'
                     )
                 )
@@ -1422,7 +1422,7 @@ def check_sagemaker_endpoint_instance_count() -> Dict[str, Any]:
                         finding_details="No InService endpoints found",
                         resolution='No action required',
                         reference="https://docs.aws.amazon.com/sagemaker/latest/dg/endpoint-scaling.html",
-                        severity='N/A',
+                        severity='Informational',
                         status='N/A'
                     )
                 )
@@ -1504,7 +1504,7 @@ def check_sagemaker_monitoring_network_isolation() -> Dict[str, Any]:
                         finding_details=f"All {len(schedules_with_isolation)} monitoring schedules have network isolation enabled",
                         resolution='No action required',
                         reference="https://docs.aws.amazon.com/sagemaker/latest/dg/model-monitor-network-isolation.html",
-                        severity='N/A',
+                        severity='Informational',
                         status='Passed'
                     )
                 )
@@ -1517,7 +1517,7 @@ def check_sagemaker_monitoring_network_isolation() -> Dict[str, Any]:
                         finding_details="No monitoring schedules found",
                         resolution='No action required',
                         reference="https://docs.aws.amazon.com/sagemaker/latest/dg/model-monitor-network-isolation.html",
-                        severity='N/A',
+                        severity='Informational',
                         status='N/A'
                     )
                 )
@@ -1628,7 +1628,7 @@ def check_sagemaker_model_container_repository() -> Dict[str, Any]:
                         finding_details=f"All {len(models_vpc_mode)} models use VPC repository access",
                         resolution='No action required',
                         reference="https://docs.aws.amazon.com/sagemaker/latest/dg/model-container-repositories.html",
-                        severity='N/A',
+                        severity='Informational',
                         status='Passed'
                     )
                 )
@@ -1641,7 +1641,7 @@ def check_sagemaker_model_container_repository() -> Dict[str, Any]:
                         finding_details="No models found or all use default Platform access",
                         resolution='No action required',
                         reference="https://docs.aws.amazon.com/sagemaker/latest/dg/model-container-repositories.html",
-                        severity='N/A',
+                        severity='Informational',
                         status='N/A'
                     )
                 )
@@ -1727,7 +1727,7 @@ def check_sagemaker_feature_store_encryption() -> Dict[str, Any]:
                         finding_details=f"All {len(feature_groups_with_encryption)} feature groups with offline stores have KMS encryption configured",
                         resolution='No action required',
                         reference="https://docs.aws.amazon.com/sagemaker/latest/dg/feature-store-security.html",
-                        severity='N/A',
+                        severity='Informational',
                         status='Passed'
                     )
                 )
@@ -1740,7 +1740,7 @@ def check_sagemaker_feature_store_encryption() -> Dict[str, Any]:
                         finding_details="No feature groups with offline stores found",
                         resolution='No action required',
                         reference="https://docs.aws.amazon.com/sagemaker/latest/dg/feature-store-security.html",
-                        severity='N/A',
+                        severity='Informational',
                         status='N/A'
                     )
                 )
@@ -1822,7 +1822,7 @@ def check_sagemaker_data_quality_encryption() -> Dict[str, Any]:
                         finding_details=f"All {len(jobs_with_encryption)} data quality job definitions have inter-container encryption enabled",
                         resolution='No action required',
                         reference="https://docs.aws.amazon.com/sagemaker/latest/dg/model-monitor-data-quality.html",
-                        severity='N/A',
+                        severity='Informational',
                         status='Passed'
                     )
                 )
@@ -1835,7 +1835,7 @@ def check_sagemaker_data_quality_encryption() -> Dict[str, Any]:
                         finding_details="No data quality job definitions found",
                         resolution='No action required',
                         reference="https://docs.aws.amazon.com/sagemaker/latest/dg/model-monitor-data-quality.html",
-                        severity='N/A',
+                        severity='Informational',
                         status='N/A'
                     )
                 )
@@ -1932,7 +1932,7 @@ def check_sagemaker_processing_job_encryption() -> Dict[str, Any]:
                         finding_details=f"All {len(jobs_with_encryption)} processing jobs have volume encryption configured",
                         resolution='No action required',
                         reference="https://docs.aws.amazon.com/sagemaker/latest/dg/processing-job.html",
-                        severity='N/A',
+                        severity='Informational',
                         status='Passed'
                     )
                 )
@@ -1945,7 +1945,7 @@ def check_sagemaker_processing_job_encryption() -> Dict[str, Any]:
                         finding_details="No processing jobs found",
                         resolution='No action required',
                         reference="https://docs.aws.amazon.com/sagemaker/latest/dg/processing-job.html",
-                        severity='N/A',
+                        severity='Informational',
                         status='N/A'
                     )
                 )
@@ -2041,7 +2041,7 @@ def check_sagemaker_transform_job_encryption() -> Dict[str, Any]:
                         finding_details=f"All {len(jobs_with_encryption)} transform jobs have volume encryption configured",
                         resolution='No action required',
                         reference="https://docs.aws.amazon.com/sagemaker/latest/dg/batch-transform.html",
-                        severity='N/A',
+                        severity='Informational',
                         status='Passed'
                     )
                 )
@@ -2054,7 +2054,7 @@ def check_sagemaker_transform_job_encryption() -> Dict[str, Any]:
                         finding_details="No transform jobs found",
                         resolution='No action required',
                         reference="https://docs.aws.amazon.com/sagemaker/latest/dg/batch-transform.html",
-                        severity='N/A',
+                        severity='Informational',
                         status='N/A'
                     )
                 )
@@ -2151,7 +2151,7 @@ def check_sagemaker_hyperparameter_tuning_encryption() -> Dict[str, Any]:
                         finding_details=f"All {len(jobs_with_encryption)} hyperparameter tuning jobs have volume encryption configured",
                         resolution='No action required',
                         reference="https://docs.aws.amazon.com/sagemaker/latest/dg/automatic-model-tuning.html",
-                        severity='N/A',
+                        severity='Informational',
                         status='Passed'
                     )
                 )
@@ -2164,7 +2164,7 @@ def check_sagemaker_hyperparameter_tuning_encryption() -> Dict[str, Any]:
                         finding_details="No hyperparameter tuning jobs found",
                         resolution='No action required',
                         reference="https://docs.aws.amazon.com/sagemaker/latest/dg/automatic-model-tuning.html",
-                        severity='N/A',
+                        severity='Informational',
                         status='N/A'
                     )
                 )
@@ -2260,7 +2260,7 @@ def check_sagemaker_compilation_job_encryption() -> Dict[str, Any]:
                         finding_details=f"All {len(jobs_with_encryption)} compilation jobs have output encryption configured",
                         resolution='No action required',
                         reference="https://docs.aws.amazon.com/sagemaker/latest/dg/neo.html",
-                        severity='N/A',
+                        severity='Informational',
                         status='Passed'
                     )
                 )
@@ -2273,7 +2273,7 @@ def check_sagemaker_compilation_job_encryption() -> Dict[str, Any]:
                         finding_details="No compilation jobs found",
                         resolution='No action required',
                         reference="https://docs.aws.amazon.com/sagemaker/latest/dg/neo.html",
-                        severity='N/A',
+                        severity='Informational',
                         status='N/A'
                     )
                 )
@@ -2369,7 +2369,7 @@ def check_sagemaker_automl_network_isolation() -> Dict[str, Any]:
                         finding_details=f"All {len(jobs_with_isolation)} AutoML jobs have inter-container encryption enabled",
                         resolution='No action required',
                         reference="https://docs.aws.amazon.com/sagemaker/latest/dg/autopilot-security.html",
-                        severity='N/A',
+                        severity='Informational',
                         status='Passed'
                     )
                 )
@@ -2382,7 +2382,7 @@ def check_sagemaker_automl_network_isolation() -> Dict[str, Any]:
                         finding_details="No AutoML jobs found",
                         resolution='No action required',
                         reference="https://docs.aws.amazon.com/sagemaker/latest/dg/autopilot-security.html",
-                        severity='N/A',
+                        severity='Informational',
                         status='N/A'
                     )
                 )
@@ -2511,7 +2511,7 @@ def check_model_approval_workflow() -> Dict[str, Any]:
                     finding_details=f"Checked {groups_checked} model package groups. Approval workflows appear to be properly configured.",
                     resolution='No action required',
                     reference="https://docs.aws.amazon.com/sagemaker/latest/dg/model-registry-approve.html",
-                    severity='N/A',
+                    severity='Informational',
                     status='Passed'
                 )
             )
@@ -2658,7 +2658,7 @@ def check_model_drift_detection() -> Dict[str, Any]:
                         finding_details=f"All {len(endpoints_with_monitoring)} InService endpoints have drift detection monitoring configured.",
                         resolution='No action required',
                         reference="https://docs.aws.amazon.com/sagemaker/latest/dg/model-monitor.html",
-                        severity='N/A',
+                        severity='Informational',
                         status='Passed'
                     )
                 )
@@ -2670,7 +2670,7 @@ def check_model_drift_detection() -> Dict[str, Any]:
                         finding_details="No InService endpoints found to monitor.",
                         resolution='No action required',
                         reference="https://docs.aws.amazon.com/sagemaker/latest/dg/model-monitor.html",
-                        severity='N/A',
+                        severity='Informational',
                         status='Passed'
                     )
                 )
@@ -2754,7 +2754,7 @@ def check_ab_testing_shadow_deployment() -> Dict[str, Any]:
                     finding_details="No InService endpoints found.",
                     resolution='No action required',
                     reference="https://docs.aws.amazon.com/sagemaker/latest/dg/model-ab-testing.html",
-                    severity='N/A',
+                    severity='Informational',
                     status='Passed'
                 )
             )
@@ -2768,7 +2768,7 @@ def check_ab_testing_shadow_deployment() -> Dict[str, Any]:
                         finding_details=f"Found {len(shadow_endpoints)} endpoint(s) using shadow deployment pattern for safe model validation. This is a recommended practice for production deployments.",
                         resolution='No action required',
                         reference="https://docs.aws.amazon.com/sagemaker/latest/dg/model-shadow-deployment.html",
-                        severity='N/A',
+                        severity='Informational',
                         status='Passed'
                     )
                 )
@@ -2782,7 +2782,7 @@ def check_ab_testing_shadow_deployment() -> Dict[str, Any]:
                         finding_details=f"Found {len(multi_variant_endpoints)} endpoint(s) using A/B testing with multiple production variants. This enables gradual rollout and comparison of model versions.",
                         resolution='No action required',
                         reference="https://docs.aws.amazon.com/sagemaker/latest/dg/model-ab-testing.html",
-                        severity='N/A',
+                        severity='Informational',
                         status='Passed'
                     )
                 )
@@ -2820,7 +2820,7 @@ def check_ab_testing_shadow_deployment() -> Dict[str, Any]:
                         finding_details=f"Safe deployment patterns are being utilized. {len(shadow_endpoints)} shadow deployments, {len(multi_variant_endpoints)} A/B tests configured.",
                         resolution='No action required',
                         reference="https://docs.aws.amazon.com/sagemaker/latest/dg/model-ab-testing.html",
-                        severity='N/A',
+                        severity='Informational',
                         status='Passed'
                     )
                 )
@@ -2947,7 +2947,7 @@ def check_ml_lineage_tracking() -> Dict[str, Any]:
                     finding_details="SageMaker Experiments and Trials are being used for ML lineage tracking.",
                     resolution='No action required',
                     reference="https://docs.aws.amazon.com/sagemaker/latest/dg/experiments.html",
-                    severity='N/A',
+                    severity='Informational',
                     status='Passed'
                 )
             )
@@ -3071,7 +3071,7 @@ def check_model_registry_usage(permission_cache) -> Dict[str, Any]:
                     finding_details='Model Registry is being used effectively',
                     resolution='No action required',
                     reference='https://docs.aws.amazon.com/sagemaker/latest/dg/model-registry.html',
-                    severity='N/A',
+                    severity='Informational',
                     status='Passed'
                 )
             )
