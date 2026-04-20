@@ -1,8 +1,10 @@
-# AI/ML Security Assessments
+# AWS AI/ML Security Assessment Framework
 
-> **Automated security assessment framework for Amazon Bedrock, SageMaker AI, and Bedrock AgentCore workloads**
+[![License: MIT-0](https://img.shields.io/badge/License-MIT--0-yellow.svg)](https://opensource.org/licenses/MIT-0) [![Python 3.12+](https://img.shields.io/badge/Python-3.12+-blue.svg)](https://www.python.org/downloads/) [![AWS SAM](https://img.shields.io/badge/AWS-SAM-orange.svg)](https://aws.amazon.com/serverless/sam/) [![Serverless](https://img.shields.io/badge/Architecture-Serverless-green.svg)](https://aws.amazon.com/serverless/)
 
-Comprehensive security scanning with **52 checks** across your AI/ML infrastructure, delivered through interactive HTML reports with actionable recommendations.
+> **Open-source automated security scanner for Amazon Bedrock, SageMaker AI, and Bedrock AgentCore** - Built on [AWS Well-Architected Framework (Generative AI Lens)](https://docs.aws.amazon.com/wellarchitected/latest/generative-ai-lens/generative-ai-lens.html)
+
+Cloud security automation with **52 security checks** for your generative AI and machine learning workloads. Identify IAM misconfigurations, encryption gaps, network isolation issues, and compliance violations with interactive HTML reports and actionable remediation guidance.
 
 ---
 
@@ -54,6 +56,7 @@ The framework generates professional, interactive security assessment reports wi
 ## Table of Contents
 
 - [What It Does](#what-it-does)
+- [Why Use This Framework?](#why-use-this-framework)
 - [Quick Start](#quick-start)
 - [Architecture](#architecture)
 - [Prerequisites](#prerequisites)
@@ -76,6 +79,17 @@ The framework generates professional, interactive security assessment reports wi
 This serverless assessment framework automatically evaluates your AI/ML workloads against AWS security best practices. It uses AWS serverless services to gather data from the control plane and generate reports containing the status of various security checks, severity levels, and recommended actions.
 
 Designed for workloads using [Amazon Bedrock](https://aws.amazon.com/bedrock/), [Amazon Bedrock AgentCore](https://aws.github.io/bedrock-agentcore-starter-toolkit/), or [Amazon SageMaker AI](https://aws.amazon.com/sagemaker/ai/).
+
+### Why Use This Framework?
+
+| Challenge | How This Framework Helps |
+|-----------|-------------------------|
+| **Manual security audits are time-consuming** | Fully automated scanning with one-click CloudFormation deployment |
+| **Inconsistent security checks across teams** | Standardized 52-check assessment based on AWS Well-Architected best practices |
+| **Difficulty tracking AI/ML security posture** | Interactive HTML dashboards with severity breakdown and trend visibility |
+| **Multi-account complexity** | Consolidated reporting across AWS Organizations with cross-account role assumption |
+| **Compliance and audit requirements** | Exportable reports with remediation guidance linked to AWS documentation |
+| **Generative AI security gaps** | Purpose-built checks for LLM guardrails, model access controls, and prompt injection prevention |
 
 **Services Covered:**
 - **Amazon Bedrock** (14 checks) - Guardrails, encryption, Amazon VPC endpoints, AWS IAM permissions, model invocation logging
