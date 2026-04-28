@@ -135,7 +135,9 @@ Resources:
                   - iam:GetPolicyVersion
                   - iam:GenerateServiceLastAccessedDetails
                   - iam:GetServiceLastAccessedDetails
+                  - iam:GetRole
                   - sts:GetCallerIdentity
+                  # Bedrock Permissions
                   - bedrock:ListGuardrails
                   - bedrock:GetGuardrail
                   - bedrock:GetModelInvocationLoggingConfiguration
@@ -143,6 +145,17 @@ Resources:
                   - bedrock:GetPrompt
                   - bedrock:ListAgents
                   - bedrock:GetAgent
+                  - bedrock:ListCustomModels
+                  - bedrock:GetCustomModel
+                  - bedrock:GetModelCustomizationJob
+                  - bedrock:ListFlows
+                  - bedrock:GetFlow
+                  # Bedrock Agent Permissions (Knowledge Bases, Flows)
+                  - bedrock-agent:ListKnowledgeBases
+                  - bedrock-agent:GetKnowledgeBase
+                  - bedrock-agent:ListFlows
+                  - bedrock-agent:GetFlow
+                  # SageMaker Permissions
                   - sagemaker:ListNotebookInstances
                   - sagemaker:DescribeNotebookInstance
                   - sagemaker:ListDomains
@@ -151,16 +164,41 @@ Resources:
                   - sagemaker:DescribeTrainingJob
                   - sagemaker:ListModelPackageGroups
                   - sagemaker:ListModelPackages
+                  - sagemaker:DescribeModelPackage
                   - sagemaker:ListFeatureGroups
+                  - sagemaker:DescribeFeatureGroup
                   - sagemaker:ListPipelines
                   - sagemaker:ListPipelineExecutions
                   - sagemaker:ListProcessingJobs
                   - sagemaker:DescribeProcessingJob
                   - sagemaker:ListMonitoringSchedules
                   - sagemaker:DescribeMonitoringSchedule
+                  - sagemaker:ListModels
+                  - sagemaker:DescribeModel
+                  - sagemaker:ListEndpoints
+                  - sagemaker:DescribeEndpoint
+                  - sagemaker:ListDataQualityJobDefinitions
+                  - sagemaker:DescribeDataQualityJobDefinition
+                  # Additional SageMaker Security Hub Controls (SM.10-15)
+                  - sagemaker:ListTransformJobs
+                  - sagemaker:DescribeTransformJob
+                  - sagemaker:ListHyperParameterTuningJobs
+                  - sagemaker:DescribeHyperParameterTuningJob
+                  - sagemaker:ListCompilationJobs
+                  - sagemaker:DescribeCompilationJob
+                  - sagemaker:ListAutoMLJobs
+                  - sagemaker:DescribeAutoMLJob
+                  # Model Governance Permissions
+                  - sagemaker:ListExperiments
+                  - sagemaker:DescribeExperiment
+                  - sagemaker:ListTrials
+                  - sagemaker:DescribeTrial
+                  - sagemaker:ListAssociations
+                  # CloudTrail Permissions
                   - cloudtrail:ListTrails
                   - cloudtrail:GetTrail
                   - cloudtrail:GetEventSelectors
+                  - cloudtrail:GetTrailStatus
                   - lambda:ListFunctions
                   - ecs:ListClusters
                   - ecs:ListTasks
@@ -169,6 +207,7 @@ Resources:
                   - ec2:DescribeVpcs
                   - kms:DescribeKey
                   - kms:ListAliases
+                  # GuardDuty Permissions
                   - guardduty:GetFindings
                   - guardduty:ListFindings
                   - guardduty:ListDetectors
@@ -186,6 +225,11 @@ Resources:
                   - bedrock-agentcore:ListMemories
                   - bedrock-agentcore:GetMemory
                   - bedrock-agentcore:ListGateways
+                  - bedrock-agentcore:GetGateway
+                  - bedrock-agentcore:ListPolicyEngines
+                  - bedrock-agentcore:GetPolicyEngine
+                  - bedrock-agentcore:GetAgentRuntimeResourcePolicy
+                  - bedrock-agentcore:GetGatewayResourcePolicy
                   # ECR Permissions for AgentCore encryption checks
                   - ecr:DescribeRepositories
                   - ecr:GetRepositoryPolicy
@@ -196,6 +240,12 @@ Resources:
                   - ec2:DescribeSubnets
                   - ec2:DescribeRouteTables
                   - ec2:DescribeNatGateways
+                  # S3 Permissions for encryption checks
+                  - s3:GetBucketEncryption
+                  - s3:ListBucket
+                  - s3:GetBucketVersioning
+                  - s3:GetBucketTagging
+                  - s3:HeadBucket
                 Resource: "*"
 
   # S3 bucket for assessment results

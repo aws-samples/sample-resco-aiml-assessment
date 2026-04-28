@@ -82,7 +82,25 @@ aws s3 rb s3://<bucket-name>
 # Re-run the CodeBuild project
 ```
 
-### 6. No Reports in S3 Bucket
+### 6. CodeBuild Timeout or Out-of-Memory with Many Accounts
+
+**Symptoms:** CodeBuild job times out or runs slowly when scanning a large number of accounts concurrently.
+
+**Cause:** The `ConcurrentAccountScans` parameter controls both the number of parallel account scans and the CodeBuild compute type. Higher concurrency requires a larger (and more expensive) instance:
+
+| ConcurrentAccountScans | Parallel Accounts | CodeBuild Compute Type | Approximate Cost per Build Minute |
+|------------------------|-------------------|------------------------|-----------------------------------|
+| Three (default) | 3 | `BUILD_GENERAL1_SMALL` | $0.005 |
+| Six | 6 | `BUILD_GENERAL1_MEDIUM` | $0.01 |
+| Twelve | 12 | `BUILD_GENERAL1_LARGE` | $0.02 |
+
+**Solutions:**
+- For organizations with fewer than 10 accounts, the default "Three" is usually sufficient
+- If builds timeout, increase `ConcurrentAccountScans` to process more accounts in parallel -- but be aware this also increases the per-minute CodeBuild cost
+- If builds timeout even at "Twelve," increase the `CodeBuildTimeout` parameter (default is 300 minutes for multi-account)
+- For very large organizations (100+ accounts), consider using `MultiAccountListOverride` to split assessments into batches
+
+### 7. No Reports in S3 Bucket
 
 **Symptoms:** Assessment completes but no HTML/CSV files appear.
 
@@ -184,7 +202,7 @@ A: Yes. The assessment will run successfully and report findings with status "N/
 
 **Q: How much does it cost to run this assessment?**
 
-A: **Estimated cost per assessment**: $0.50 - $2.00 for typical usage
+A: **Estimated cost per assessment**: $0.50 - $2.00 for typical single-account usage
 
 Cost breakdown:
 - **AWS Lambda**: $0.10 - $0.50 (pay per execution, typically 5-10 function invocations)
@@ -192,7 +210,15 @@ Cost breakdown:
 - **Amazon S3**: $0.01 - $0.10 (report storage, negligible for most use cases)
 - **AWS CodeBuild**: $0.10 - $0.50 (execution time, billed per minute)
 
-**Multi-account deployments**: Multiply by the number of accounts being assessed. The AWS Organizations API calls are free.
+**Multi-account deployments**: Lambda and Step Functions costs scale with the number of accounts. AWS Organizations API calls are free. CodeBuild cost depends on the `ConcurrentAccountScans` setting, which determines the instance size:
+
+| ConcurrentAccountScans | CodeBuild Compute Type | Approximate Cost per Build Minute |
+|------------------------|------------------------|-----------------------------------|
+| Three (default) | `BUILD_GENERAL1_SMALL` | $0.005 |
+| Six | `BUILD_GENERAL1_MEDIUM` | $0.01 |
+| Twelve | `BUILD_GENERAL1_LARGE` | $0.02 |
+
+For example, a 30-minute multi-account assessment at "Twelve" concurrency costs roughly $0.60 in CodeBuild alone, compared to $0.15 at the default "Three." Choose the concurrency level that balances speed against cost for your organization size.
 
 **Q: Are there any ongoing costs when not running assessments?**
 

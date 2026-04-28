@@ -18,7 +18,8 @@ Resources:
         AgentCoreSecurityAssessmentFunction: !GetAtt AgentCoreSecurityAssessmentFunction.Arn
         GenerateConsolidatedReportFunction: !GetAtt GenerateConsolidatedReportFunction.Arn
         AIMLAssessmentBucketName: !Ref AIMLAssessmentBucket
-      Policies: # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
+      Policies:
+        # Find out more about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
         - LambdaInvokePolicy:
             FunctionName: !Ref CleanupBucketFunction
         - LambdaInvokePolicy:
@@ -62,7 +63,7 @@ Resources:
       Runtime: python3.12
       Architectures:
         - x86_64
-      Timeout: 600  # 5 minutes
+      Timeout: 600 # 10 minutes
       MemorySize: 1024
       Environment:
         Variables:
@@ -97,7 +98,7 @@ Resources:
       Runtime: python3.12
       Architectures:
         - x86_64
-      Timeout: 600  # 5 minutes
+      Timeout: 600 # 10 minutes
       MemorySize: 1024
       Environment:
         Variables:
@@ -115,7 +116,7 @@ Resources:
       Architectures:
         - x86_64
       # Add S3 Read Write policy
-      Timeout: 600  # 5 minutes
+      Timeout: 600 # 10 minutes
       MemorySize: 1024
       Environment:
         Variables:
@@ -194,7 +195,7 @@ Resources:
               Effect: Allow
               Action:
                 - ec2:DescribeVpcEndpoints
-                - ec2:DescribeVpcs  # Added this permission
+                - ec2:DescribeVpcs # Added this permission
               Resource: '*'
   SagemakerSecurityAssessmentFunction:
     Type: AWS::Serverless::Function
@@ -206,7 +207,7 @@ Resources:
       Architectures:
         - x86_64
       # Add S3 Read Write policy
-      Timeout: 600  # 5 minutes
+      Timeout: 600 # 10 minutes
       MemorySize: 1024
       Environment:
         Variables:
@@ -287,7 +288,7 @@ Resources:
               Effect: Allow
               Action:
                 - ec2:DescribeVpcEndpoints
-                - ec2:DescribeVpcs  # Added this permission
+                - ec2:DescribeVpcs # Added this permission
               Resource: '*'
 
   AgentCoreSecurityAssessmentFunction:
@@ -299,7 +300,7 @@ Resources:
       Runtime: python3.12
       Architectures:
         - x86_64
-      Timeout: 600  # 10 minutes
+      Timeout: 600 # 10 minutes
       MemorySize: 1024
       Environment:
         Variables:
@@ -386,7 +387,7 @@ Resources:
                 - s3:HeadBucket
               Resource: 'arn:aws:s3:::*'
 
-# Add a S3 bucket to store the AIML assessment results
+  # Add a S3 bucket to store the AIML assessment results
   AIMLAssessmentBucket:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain

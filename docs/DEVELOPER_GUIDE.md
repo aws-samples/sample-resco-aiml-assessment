@@ -44,7 +44,7 @@
 
 ## Architecture Overview
 
-The AI/ML Security Assessment Framework is a serverless, multi-account security assessment solution for AWS AI/ML workloads. It performs 51 security checks across Amazon Bedrock, Amazon SageMaker AI, and Amazon Bedrock AgentCore, generating interactive HTML reports with findings and remediation guidance.
+The AI/ML Security Assessment Framework is a serverless, multi-account security assessment solution for AWS AI/ML workloads. It performs 52 security checks across Amazon Bedrock, Amazon SageMaker AI, and Amazon Bedrock AgentCore, generating interactive HTML reports with findings and remediation guidance.
 
 ### Security Design Principles
 
@@ -220,20 +220,20 @@ from schema import create_finding
 def lambda_handler(event, context):
     """Main assessment handler for new service"""
     all_findings = []
-    
+
     # Get cached permissions
     execution_id = event["Execution"]["Name"]
     permission_cache = get_permissions_cache(execution_id)
-    
+
     # Run assessment checks
     findings = check_new_service_security(permission_cache)
     all_findings.append(findings)
-    
+
     # Generate and upload report
     csv_content = generate_csv_report(all_findings)
     bucket_name = os.environ.get('AIML_ASSESSMENT_BUCKET_NAME')
     s3_url = write_to_s3(execution_id, csv_content, bucket_name)
-    
+
     return {
         'statusCode': 200,
         'body': {
@@ -251,11 +251,11 @@ def check_new_service_security(permission_cache):
         'details': '',
         'csv_data': []
     }
-    
+
     # Your assessment logic here
     # Use permission_cache to check IAM permissions
     # Use AWS SDK to check service configurations
-    
+
     return findings
 ```
 
@@ -285,7 +285,7 @@ class StatusEnum(str, Enum):
 
 def create_finding(check_id, finding_name, finding_details, resolution, reference, severity, status):
     """Create standardized finding format
-    
+
     Args:
         check_id: Unique check identifier (e.g., SM-01, BR-01, AC-01)
         finding_name: Name of the finding
@@ -338,7 +338,7 @@ Add your new function to `aiml-security-assessment/template.yaml`:
 
 ### Step 3: Update AWS Step Functions Definition
 
-Add new service to the parallel execution in `aiml-security-assessment/statemachine/aiml_security_assessments.asl.json`:
+Add new service to the parallel execution in `aiml-security-assessment/statemachine/assessments.asl.json`:
 
 ```json
 {
@@ -483,7 +483,7 @@ For detailed troubleshooting guidance, common issues, and debugging tips, see th
 ## Development Roadmap
 
 ### Current Status
-- **AI/ML Assessment**: 51 security checks across three services (see [Security Checks Reference](SECURITY_CHECKS.md))
+- **AI/ML Assessment**: 52 security checks across three services (see [Security Checks Reference](SECURITY_CHECKS.md))
 
 ### Potential Additions
 - **Amazon Comprehend**: Data privacy, access controls, entity recognition security
@@ -577,7 +577,7 @@ python sample-reports/scripts/capture_screenshots.py
 
 The script captures 4 screenshots:
 - `dashboard-overview-light.png` - Executive dashboard in light mode
-- `dashboard-overview-dark.png` - Executive dashboard in dark mode  
+- `dashboard-overview-dark.png` - Executive dashboard in dark mode
 - `findings-table.png` - Detailed findings table with filters
 - `multi-account-summary.png` - Multi-account consolidated view
 

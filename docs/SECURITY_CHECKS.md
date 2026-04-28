@@ -1,6 +1,6 @@
 # Security Checks Reference
 
-This document provides a comprehensive reference for all 51 security checks performed by the AI/ML Security Assessment framework.
+This document provides a comprehensive reference for all 52 security checks performed by the AI/ML Security Assessment framework.
 
 ## Table of Contents
 
@@ -8,9 +8,9 @@ This document provides a comprehensive reference for all 51 security checks perf
 - [Check ID Convention](#check-id-convention)
 - [Severity Levels](#severity-levels)
 - [Status Values](#status-values)
-- [Amazon SageMaker Checks (25)](#amazon-sagemaker-checks-25)
-- [Amazon Bedrock Checks (14)](#amazon-bedrock-checks-14)
-- [Amazon Bedrock AgentCore Checks (13)](#amazon-bedrock-agentcore-checks-13)
+- [Amazon SageMaker AI Security Checks (25)](#amazon-sagemaker-ai-security-checks-25)
+- [Amazon Bedrock Security Checks (14)](#amazon-bedrock-security-checks-14)
+- [Amazon Bedrock AgentCore Security Checks (13)](#amazon-bedrock-agentcore-security-checks-13)
 
 ---
 
@@ -21,7 +21,7 @@ The framework evaluates your AI/ML workloads against AWS security best practices
 | Service | Number of Checks | Focus Areas |
 |---------|------------------|-------------|
 | Amazon SageMaker AI | 25 | Security Hub controls, encryption, network isolation, IAM, MLOps |
-| Amazon Bedrock | 13 | Guardrails, encryption, VPC endpoints, IAM permissions, logging |
+| Amazon Bedrock | 14 | Guardrails, encryption, VPC endpoints, IAM permissions, logging |
 | Amazon Bedrock AgentCore | 13 | VPC configuration, encryption, observability, resource policies |
 
 ---
@@ -33,7 +33,7 @@ Each security check has a unique identifier with a service prefix:
 | Prefix | Service | Example |
 |--------|---------|---------|
 | **SM-XX** | Amazon SageMaker | SM-01, SM-25 |
-| **BR-XX** | Amazon Bedrock | BR-01, BR-13 |
+| **BR-XX** | Amazon Bedrock | BR-01, BR-14 |
 | **AC-XX** | Amazon Bedrock AgentCore | AC-01, AC-13 |
 
 ---
@@ -60,126 +60,281 @@ Each security check has a unique identifier with a service prefix:
 
 ---
 
-## Amazon SageMaker Checks (25)
+## Amazon SageMaker AI Security Checks (25)
 
-### Core Security Controls
+### SM-01: Internet Access
 
-| Check ID | Check Name | Description | Severity | AWS Security Hub Control |
-|----------|------------|-------------|----------|--------------------------|
-| SM-01 | Internet Access | Checks for direct internet access on notebooks and domains | High | SageMaker.2 |
-| SM-02 | AWS IAM Permissions | Identifies overly permissive policies, stale access, and SSO configuration | High | - |
-| SM-03 | Data Protection | Verifies encryption at rest and in transit for notebooks and domains | High | SageMaker.1 |
-| SM-04 | Amazon GuardDuty Integration | Verifies Amazon GuardDuty runtime threat detection is enabled | Medium | - |
-| SM-09 | Notebook Root Access | Validates root access is disabled on notebooks | High | SageMaker.3 |
-| SM-10 | Notebook Amazon VPC Deployment | Ensures notebooks are deployed within an Amazon VPC | High | SageMaker.2 |
-| SM-11 | Model Network Isolation | Checks inference containers have network isolation | Medium | SageMaker.4 |
-| SM-12 | Endpoint Instance Count | Verifies endpoints have 2+ instances for high availability | Medium | SageMaker.5 |
+- **Severity:** High
+- **AWS Security Hub Control:** SageMaker.2
+- **Description:** Checks for direct internet access on notebooks and domains.
 
-### MLOps and Governance
+### SM-02: AWS IAM Permissions
 
-| Check ID | Check Name | Description | Severity | AWS Security Hub Control |
-|----------|------------|-------------|----------|--------------------------|
-| SM-05 | MLOps Features | Checks MLOps pipelines, experiment tracking, and model registry usage | Low | - |
-| SM-06 | Clarify Usage | Validates SageMaker Clarify for bias detection and explainability | Low | - |
-| SM-07 | Model Monitor | Checks Model Monitor configuration for drift detection | Medium | - |
-| SM-08 | Model Registry | Validates model registry usage and permissions | Medium | - |
-| SM-22 | Model Approval Workflow | Checks model approval and governance workflow | Medium | - |
-| SM-23 | Model Drift Detection | Validates model drift monitoring configuration | Medium | - |
-| SM-24 | A/B Testing & Shadow Deployment | Checks for safe deployment patterns | Low | - |
-| SM-25 | ML Lineage Tracking | Validates experiment tracking and lineage | Low | - |
+- **Severity:** High
+- **Description:** Identifies overly permissive policies, stale access, and SSO configuration.
 
-### Encryption Checks
+### SM-03: Data Protection
 
-| Check ID | Check Name | Description | Severity | AWS Security Hub Control |
-|----------|------------|-------------|----------|--------------------------|
-| SM-13 | Monitoring Network Isolation | Checks monitoring job network isolation | Medium | - |
-| SM-14 | Model Container Repository | Validates model container repository access | Medium | - |
-| SM-15 | Feature Store Encryption | Checks feature group encryption settings | High | - |
-| SM-16 | Data Quality Encryption | Validates data quality job encryption | Medium | - |
-| SM-17 | Processing Job Encryption | Verifies processing job encryption | Medium | - |
-| SM-18 | Transform Job Encryption | Checks transform job volume encryption | Medium | - |
-| SM-19 | Hyperparameter Tuning Encryption | Validates hyperparameter tuning job encryption | Medium | - |
-| SM-20 | Compilation Job Encryption | Checks compilation job encryption | Medium | - |
-| SM-21 | AutoML Network Isolation | Validates AutoML job network isolation | Medium | - |
+- **Severity:** High
+- **AWS Security Hub Control:** SageMaker.1
+- **Description:** Verifies encryption at rest and in transit for notebooks and domains.
+
+### SM-04: Amazon GuardDuty Integration
+
+- **Severity:** Medium
+- **Description:** Verifies Amazon GuardDuty runtime threat detection is enabled.
+
+### SM-05: MLOps Features
+
+- **Severity:** Low
+- **Description:** Checks MLOps pipelines, experiment tracking, and model registry usage.
+
+### SM-06: Clarify Usage
+
+- **Severity:** Low
+- **Description:** Validates SageMaker Clarify for bias detection and explainability.
+
+### SM-07: Model Monitor
+
+- **Severity:** Medium
+- **Description:** Checks Model Monitor configuration for drift detection.
+
+### SM-08: Model Registry
+
+- **Severity:** Medium
+- **Description:** Validates model registry usage and permissions.
+
+### SM-09: Notebook Root Access
+
+- **Severity:** High
+- **AWS Security Hub Control:** SageMaker.3
+- **Description:** Validates root access is disabled on notebooks.
+
+### SM-10: Notebook Amazon VPC Deployment
+
+- **Severity:** High
+- **AWS Security Hub Control:** SageMaker.2
+- **Description:** Ensures notebooks are deployed within an Amazon VPC.
+
+### SM-11: Model Network Isolation
+
+- **Severity:** Medium
+- **AWS Security Hub Control:** SageMaker.4
+- **Description:** Checks inference containers have network isolation.
+
+### SM-12: Endpoint Instance Count
+
+- **Severity:** Medium
+- **AWS Security Hub Control:** SageMaker.5
+- **Description:** Verifies endpoints have 2+ instances for high availability.
+
+### SM-13: Monitoring Network Isolation
+
+- **Severity:** Medium
+- **Description:** Checks monitoring job network isolation.
+
+### SM-14: Model Container Repository
+
+- **Severity:** Medium
+- **Description:** Validates model container repository access.
+
+### SM-15: Feature Store Encryption
+
+- **Severity:** High
+- **Description:** Checks feature group encryption settings.
+
+### SM-16: Data Quality Encryption
+
+- **Severity:** Medium
+- **Description:** Validates data quality job encryption.
+
+### SM-17: Processing Job Encryption
+
+- **Severity:** Medium
+- **Description:** Verifies processing job encryption.
+
+### SM-18: Transform Job Encryption
+
+- **Severity:** Medium
+- **Description:** Checks transform job volume encryption.
+
+### SM-19: Hyperparameter Tuning Encryption
+
+- **Severity:** Medium
+- **Description:** Validates hyperparameter tuning job encryption.
+
+### SM-20: Compilation Job Encryption
+
+- **Severity:** Medium
+- **Description:** Checks compilation job encryption.
+
+### SM-21: AutoML Network Isolation
+
+- **Severity:** Medium
+- **Description:** Validates AutoML job network isolation.
+
+### SM-22: Model Approval Workflow
+
+- **Severity:** Medium
+- **Description:** Checks model approval and governance workflow.
+
+### SM-23: Model Drift Detection
+
+- **Severity:** Medium
+- **Description:** Validates model drift monitoring configuration.
+
+### SM-24: A/B Testing and Shadow Deployment
+
+- **Severity:** Low
+- **Description:** Checks for safe deployment patterns.
+
+### SM-25: ML Lineage Tracking
+
+- **Severity:** Low
+- **Description:** Validates experiment tracking and lineage.
 
 ---
 
-## Amazon Bedrock Checks (13)
+## Amazon Bedrock Security Checks (14)
 
-### Access Control
+### BR-01: AWS IAM Least Privilege
 
-| Check ID | Check Name | Description | Severity |
-|----------|------------|-------------|----------|
-| BR-01 | AWS IAM Least Privilege | Identifies roles with AmazonBedrockFullAccess policy | High |
-| BR-03 | Marketplace Subscription Access | Checks for overly permissive marketplace subscription access | Medium |
-| BR-08 | Agent AWS IAM Configuration | Checks agent execution role permissions | Medium |
-| BR-10 | Guardrail AWS IAM Enforcement | Verifies guardrails are enforced via AWS IAM conditions | Medium |
+- **Severity:** High
+- **Description:** Identifies roles with AmazonBedrockFullAccess policy.
 
-### Network Security
+### BR-02: Amazon VPC Endpoint Configuration
 
-| Check ID | Check Name | Description | Severity |
-|----------|------------|-------------|----------|
-| BR-02 | Amazon VPC Endpoint Configuration | Validates Bedrock Amazon VPC endpoints exist for private connectivity | High |
+- **Severity:** High
+- **Description:** Validates Bedrock Amazon VPC endpoints exist for private connectivity.
 
-### Data Protection
+### BR-03: Marketplace Subscription Access
 
-| Check ID | Check Name | Description | Severity |
-|----------|------------|-------------|----------|
-| BR-09 | Knowledge Base Encryption | Checks knowledge base encryption settings | High |
-| BR-11 | Custom Model Encryption | Validates custom models use customer-managed AWS KMS keys | High |
-| BR-12 | Invocation Log Encryption | Verifies logs are encrypted with AWS KMS | Medium |
+- **Severity:** Medium
+- **Description:** Checks for overly permissive marketplace subscription access.
 
-### Guardrails and Safety
+### BR-04: Model Invocation Logging
 
-| Check ID | Check Name | Description | Severity |
-|----------|------------|-------------|----------|
-| BR-05 | Guardrail Configuration | Verifies guardrails are configured and enforced | High |
-| BR-07 | Prompt Management | Validates Bedrock Prompt template usage and variants | Low |
-| BR-13 | Flows Guardrails | Validates Bedrock Flows have guardrails attached | Medium |
+- **Severity:** Medium
+- **Description:** Checks invocation logging is enabled.
 
-### Logging and Monitoring
+### BR-05: Guardrail Configuration
 
-| Check ID | Check Name | Description | Severity |
-|----------|------------|-------------|----------|
-| BR-04 | Model Invocation Logging | Checks invocation logging is enabled | Medium |
-| BR-06 | AWS CloudTrail Logging | Validates AWS CloudTrail logging for Bedrock API calls | Medium |
+- **Severity:** High
+- **Description:** Verifies guardrails are configured and enforced.
+
+### BR-06: AWS CloudTrail Logging
+
+- **Severity:** Medium
+- **Description:** Validates AWS CloudTrail logging for Bedrock API calls.
+
+### BR-07: Prompt Management
+
+- **Severity:** Low
+- **Description:** Validates Bedrock Prompt template usage and variants.
+
+### BR-08: Agent AWS IAM Configuration
+
+- **Severity:** Medium
+- **Description:** Checks agent execution role permissions.
+
+### BR-09: Knowledge Base Encryption
+
+- **Severity:** High
+- **Description:** Checks knowledge base encryption settings.
+
+### BR-10: Guardrail AWS IAM Enforcement
+
+- **Severity:** Medium
+- **Description:** Verifies guardrails are enforced via AWS IAM conditions.
+
+### BR-11: Custom Model Encryption
+
+- **Severity:** High
+- **Description:** Validates custom models use customer-managed AWS KMS keys.
+
+### BR-12: Invocation Log Encryption
+
+- **Severity:** Medium
+- **Description:** Verifies logs are encrypted with AWS KMS.
+
+### BR-13: Flows Guardrails
+
+- **Severity:** Medium
+- **Description:** Validates Bedrock Flows have guardrails attached.
+
+### BR-14: Stale Bedrock Access
+
+- **Severity:** Medium
+- **Description:** Detects IAM identities with Bedrock permissions that have not accessed the service in over 60 days.
 
 ---
 
-## Amazon Bedrock AgentCore Checks (13)
+## Amazon Bedrock AgentCore Security Checks (13)
 
-### Network Configuration
+### AC-01: Runtime Amazon VPC Configuration
 
-| Check ID | Check Name | Description | Severity |
-|----------|------------|-------------|----------|
-| AC-01 | Runtime Amazon VPC Configuration | Validates agent runtimes have proper Amazon VPC settings | High |
-| AC-08 | Amazon VPC Endpoints | Validates Amazon VPC endpoints for AgentCore services | High |
+- **Severity:** High
+- **Description:** Validates agent runtimes have proper Amazon VPC settings.
 
-### Access Control
+### AC-02: AWS IAM Full Access
 
-| Check ID | Check Name | Description | Severity |
-|----------|------------|-------------|----------|
-| AC-02 | AWS IAM Full Access | Checks for overly permissive AgentCore AWS IAM policies | High |
-| AC-03 | Stale Access | Detects unused AgentCore permissions | Low |
-| AC-09 | Service-Linked Role | Verifies the AgentCore service-linked role exists | Medium |
-| AC-10 | Resource-Based Policies | Checks runtime and gateway resource policies | Medium |
+- **Severity:** High
+- **Description:** Checks for overly permissive AgentCore AWS IAM policies.
 
-### Data Protection
+### AC-03: Stale Access
 
-| Check ID | Check Name | Description | Severity |
-|----------|------------|-------------|----------|
-| AC-05 | Amazon ECR Repository Encryption | Validates Amazon ECR repositories use encryption | High |
-| AC-06 | Browser Tool Recording | Checks storage configuration for browser tools | Medium |
-| AC-07 | Memory Encryption | Checks agent memory encryption with AWS KMS | High |
-| AC-11 | Policy Engine Encryption | Validates policy engine encryption settings | Medium |
-| AC-12 | Gateway Encryption | Verifies gateway encryption settings | Medium |
-| AC-13 | Gateway Configuration | Validates gateway security configuration | Medium |
+- **Severity:** Low
+- **Description:** Detects unused AgentCore permissions.
 
-### Observability
+### AC-04: Observability
 
-| Check ID | Check Name | Description | Severity |
-|----------|------------|-------------|----------|
-| AC-04 | Observability | Verifies Amazon CloudWatch Logs and AWS X-Ray tracing configuration | Medium |
+- **Severity:** Medium
+- **Description:** Verifies Amazon CloudWatch Logs and AWS X-Ray tracing configuration.
+
+### AC-05: Amazon ECR Repository Encryption
+
+- **Severity:** High
+- **Description:** Validates Amazon ECR repositories use encryption.
+
+### AC-06: Browser Tool Recording
+
+- **Severity:** Medium
+- **Description:** Checks storage configuration for browser tools.
+
+### AC-07: Memory Encryption
+
+- **Severity:** High
+- **Description:** Checks agent memory encryption with AWS KMS.
+
+### AC-08: Amazon VPC Endpoints
+
+- **Severity:** High
+- **Description:** Validates Amazon VPC endpoints for AgentCore services.
+
+### AC-09: Service-Linked Role
+
+- **Severity:** Medium
+- **Description:** Verifies the AgentCore service-linked role exists.
+
+### AC-10: Resource-Based Policies
+
+- **Severity:** Medium
+- **Description:** Checks runtime and gateway resource policies.
+
+### AC-11: Policy Engine Encryption
+
+- **Severity:** Medium
+- **Description:** Validates policy engine encryption settings.
+
+### AC-12: Gateway Encryption
+
+- **Severity:** Medium
+- **Description:** Verifies gateway encryption settings.
+
+### AC-13: Gateway Configuration
+
+- **Severity:** Medium
+- **Description:** Validates gateway security configuration.
 
 ---
 

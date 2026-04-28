@@ -38,3 +38,5 @@ samples/
 
 # Test output
 **/test_reports/
+
+.ruff_cache/

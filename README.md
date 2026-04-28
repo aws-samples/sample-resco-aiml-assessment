@@ -1,10 +1,10 @@
-# AWS AI/ML Security Assessment Framework
+# AWS AI/ML Security Assessment — Amazon Bedrock, SageMaker & AgentCore.
 
 [![License: MIT-0](https://img.shields.io/badge/License-MIT--0-yellow.svg)](https://opensource.org/licenses/MIT-0) [![Python 3.12+](https://img.shields.io/badge/Python-3.12+-blue.svg)](https://www.python.org/downloads/) [![AWS SAM](https://img.shields.io/badge/AWS-SAM-orange.svg)](https://aws.amazon.com/serverless/sam/) [![Serverless](https://img.shields.io/badge/Architecture-Serverless-green.svg)](https://aws.amazon.com/serverless/)
 
-> **Open-source automated security scanner for Amazon Bedrock, SageMaker AI, and Bedrock AgentCore** - Built on [AWS Well-Architected Framework (Generative AI Lens)](https://docs.aws.amazon.com/wellarchitected/latest/generative-ai-lens/generative-ai-lens.html)
+**Open-source automated security scanner for Amazon Bedrock, SageMaker AI, and Bedrock AgentCore** — Built on [AWS Well-Architected Framework (Generative AI Lens)](https://docs.aws.amazon.com/wellarchitected/latest/generative-ai-lens/generative-ai-lens.html)
 
-Cloud security automation with **51 security checks** for your generative AI and machine learning workloads. Identify IAM misconfigurations, encryption gaps, network isolation issues, and compliance violations with interactive HTML reports and actionable remediation guidance.
+Cloud security automation with **[52 security checks](docs/SECURITY_CHECKS.md)** for your generative AI and machine learning workloads. Identify IAM misconfigurations, encryption gaps, network isolation issues, and compliance violations with interactive HTML reports and actionable remediation guidance.
 
 ---
 
@@ -12,16 +12,16 @@ Cloud security automation with **51 security checks** for your generative AI and
 
 The framework generates professional, interactive security assessment reports with filtering, search, and dark mode support.
 
-**Download Sample Reports** | [Single Account](sample-reports/security_assessment_single_account.html) | [Multi-Account](sample-reports/security_assessment_multi_account.html)
+**Download Sample Reports** | [Single Account](https://aws-samples.github.io/sample-aiml-security-assessment/sample-reports/security_assessment_single_account.html) | [Multi-Account](https://aws-samples.github.io/sample-aiml-security-assessment/sample-reports/security_assessment_multi_account.html)
 
 <table>
   <tr>
     <td width="50%">
-      <img src="sample-reports/dashboard-overview-light.png" alt="Executive Dashboard - Light Mode"/>
+      <img src="sample-reports/dashboard-overview-light.png" alt="AWS AI/ML security assessment dashboard showing Bedrock, SageMaker, and AgentCore findings by severity"/>
       <p align="center"><em>Executive Dashboard (Light Mode)</em></p>
     </td>
     <td width="50%">
-      <img src="sample-reports/dashboard-overview-dark.png" alt="Executive Dashboard - Dark Mode"/>
+      <img src="sample-reports/dashboard-overview-dark.png" alt="AWS AI/ML security assessment dashboard showing Bedrock, SageMaker, and AgentCore findings by severity"/>
       <p align="center"><em>Executive Dashboard (Dark Mode)</em></p>
     </td>
   </tr>
@@ -43,7 +43,7 @@ The framework generates professional, interactive security assessment reports wi
 
 - **Executive Summary** with severity counts and service breakdown
 - **Priority Recommendations** highlighting critical issues requiring immediate attention
-- **51 Security Checks** across Amazon Bedrock, SageMaker AI, and Bedrock AgentCore
+- **[52 Security Checks](docs/SECURITY_CHECKS.md)** across Amazon Bedrock, SageMaker AI, and Bedrock AgentCore
 - **Interactive Filtering** by account, service, severity, and status
 - **Light/Dark Mode Toggle** with persistent user preference
 - **Text Search** across all findings with real-time results
@@ -85,16 +85,16 @@ Designed for workloads using [Amazon Bedrock](https://aws.amazon.com/bedrock/), 
 | Challenge | How This Framework Helps |
 |-----------|-------------------------|
 | **Manual security audits are time-consuming** | Fully automated scanning with one-click CloudFormation deployment |
-| **Inconsistent security checks across teams** | Standardized 51-check assessment based on AWS Well-Architected best practices |
-| **Difficulty tracking AI/ML security posture** | Interactive HTML dashboards with severity breakdown and trend visibility |
+| **Inconsistent security checks across teams** | Standardized 52-check assessment based on AWS Well-Architected best practices |
+| **Difficulty tracking AI/ML security posture** | Interactive HTML dashboards with severity breakdown and per-account visibility |
 | **Multi-account complexity** | Consolidated reporting across AWS Organizations with cross-account role assumption |
 | **Compliance and audit requirements** | Exportable reports with remediation guidance linked to AWS documentation |
 | **Generative AI security gaps** | Purpose-built checks for LLM guardrails, model access controls, and prompt injection prevention |
 
 **Services Covered:**
-- **Amazon Bedrock** (13 checks) - Guardrails, encryption, Amazon VPC endpoints, AWS IAM permissions, model invocation logging
-- **Amazon SageMaker AI** (25 checks) - Security Hub controls (SageMaker.1-5), encryption, network isolation, AWS IAM, MLOps
-- **Amazon Bedrock AgentCore** (13 checks) - Amazon VPC configuration, encryption, observability, resource policies
+- **[Amazon Bedrock](docs/SECURITY_CHECKS.md#amazon-bedrock-security-checks-14)** (14 checks) - Guardrails, encryption, Amazon VPC endpoints, AWS IAM permissions, model invocation logging
+- **[Amazon SageMaker AI](docs/SECURITY_CHECKS.md#amazon-sagemaker-ai-security-checks-25)** (25 checks) - Security Hub controls (SageMaker.1-5), encryption, network isolation, AWS IAM, MLOps
+- **[Amazon Bedrock AgentCore](docs/SECURITY_CHECKS.md#amazon-bedrock-agentcore-security-checks-13)** (13 checks) - Amazon VPC configuration, encryption, observability, resource policies
 
 **Deployment Options:**
 - **Single-Account**: Assess security in one AWS account
@@ -178,9 +178,11 @@ AWS IAM roles<br/>
 <td><strong>Assessment Stack</strong><br/><em>(Auto-generated - ignore this)</em></td>
 <td>
 Auto-generated name:<br/>
-<code>aiml-sec-{account_id}</code><br/>
-Example:<br/>
-<code>aiml-sec-123456789012</code>
+Single-account: <code>aiml-sec-{account_id}</code><br/>
+Multi-account: <code>aiml-security-{account_id}</code> per member account, plus <code>aiml-security-mgmt</code> for the management account<br/>
+Examples:<br/>
+<code>aiml-sec-123456789012</code> (single)<br/>
+<code>aiml-security-123456789012</code> (multi)
 </td>
 <td>
 AWS Lambda functions<br/>
@@ -196,7 +198,7 @@ Created automatically by AWS CodeBuild.
 </tr>
 </table>
 
-**Quick Check**: If you see a stack name starting with `aiml-sec-` followed by numbers, that's the **wrong stack**. Look for the stack name you originally chose during deployment.
+**Quick Check**: If you see a stack name starting with `aiml-sec-` or `aiml-security-` followed by numbers (or `aiml-security-mgmt`), that's an **auto-generated assessment stack**. Look for the stack name you originally chose during deployment.
 
 ## Multi-Account Deployment
 
@@ -489,7 +491,7 @@ For a clean removal, delete resources in this order:
 
 | Document | Description |
 |----------|-------------|
-| [Security Checks Reference](docs/SECURITY_CHECKS.md) | Complete reference for all 51 security checks with severity levels |
+| [Security Checks Reference](docs/SECURITY_CHECKS.md) | Complete reference for all 52 security checks with severity levels |
 | [Troubleshooting Guide](docs/TROUBLESHOOTING.md) | Common issues, debugging tips, and FAQ |
 | [Developer Guide](docs/DEVELOPER_GUIDE.md) | Architecture details, adding custom checks, and contributing |
 
