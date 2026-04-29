@@ -318,6 +318,53 @@ Resources:
                   - "arn:aws:s3:::aws-sam-cli-managed-default-*"
                   - "arn:aws:s3:::aws-sam-cli-managed-default-*/*"
 
+              # FinServ GenAI Risk Assessment Permissions (FS-01 to FS-69)
+              - Effect: Allow
+                Action:
+                  # WAF / Shield (FS-01, FS-51..54)
+                  - wafv2:ListWebACLs
+                  - wafv2:GetWebACL
+                  - shield:DescribeSubscription
+                  # API Gateway (FS-02, FS-68)
+                  - apigateway:GET
+                  # Service Quotas (FS-03)
+                  - servicequotas:ListServiceQuotas
+                  - servicequotas:ListAWSDefaultServiceQuotas
+                  # Cost / Budgets (FS-04, FS-06)
+                  - ce:GetAnomalyMonitors
+                  - budgets:ViewBudget
+                  # CloudWatch (FS-05, FS-11, FS-21, FS-33, FS-46)
+                  - cloudwatch:DescribeAlarms
+                  - cloudwatch:ListMetrics
+                  # CloudWatch Logs (FS-43, FS-64)
+                  - logs:DescribeAccountPolicies
+                  # Bedrock — guardrail and evaluation (FS-27..30, FS-36..38, FS-43..45, FS-47..50, FS-59..60)
+                  - bedrock:ListEvaluationJobs
+                  - bedrock:GetEvaluationJob
+                  - bedrock:ListFoundationModels
+                  # Bedrock Agent — runtimes and data sources (FS-31, FS-65)
+                  - bedrock-agent:ListDataSources
+                  - bedrock-agent:GetDataSource
+                  # SageMaker — additional inventory (FS-42, FS-61, FS-63)
+                  - sagemaker:ListModelCards
+                  - sagemaker:ListTags
+                  # S3 — additional bucket metadata (FS-20, FS-46, FS-65)
+                  - s3:ListAllMyBuckets
+                  - s3:GetBucketNotification
+                  # ECR — image-scan findings (FS-16)
+                  - ecr:DescribeImageScanFindings
+                  # OpenSearch Serverless (FS-25, FS-26)
+                  - aoss:ListSecurityPolicies
+                  # Macie — PII protection (FS-44)
+                  - macie2:GetMacieSession
+                  # EventBridge / Config (FS-32, FS-34)
+                  - events:ListRules
+                  - config:DescribeConfigRules
+                  # Organizations — SCPs (FS-12)
+                  - organizations:ListPolicies
+                  - organizations:DescribePolicy
+                Resource: "*"
+
 Outputs:
   MemberRoleArn:
     Description: ARN of the AIML Security Member Role
