@@ -1,6 +1,6 @@
 # Security Checks Reference
 
-This document provides a comprehensive reference for all 52 security checks performed by the AI/ML Security Assessment framework.
+This document provides a comprehensive reference for all 116 security checks performed by the AI/ML Security Assessment framework (52 core checks across Bedrock, SageMaker, and AgentCore, plus 64 Financial Services GenAI Risk checks).
 
 ## Table of Contents
 
@@ -11,6 +11,7 @@ This document provides a comprehensive reference for all 52 security checks perf
 - [Amazon SageMaker AI Security Checks (25)](#amazon-sagemaker-ai-security-checks-25)
 - [Amazon Bedrock Security Checks (14)](#amazon-bedrock-security-checks-14)
 - [Amazon Bedrock AgentCore Security Checks (13)](#amazon-bedrock-agentcore-security-checks-13)
+- [Financial Services GenAI Risk Checks (64)](#financial-services-genai-risk-checks-64-additional-5-upstream-extensions)
 
 ---
 
@@ -23,6 +24,7 @@ The framework evaluates your AI/ML workloads against AWS security best practices
 | Amazon SageMaker AI | 25 | Security Hub controls, encryption, network isolation, IAM, MLOps |
 | Amazon Bedrock | 14 | Guardrails, encryption, VPC endpoints, IAM permissions, logging |
 | Amazon Bedrock AgentCore | 13 | VPC configuration, encryption, observability, resource policies |
+| Financial Services GenAI Risk | 64 | Unbounded consumption, excessive agency, supply chain, training data poisoning, vector weaknesses, non-compliant output, misinformation, harmful output, biased output, PII disclosure, hallucination, prompt injection, improper output handling, off-topic output, out-of-date training data |
 
 ---
 
@@ -35,6 +37,7 @@ Each security check has a unique identifier with a service prefix:
 | **SM-XX** | Amazon SageMaker | SM-01, SM-25 |
 | **BR-XX** | Amazon Bedrock | BR-01, BR-14 |
 | **AC-XX** | Amazon Bedrock AgentCore | AC-01, AC-13 |
+| **FS-XX** | Financial Services GenAI Risk | FS-01, FS-69 |
 
 ---
 
