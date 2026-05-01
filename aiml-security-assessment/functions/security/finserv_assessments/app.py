@@ -1,3 +1,4 @@
+
 """
 AWS FinServ GenAI Risk Assessment Lambda
 =========================================
@@ -70,7 +71,6 @@ logger.setLevel(logging.ERROR)
 # Helpers
 # ---------------------------------------------------------------------------
 
-
 def get_permissions_cache(execution_id: str) -> Optional[Dict[str, Any]]:
     """Retrieve IAM permissions cache from S3 (same pattern as other assessments)."""
     try:
@@ -105,7 +105,6 @@ def _error_findings(check_name: str, err: Exception) -> Dict[str, Any]:
 # Risk: GenAI workloads can be exploited to exhaust compute/cost budgets
 # COMPLIANCE_PLACEHOLDER: [FFIEC CAT, DORA Art.6, SR 11-7 Appendix A]
 # ===========================================================================
-
 
 def check_waf_shield_on_bedrock_endpoints() -> Dict[str, Any]:
     """
@@ -287,7 +286,9 @@ def check_bedrock_token_quotas() -> Dict[str, Any]:
         # Flag if no custom quota increases have been requested (still at default)
         default_only = all(not q.get("Adjustable") for q in tpm_quotas + rpm_quotas)
 
-        details = f"Found {len(tpm_quotas)} token-based and {len(rpm_quotas)} request-based Bedrock quotas."
+        details = (
+            f"Found {len(tpm_quotas)} token-based and {len(rpm_quotas)} request-based Bedrock quotas."
+        )
         findings["csv_data"].append(
             create_finding(
                 check_id="FS-03",
@@ -321,8 +322,7 @@ def check_cost_anomaly_detection() -> Dict[str, Any]:
         monitors = ce.get_anomaly_monitors().get("AnomalyMonitors", [])
 
         bedrock_monitors = [
-            m
-            for m in monitors
+            m for m in monitors
             if "bedrock" in json.dumps(m.get("MonitorSpecification", {})).lower()
             or m.get("MonitorType") == "DIMENSIONAL"
         ]
@@ -379,15 +379,13 @@ def check_cloudwatch_token_alarms() -> Dict[str, Any]:
             all_alarms.extend(page.get("MetricAlarms", []))
 
         bedrock_alarms = [
-            a
-            for a in all_alarms
+            a for a in all_alarms
             if a.get("Namespace", "").startswith("AWS/Bedrock")
             or "bedrock" in a.get("AlarmName", "").lower()
         ]
 
         throttle_alarms = [
-            a
-            for a in bedrock_alarms
+            a for a in bedrock_alarms
             if "throttl" in a.get("MetricName", "").lower()
             or "throttl" in a.get("AlarmName", "").lower()
         ]
@@ -448,8 +446,7 @@ def check_aws_budgets_for_aiml() -> Dict[str, Any]:
             "Budgets", []
         )
         aiml_budgets = [
-            b
-            for b in all_budgets
+            b for b in all_budgets
             if any(
                 svc in json.dumps(b.get("CostFilters", {})).lower()
                 for svc in ["bedrock", "sagemaker"]
@@ -499,7 +496,6 @@ def check_aws_budgets_for_aiml() -> Dict[str, Any]:
 # COMPLIANCE_PLACEHOLDER: [SR 11-7, FFIEC CAT, DORA Art.6, MAS TRM 9]
 # ===========================================================================
 
-
 def check_bedrock_agent_action_boundaries(permission_cache) -> Dict[str, Any]:
     """
     FS-07 — Verify Bedrock agent execution roles have narrow action boundaries
@@ -531,17 +527,17 @@ def check_bedrock_agent_action_boundaries(permission_cache) -> Dict[str, Any]:
         for agent_summary in agents:
             agent_id = agent_summary["agentId"]
             agent_name = agent_summary["agentName"]
-            detail = bedrock_agent.get_agent(agentId=agent_id)
+            try:
+                detail = bedrock_agent.get_agent(agentId=agent_id)
+            except ClientError as e:
+                logger.warning(f"Could not describe agent {agent_name}: {e}")
+                continue
             role_arn = detail.get("agent", {}).get("agentResourceRoleArn", "")
             if not role_arn:
                 continue
             role_name = role_arn.split("/")[-1]
-            role_perms = (
-                (permission_cache or {}).get("role_permissions", {}).get(role_name, {})
-            )
-            for policy in role_perms.get("attached_policies", []) + role_perms.get(
-                "inline_policies", []
-            ):
+            role_perms = (permission_cache or {}).get("role_permissions", {}).get(role_name, {})
+            for policy in role_perms.get("attached_policies", []) + role_perms.get("inline_policies", []):
                 doc = policy.get("document", {})
                 if isinstance(doc, str):
                     doc = json.loads(doc)
@@ -693,11 +689,8 @@ def check_agent_transaction_limits() -> Dict[str, Any]:
 
         # Look for agent-related Lambda functions without reserved concurrency
         agent_lambdas = [
-            f
-            for f in functions
-            if any(
-                kw in f["FunctionName"].lower() for kw in ["agent", "bedrock", "aiml"]
-            )
+            f for f in functions
+            if any(kw in f["FunctionName"].lower() for kw in ["agent", "bedrock", "aiml"])
         ]
 
         lambdas_without_concurrency = []
@@ -762,12 +755,8 @@ def check_human_in_the_loop_for_high_risk_actions() -> Dict[str, Any]:
         machines = sfn.list_state_machines().get("stateMachines", [])
 
         agent_machines = [
-            m
-            for m in machines
-            if any(
-                kw in m["name"].lower()
-                for kw in ["agent", "approval", "human", "review"]
-            )
+            m for m in machines
+            if any(kw in m["name"].lower() for kw in ["agent", "approval", "human", "review"])
         ]
 
         machines_with_wait = []
@@ -848,8 +837,7 @@ def check_agent_rate_alarms() -> Dict[str, Any]:
             all_alarms.extend(page.get("MetricAlarms", []))
 
         agent_alarms = [
-            a
-            for a in all_alarms
+            a for a in all_alarms
             if "agent" in a.get("AlarmName", "").lower()
             or "agent" in a.get("Namespace", "").lower()
         ]
@@ -898,7 +886,6 @@ def check_agent_rate_alarms() -> Dict[str, Any]:
 # COMPLIANCE_PLACEHOLDER: [SR 11-7, FFIEC CAT, DORA Art.6, ISO 27001 A.15]
 # ===========================================================================
 
-
 def check_scp_model_access_restrictions() -> Dict[str, Any]:
     """
     FS-12 — Verify SCPs restrict Bedrock model access to an approved model list,
@@ -913,9 +900,7 @@ def check_scp_model_access_restrictions() -> Dict[str, Any]:
                 "Policies", []
             )
         except ClientError as e:
-            if "AccessDenied" in str(e) or "AWSOrganizationsNotInUseException" in str(
-                e
-            ):
+            if "AccessDenied" in str(e) or "AWSOrganizationsNotInUseException" in str(e):
                 findings["csv_data"].append(
                     create_finding(
                         check_id="FS-12",
@@ -991,9 +976,7 @@ def check_model_inventory_tagging() -> Dict[str, Any]:
 
         # Check Bedrock custom models
         for model in bedrock.list_custom_models().get("modelSummaries", []):
-            tags_response = bedrock.list_tags_for_resource(
-                resourceARN=model["modelArn"]
-            )
+            tags_response = bedrock.list_tags_for_resource(resourceARN=model["modelArn"])
             tag_keys = {t["key"].lower() for t in tags_response.get("tags", [])}
             missing = REQUIRED_TAGS - tag_keys
             if missing:
@@ -1060,8 +1043,7 @@ def check_model_onboarding_governance() -> Dict[str, Any]:
         rules = config.describe_config_rules().get("ConfigRules", [])
 
         bedrock_rules = [
-            r
-            for r in rules
+            r for r in rules
             if "bedrock" in r.get("ConfigRuleName", "").lower()
             or "model" in r.get("ConfigRuleName", "").lower()
         ]
@@ -1309,12 +1291,8 @@ def check_training_data_s3_versioning() -> Dict[str, Any]:
         buckets = s3.list_buckets().get("Buckets", [])
 
         training_buckets = [
-            b
-            for b in buckets
-            if any(
-                kw in b["Name"].lower()
-                for kw in ["train", "dataset", "model", "sagemaker", "bedrock"]
-            )
+            b for b in buckets
+            if any(kw in b["Name"].lower() for kw in ["train", "dataset", "model", "sagemaker", "bedrock"])
         ]
 
         if not training_buckets:
@@ -1379,7 +1357,6 @@ def check_training_data_s3_versioning() -> Dict[str, Any]:
 # COMPLIANCE_PLACEHOLDER: [SR 11-7, FFIEC CAT, NYDFS 500.06, PCI-DSS 12.3.2]
 # ===========================================================================
 
-
 def check_knowledge_base_iam_least_privilege(permission_cache) -> Dict[str, Any]:
     """
     FS-22 — Verify IAM roles accessing Bedrock Knowledge Bases follow
@@ -1389,12 +1366,8 @@ def check_knowledge_base_iam_least_privilege(permission_cache) -> Dict[str, Any]
     findings = _empty_findings("Knowledge Base IAM Least Privilege Check")
     try:
         issues = []
-        for role_name, perms in (
-            (permission_cache or {}).get("role_permissions", {}).items()
-        ):
-            for policy in perms.get("attached_policies", []) + perms.get(
-                "inline_policies", []
-            ):
+        for role_name, perms in (permission_cache or {}).get("role_permissions", {}).items():
+            for policy in perms.get("attached_policies", []) + perms.get("inline_policies", []):
                 doc = policy.get("document", {})
                 if isinstance(doc, str):
                     doc = json.loads(doc)
@@ -1637,7 +1610,6 @@ def check_knowledge_base_vpc_access() -> Dict[str, Any]:
 # COMPLIANCE_PLACEHOLDER: [SR 11-7, FFIEC CAT, NYDFS 500, MAS TRM 9.2]
 # ===========================================================================
 
-
 def check_automated_reasoning_checks() -> Dict[str, Any]:
     """
     FS-27 — Check whether Bedrock Guardrails have Automated Reasoning checks
@@ -1861,7 +1833,6 @@ def check_bedrock_evaluation_compliance_datasets() -> Dict[str, Any]:
 # COMPLIANCE_PLACEHOLDER: [SR 11-7, FFIEC CAT, MAS TRM 9.2, NYDFS 500]
 # ===========================================================================
 
-
 def check_knowledge_base_data_source_sync() -> Dict[str, Any]:
     """
     FS-31 — Verify Bedrock Knowledge Base data sources have recent sync jobs
@@ -2019,9 +1990,13 @@ def check_knowledge_base_integrity_monitoring() -> Dict[str, Any]:
                 )
                 bucket = s3_config.get("bucketArn", "").split(":::")[-1]
                 if bucket:
-                    versioning = s3.get_bucket_versioning(Bucket=bucket)
-                    if versioning.get("Status") != "Enabled":
-                        buckets_without_versioning.append(bucket)
+                    try:
+                        versioning = s3.get_bucket_versioning(Bucket=bucket)
+                        if versioning.get("Status") != "Enabled":
+                            buckets_without_versioning.append(bucket)
+                    except ClientError as e:
+                        logger.warning(f"Could not check versioning for bucket {bucket}: {e}")
+                        buckets_without_versioning.append(f"{bucket} (access error)")
 
         if buckets_without_versioning:
             findings["status"] = "WARN"
@@ -2068,13 +2043,12 @@ def check_fm_version_currency() -> Dict[str, Any]:
     findings = _empty_findings("Foundation Model Version Currency Check")
     try:
         bedrock = boto3.client("bedrock", config=boto3_config)
-        models = bedrock.list_foundation_models(byOutputModality="TEXT").get(
-            "modelSummaries", []
-        )
+        models = bedrock.list_foundation_models(
+            byOutputModality="TEXT"
+        ).get("modelSummaries", [])
 
         deprecated = [
-            m["modelId"]
-            for m in models
+            m["modelId"] for m in models
             if m.get("modelLifecycle", {}).get("status") == "LEGACY"
         ]
 
@@ -2120,7 +2094,6 @@ def check_fm_version_currency() -> Dict[str, Any]:
 # CATEGORY 9: BIASED OUTPUT (FS-39 to FS-42)
 # COMPLIANCE_PLACEHOLDER: [SR 11-7, FFIEC CAT, MAS TRM 9.2, NYDFS 500]
 # ===========================================================================
-
 
 def check_fmeval_harmful_content() -> Dict[str, Any]:
     """
@@ -2295,9 +2268,7 @@ def check_guardrail_word_filters() -> Dict[str, Any]:
             detail = bedrock.get_guardrail(
                 guardrailIdentifier=g["id"], guardrailVersion="DRAFT"
             )
-            if detail.get("wordPolicy", {}).get("words") or detail.get(
-                "wordPolicy", {}
-            ).get("managedWordLists"):
+            if detail.get("wordPolicy", {}).get("words") or detail.get("wordPolicy", {}).get("managedWordLists"):
                 guardrails_with_words.append(g["name"])
 
         if not guardrails_with_words:
@@ -2347,12 +2318,11 @@ def check_sagemaker_clarify_bias() -> Dict[str, Any]:
     findings = _empty_findings("SageMaker Clarify Bias Check")
     try:
         sm = boto3.client("sagemaker", config=boto3_config)
-        schedules = sm.list_monitoring_schedules().get(
-            "MonitoringScheduleSummaries", []
-        )
+        schedules = sm.list_monitoring_schedules().get("MonitoringScheduleSummaries", [])
 
         bias_schedules = [
-            s for s in schedules if s.get("MonitoringType") == "ModelBias"
+            s for s in schedules
+            if s.get("MonitoringType") == "ModelBias"
         ]
 
         if not bias_schedules:
@@ -2449,12 +2419,11 @@ def check_sagemaker_clarify_explainability() -> Dict[str, Any]:
     findings = _empty_findings("SageMaker Clarify Explainability Check")
     try:
         sm = boto3.client("sagemaker", config=boto3_config)
-        schedules = sm.list_monitoring_schedules().get(
-            "MonitoringScheduleSummaries", []
-        )
+        schedules = sm.list_monitoring_schedules().get("MonitoringScheduleSummaries", [])
 
         explainability_schedules = [
-            s for s in schedules if s.get("MonitoringType") == "ModelExplainability"
+            s for s in schedules
+            if s.get("MonitoringType") == "ModelExplainability"
         ]
 
         if not explainability_schedules:
@@ -2549,7 +2518,6 @@ def check_ai_service_cards_documentation() -> Dict[str, Any]:
 # CATEGORY 10: SENSITIVE INFORMATION DISCLOSURE (FS-43 to FS-46)
 # COMPLIANCE_PLACEHOLDER: [NYDFS 500.06, FFIEC CAT, PCI-DSS 3.4, GDPR Art.25]
 # ===========================================================================
-
 
 def check_cloudwatch_log_pii_masking() -> Dict[str, Any]:
     """
@@ -2745,12 +2713,8 @@ def check_data_classification_tagging() -> Dict[str, Any]:
         buckets = s3.list_buckets().get("Buckets", [])
 
         aiml_buckets = [
-            b
-            for b in buckets
-            if any(
-                kw in b["Name"].lower()
-                for kw in ["train", "model", "bedrock", "sagemaker", "kb", "knowledge"]
-            )
+            b for b in buckets
+            if any(kw in b["Name"].lower() for kw in ["train", "model", "bedrock", "sagemaker", "kb", "knowledge"])
         ]
 
         if not aiml_buckets:
@@ -2772,10 +2736,7 @@ def check_data_classification_tagging() -> Dict[str, Any]:
             try:
                 tags = s3.get_bucket_tagging(Bucket=bucket["Name"]).get("TagSet", [])
                 tag_keys = {t["Key"].lower() for t in tags}
-                if (
-                    "data-classification" not in tag_keys
-                    and "classification" not in tag_keys
-                ):
+                if "data-classification" not in tag_keys and "classification" not in tag_keys:
                     unclassified.append(bucket["Name"])
             except ClientError:
                 unclassified.append(bucket["Name"])
@@ -2823,7 +2784,6 @@ def check_data_classification_tagging() -> Dict[str, Any]:
 # COMPLIANCE_PLACEHOLDER: [SR 11-7, FFIEC CAT, MAS TRM 9.2, NYDFS 500]
 # ===========================================================================
 
-
 def check_guardrail_grounding_threshold() -> Dict[str, Any]:
     """
     FS-47 — Verify Bedrock Guardrails contextual grounding thresholds are
@@ -2856,10 +2816,7 @@ def check_guardrail_grounding_threshold() -> Dict[str, Any]:
             )
             grounding = detail.get("contextualGroundingPolicy", {})
             for filter_item in grounding.get("filters", []):
-                if (
-                    filter_item.get("type") == "GROUNDING"
-                    and filter_item.get("threshold", 1.0) < 0.7
-                ):
+                if filter_item.get("type") == "GROUNDING" and filter_item.get("threshold", 1.0) < 0.7:
                     low_threshold_guardrails.append(
                         f"{g['name']} (threshold={filter_item['threshold']})"
                     )
@@ -3126,12 +3083,8 @@ def check_bedrock_sdk_version_currency() -> Dict[str, Any]:
         functions = lambda_client.list_functions().get("Functions", [])
 
         bedrock_functions = [
-            f
-            for f in functions
-            if any(
-                kw in f["FunctionName"].lower()
-                for kw in ["bedrock", "agent", "aiml", "genai"]
-            )
+            f for f in functions
+            if any(kw in f["FunctionName"].lower() for kw in ["bedrock", "agent", "aiml", "genai"])
         ]
 
         if not bedrock_functions:
@@ -3232,9 +3185,7 @@ def check_waf_sql_injection_rules() -> Dict[str, Any]:
                 Id=acl_summary["Id"],
             ).get("WebACL", {})
             rule_names = {
-                r.get("Statement", {})
-                .get("ManagedRuleGroupStatement", {})
-                .get("Name", "")
+                r.get("Statement", {}).get("ManagedRuleGroupStatement", {}).get("Name", "")
                 for r in acl.get("Rules", [])
             }
             if not rule_names.intersection(INJECTION_RULE_GROUPS):
@@ -3315,7 +3266,6 @@ def check_penetration_testing_evidence() -> Dict[str, Any]:
 # COMPLIANCE_PLACEHOLDER: [SR 11-7, FFIEC CAT, NYDFS 500, OWASP LLM02]
 # ===========================================================================
 
-
 def check_output_validation_lambda() -> Dict[str, Any]:
     """
     FS-55 — Check for Lambda functions implementing output validation/sanitization
@@ -3328,12 +3278,8 @@ def check_output_validation_lambda() -> Dict[str, Any]:
         functions = lambda_client.list_functions().get("Functions", [])
 
         validation_functions = [
-            f
-            for f in functions
-            if any(
-                kw in f["FunctionName"].lower()
-                for kw in ["validate", "sanitize", "filter", "output"]
-            )
+            f for f in functions
+            if any(kw in f["FunctionName"].lower() for kw in ["validate", "sanitize", "filter", "output"])
         ]
 
         if not validation_functions:
@@ -3464,12 +3410,8 @@ def check_output_schema_validation() -> Dict[str, Any]:
         functions = lambda_client.list_functions().get("Functions", [])
 
         schema_functions = [
-            f
-            for f in functions
-            if any(
-                kw in f["FunctionName"].lower()
-                for kw in ["schema", "validate", "parse", "format"]
-            )
+            f for f in functions
+            if any(kw in f["FunctionName"].lower() for kw in ["schema", "validate", "parse", "format"])
         ]
 
         findings["csv_data"].append(
@@ -3632,10 +3574,8 @@ def check_knowledge_base_sync_schedule() -> Dict[str, Any]:
         # Check for EventBridge rules that trigger KB sync
         rules = events.list_rules().get("Rules", [])
         kb_sync_rules = [
-            r
-            for r in rules
-            if "bedrock" in r.get("Name", "").lower()
-            or "knowledge" in r.get("Name", "").lower()
+            r for r in rules
+            if "bedrock" in r.get("Name", "").lower() or "knowledge" in r.get("Name", "").lower()
         ]
 
         if not kb_sync_rules:
@@ -3727,8 +3667,7 @@ def check_foundation_model_lifecycle_policy() -> Dict[str, Any]:
         config_client = boto3.client("config", config=boto3_config)
         rules = config_client.describe_config_rules().get("ConfigRules", [])
         lifecycle_rules = [
-            r
-            for r in rules
+            r for r in rules
             if "lifecycle" in r.get("ConfigRuleName", "").lower()
             or "model" in r.get("ConfigRuleName", "").lower()
         ]
@@ -3813,9 +3752,9 @@ def check_kb_datasource_s3_event_notifications() -> Dict[str, Any]:
         buckets_without_notifications = []
         for kb in kbs:
             kb_id = kb["knowledgeBaseId"]
-            data_sources = bedrock_agent.list_data_sources(knowledgeBaseId=kb_id).get(
-                "dataSourceSummaries", []
-            )
+            data_sources = bedrock_agent.list_data_sources(
+                knowledgeBaseId=kb_id
+            ).get("dataSourceSummaries", [])
             for ds in data_sources:
                 ds_detail = bedrock_agent.get_data_source(
                     knowledgeBaseId=kb_id,
@@ -3830,17 +3769,13 @@ def check_kb_datasource_s3_event_notifications() -> Dict[str, Any]:
                 if not bucket:
                     continue
                 try:
-                    notif = s3_client.get_bucket_notification_configuration(
-                        Bucket=bucket
-                    )
-                    has_notif = any(
-                        [
-                            notif.get("TopicConfigurations"),
-                            notif.get("QueueConfigurations"),
-                            notif.get("LambdaFunctionConfigurations"),
-                            notif.get("EventBridgeConfiguration"),
-                        ]
-                    )
+                    notif = s3_client.get_bucket_notification_configuration(Bucket=bucket)
+                    has_notif = any([
+                        notif.get("TopicConfigurations"),
+                        notif.get("QueueConfigurations"),
+                        notif.get("LambdaFunctionConfigurations"),
+                        notif.get("EventBridgeConfiguration"),
+                    ])
                     if not has_notif:
                         buckets_without_notifications.append(bucket)
                 except ClientError:
@@ -3855,9 +3790,7 @@ def check_kb_datasource_s3_event_notifications() -> Dict[str, Any]:
                     finding_details=(
                         "The following KB data-source S3 buckets have no event notifications configured. "
                         "Unauthorized document modifications will not be detected in real time:\n"
-                        + "\n".join(
-                            f"- {b}" for b in buckets_without_notifications[:10]
-                        )
+                        + "\n".join(f"- {b}" for b in buckets_without_notifications[:10])
                     ),
                     resolution=(
                         "1. Enable Amazon EventBridge notifications on each KB data-source S3 bucket.\n"
@@ -3993,19 +3926,10 @@ def check_agent_financial_transaction_thresholds() -> Dict[str, Any]:
 
         # Look for agent action-group Lambda functions
         action_group_lambdas = [
-            f
-            for f in functions
-            if any(
-                kw in f["FunctionName"].lower()
-                for kw in [
-                    "agent",
-                    "action",
-                    "tool",
-                    "bedrock",
-                    "finserv",
-                    "transaction",
-                ]
-            )
+            f for f in functions
+            if any(kw in f["FunctionName"].lower() for kw in [
+                "agent", "action", "tool", "bedrock", "finserv", "transaction"
+            ])
         ]
 
         if not action_group_lambdas:
@@ -4036,9 +3960,7 @@ def check_agent_financial_transaction_thresholds() -> Dict[str, Any]:
                 f["FunctionName"]
                 for f in action_group_lambdas
                 if not any(
-                    "threshold" in k.lower()
-                    or "limit" in k.lower()
-                    or "max" in k.lower()
+                    "threshold" in k.lower() or "limit" in k.lower() or "max" in k.lower()
                     for k in f.get("Environment", {}).get("Variables", {}).keys()
                 )
             ]
@@ -4053,9 +3975,7 @@ def check_agent_financial_transaction_thresholds() -> Dict[str, Any]:
                             "The following agent action-group Lambda functions have no environment "
                             "variables indicating transaction-value threshold configuration. "
                             "Without explicit limits, agents could initiate unbounded financial transactions:\n"
-                            + "\n".join(
-                                f"- {n}" for n in lambdas_without_threshold_config[:10]
-                            )
+                            + "\n".join(f"- {n}" for n in lambdas_without_threshold_config[:10])
                         ),
                         resolution=(
                             "1. Add transaction-value threshold environment variables (e.g., MAX_TRANSACTION_AMOUNT) "
@@ -4099,15 +4019,14 @@ def check_api_gateway_request_body_size_limits() -> Dict[str, Any]:
     findings = _empty_findings("API Gateway Request Body Size Limits Check")
     try:
         apigw = boto3.client("apigateway", config=boto3_config)
+        apigwv2 = boto3.client("apigatewayv2", config=boto3_config)
         wafv2 = boto3.client("wafv2", config=boto3_config)
 
         # Check REST APIs for request validators
         rest_apis = apigw.get_rest_apis().get("items", [])
         apis_without_validators = []
         for api in rest_apis:
-            validators = apigw.get_request_validators(restApiId=api["id"]).get(
-                "items", []
-            )
+            validators = apigw.get_request_validators(restApiId=api["id"]).get("items", [])
             if not validators:
                 apis_without_validators.append(api.get("name", api["id"]))
 
@@ -4191,15 +4110,8 @@ def check_prompt_input_validation_function() -> Dict[str, Any]:
 
         # Look for Lambda functions with input validation / sanitization naming patterns
         VALIDATION_KEYWORDS = [
-            "sanitiz",
-            "validat",
-            "input",
-            "preprocess",
-            "pre-process",
-            "filter",
-            "clean",
-            "prompt-guard",
-            "promptguard",
+            "sanitiz", "validat", "input", "preprocess", "pre-process",
+            "filter", "clean", "prompt-guard", "promptguard",
         ]
         validation_lambdas = [
             f["FunctionName"]
@@ -4261,7 +4173,6 @@ def check_prompt_input_validation_function() -> Dict[str, Any]:
 # ===========================================================================
 # REPORT GENERATION & LAMBDA HANDLER
 # ===========================================================================
-
 
 def generate_csv_report(findings: List[Dict[str, Any]]) -> str:
     """Generate CSV report from all security check findings."""
