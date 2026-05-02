@@ -55,8 +55,8 @@ Each security check has a unique identifier with a service prefix:
 | Status | Description |
 |--------|-------------|
 | **Failed** | Security issue identified that requires remediation |
-| **Passed** | Resources were checked and found compliant |
-| **N/A** | No resources exist to check (e.g., no notebooks, no guardrails configured) |
+| **Passed** | Checked resources met the assessed best practice at time of scan |
+| **N/A** | No resources exist to check (for example, no notebooks, no guardrails configured) |
 
 ---
 
@@ -71,7 +71,7 @@ Each security check has a unique identifier with a service prefix:
 ### SM-02: AWS IAM Permissions
 
 - **Severity:** High
-- **Description:** Identifies overly permissive policies, stale access, and SSO configuration.
+- **Description:** Identifies overly permissive policies, stale access, and IAM Identity Center configuration.
 
 ### SM-03: Data Protection
 
@@ -245,7 +245,7 @@ Each security check has a unique identifier with a service prefix:
 ### BR-10: Guardrail AWS IAM Enforcement
 
 - **Severity:** Medium
-- **Description:** Verifies guardrails are enforced via AWS IAM conditions.
+- **Description:** Verifies guardrails are enforced through AWS IAM conditions.
 
 ### BR-11: Custom Model Encryption
 
