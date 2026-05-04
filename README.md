@@ -507,7 +507,6 @@ GitHub Actions workflows run automatically on pull requests and pushes to `main`
 | **CloudFormation Lint** | PR | Validates deployment and SAM templates with `cfn-lint` |
 | **SAM Validate & Build** | PR | Runs `sam validate --lint` and `sam build` on SAM templates |
 | **ASH Security Scan** | PR | Scans changed files for secrets, dependency vulnerabilities, and IaC misconfigurations |
-| **CodeQL** | PR, push, weekly | GitHub semantic code analysis for Python |
 | **ASH Full Repository Scan** | Push to main, monthly | Full repository security scan with results uploaded as artifacts |
 
 ---

@@ -50,7 +50,6 @@ The following checks run automatically on every pull request:
 - **CloudFormation Lint** — `cfn-lint` validation of deployment and SAM templates
 - **SAM Validate & Build** — `sam validate --lint` and `sam build` on SAM templates
 - **ASH Security Scan** — [Automated Security Helper](https://github.com/awslabs/automated-security-helper) scans changed files for secrets, dependency vulnerabilities, and IaC misconfigurations
-- **CodeQL** — GitHub semantic code analysis for Python
 
 All checks must pass before a pull request can be merged.
 

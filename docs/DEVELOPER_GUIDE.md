@@ -663,7 +663,6 @@ GitHub Actions workflows run automatically to validate code quality and security
 | **CloudFormation Lint** | `.github/workflows/cfn-lint.yml` | Validates deployment and SAM templates with `cfn-lint` |
 | **SAM Validate & Build** | `.github/workflows/sam-validate.yml` | Runs `sam validate --lint` and `sam build` on SAM templates |
 | **ASH Security Scan** | `.github/workflows/ash-security-scan.yml` | Scans changed files for secrets, dependency vulnerabilities, and IaC misconfigurations |
-| **CodeQL** | `.github/workflows/codeql.yml` | GitHub semantic code analysis for Python |
 
 Additional workflows run post-merge or on schedule:
 
