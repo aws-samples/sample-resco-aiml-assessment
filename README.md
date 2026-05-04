@@ -1,10 +1,10 @@
-# AWS AI/ML Security Assessment — Amazon Bedrock, SageMaker & AgentCore.
+# AWS AI/ML Security Assessment — Amazon Bedrock, SageMaker, AgentCore & Financial Services GenAI Risk.
 
 [![License: MIT-0](https://img.shields.io/badge/License-MIT--0-yellow.svg)](https://opensource.org/licenses/MIT-0) [![Python 3.12+](https://img.shields.io/badge/Python-3.12+-blue.svg)](https://www.python.org/downloads/) [![AWS SAM](https://img.shields.io/badge/AWS-SAM-orange.svg)](https://aws.amazon.com/serverless/sam/) [![Serverless](https://img.shields.io/badge/Architecture-Serverless-green.svg)](https://aws.amazon.com/serverless/)
 
 **Open-source automated security scanner for Amazon Bedrock, SageMaker AI, and Bedrock AgentCore** — Built on [AWS Well-Architected Framework (Generative AI Lens)](https://docs.aws.amazon.com/wellarchitected/latest/generative-ai-lens/generative-ai-lens.html)
 
-Cloud security automation with **[52 security checks](docs/SECURITY_CHECKS.md)** for your generative AI and machine learning workloads. Identify IAM misconfigurations, encryption gaps, network isolation issues, and compliance violations with interactive HTML reports and actionable remediation guidance.
+Cloud security automation with **[116 security checks](docs/SECURITY_CHECKS.md)** for your generative AI and machine learning workloads. Identify IAM misconfigurations, encryption gaps, network isolation issues, and compliance violations with interactive HTML reports and actionable remediation guidance.
 
 ---
 
@@ -43,7 +43,7 @@ The framework generates professional, interactive security assessment reports wi
 
 - **Executive Summary** with severity counts and service breakdown
 - **Priority Recommendations** highlighting critical issues requiring immediate attention
-- **[52 Security Checks](docs/SECURITY_CHECKS.md)** across Amazon Bedrock, SageMaker AI, and Bedrock AgentCore
+- **[116 Security Checks](docs/SECURITY_CHECKS.md)** across Amazon Bedrock, SageMaker AI, Bedrock AgentCore, and Financial Services GenAI Risk
 - **Interactive Filtering** by account, service, severity, and status
 - **Light/Dark Mode Toggle** with persistent user preference
 - **Text Search** across all findings with real-time results
@@ -85,7 +85,7 @@ Designed for workloads using [Amazon Bedrock](https://aws.amazon.com/bedrock/), 
 | Challenge | How This Framework Helps |
 |-----------|-------------------------|
 | **Manual security audits are time-consuming** | Fully automated scanning with one-click CloudFormation deployment |
-| **Inconsistent security checks across teams** | Standardized 52-check assessment based on AWS Well-Architected best practices |
+| **Inconsistent security checks across teams** | Standardized 116-check assessment based on AWS Well-Architected best practices and AWS FinServ GenAI Risk guidance |
 | **Difficulty tracking AI/ML security posture** | Interactive HTML dashboards with severity breakdown and per-account visibility |
 | **Multi-account complexity** | Consolidated reporting across AWS Organizations with cross-account role assumption |
 | **Compliance and audit requirements** | Exportable reports with remediation guidance linked to AWS documentation |
@@ -95,6 +95,7 @@ Designed for workloads using [Amazon Bedrock](https://aws.amazon.com/bedrock/), 
 - **[Amazon Bedrock](docs/SECURITY_CHECKS.md#amazon-bedrock-security-checks-14)** (14 checks) - Guardrails, encryption, Amazon VPC endpoints, AWS IAM permissions, model invocation logging
 - **[Amazon SageMaker AI](docs/SECURITY_CHECKS.md#amazon-sagemaker-ai-security-checks-25)** (25 checks) - Security Hub controls (SageMaker.1-5), encryption, network isolation, AWS IAM, MLOps
 - **[Amazon Bedrock AgentCore](docs/SECURITY_CHECKS.md#amazon-bedrock-agentcore-security-checks-13)** (13 checks) - Amazon VPC configuration, encryption, observability, resource policies
+- **[Financial Services GenAI Risk](docs/SECURITY_CHECKS.md#financial-services-genai-risk-checks-64-additional-5-upstream-extensions)** (64 checks) - Unbounded consumption, excessive agency, supply chain, training data poisoning, hallucination, prompt injection, PII disclosure, and 8 more FinServ-specific risk categories derived from the [AWS FinServ GenAI Risk Guide](https://d1.awsstatic.com/onedam/marketing-channels/website/public/global-FinServ-ComplianceGuide-GenAIRisks-public.pdf)
 
 **Deployment Options:**
 - **Single-Account**: Assess security in one AWS account
@@ -272,6 +273,7 @@ Deploy [2-aiml-security-codebuild.yaml](deployment/2-aiml-security-codebuild.yam
    - Amazon Bedrock Assessment AWS Lambda
    - Amazon SageMaker Assessment AWS Lambda
    - Amazon Bedrock AgentCore Assessment AWS Lambda
+   - Financial Services GenAI Risk Assessment AWS Lambda
    - AWS IAM Permission Caching AWS Lambda
    - Consolidated Report Generation AWS Lambda
 4. **Assessment Execution**: AWS Step Functions orchestrate parallel AWS Lambda execution
@@ -292,7 +294,7 @@ Deploy [2-aiml-security-codebuild.yaml](deployment/2-aiml-security-codebuild.yam
 
 ### Member Account Role (`AIMLSecurityMemberRole`)
 
-- Read-only access to AI/ML services (Amazon Bedrock, Amazon SageMaker AI, Amazon Bedrock AgentCore)
+- Read-only access to AI/ML services (Amazon Bedrock, Amazon SageMaker AI, Amazon Bedrock AgentCore, and FinServ-specific services: AWS WAF, AWS Shield, Amazon Macie, AWS Organizations, Amazon OpenSearch Serverless)
 - AWS IAM read permissions for security assessment
 - AWS CloudTrail, Amazon GuardDuty, and AWS Lambda read permissions
 - Amazon VPC and Amazon EC2 read permissions
@@ -335,7 +337,7 @@ You can check the AWS CodeBuild console to ensure that the assessment has comple
 - **File Format**: `multi_account_report_YYYYMMDD_HHMMSS.html`
 - **Features**:
   - Executive summary with metrics (Total, High, Medium, Low severity counts)
-  - Service breakdown (Amazon Bedrock, Amazon SageMaker, Amazon Bedrock AgentCore)
+  - Service breakdown (Amazon Bedrock, Amazon SageMaker, Amazon Bedrock AgentCore, Financial Services GenAI Risk)
   - Priority recommendations
   - Light/dark mode toggle (persists via localStorage)
   - Dropdown filters for Account ID, Severity, Status
@@ -350,6 +352,7 @@ You can check the AWS CodeBuild console to ensure that the assessment has comple
   - `bedrock_security_report_{execution_id}.csv` - Amazon Bedrock security assessment results
   - `sagemaker_security_report_{execution_id}.csv` - Amazon SageMaker security assessment results
   - `agentcore_security_report_{execution_id}.csv` - Amazon Bedrock AgentCore security assessment results
+  - `finserv_security_report_{execution_id}.csv` - Financial Services GenAI risk assessment results (64 FS-XX checks)
   - `permissions_cache_{execution_id}.json` - IAM permissions cache
   - `security_assessment_{timestamp}_{execution_id}.html` - Consolidated HTML report (same features as multi-account report)
 
@@ -491,7 +494,7 @@ For a clean removal, delete resources in this order:
 
 | Document | Description |
 |----------|-------------|
-| [Security Checks Reference](docs/SECURITY_CHECKS.md) | Complete reference for all 52 security checks with severity levels |
+| [Security Checks Reference](docs/SECURITY_CHECKS.md) | Complete reference for all 116 security checks with severity levels |
 | [Troubleshooting Guide](docs/TROUBLESHOOTING.md) | Common issues, debugging tips, and FAQ |
 | [Developer Guide](docs/DEVELOPER_GUIDE.md) | Architecture details, adding custom checks, and contributing |
 
