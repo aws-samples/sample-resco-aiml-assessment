@@ -724,9 +724,12 @@ def generate_html_report(
         account_info = f"Accounts: {num_accounts}"
         header_account_info = f"{num_accounts} Accounts"
         findings_sub = f"Across {num_accounts} accounts"
-        account_options = "".join([
-            f'<option value="{acc}">{acc}</option>' for acc in sorted(account_ids or [])
-        ])
+        account_options = "".join(
+            [
+                f'<option value="{acc}">{acc}</option>'
+                for acc in sorted(account_ids or [])
+            ]
+        )
         account_filter = f'<div class="filter-group"><label>Account</label><select id="accountFilter"><option value="">All Accounts</option>{account_options}</select></div>'
         bedrock_account_filter = f'<div class="filter-group"><label>Account</label><select id="bedrockAccountFilter"><option value="">All Accounts</option>{account_options}</select></div>'
         sagemaker_account_filter = f'<div class="filter-group"><label>Account</label><select id="sagemakerAccountFilter"><option value="">All Accounts</option>{account_options}</select></div>'
