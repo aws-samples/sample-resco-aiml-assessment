@@ -12,9 +12,7 @@ Each check is tested for:
 import sys
 import os
 import importlib.util
-import pytest
 from unittest.mock import patch, MagicMock
-from botocore.exceptions import ClientError
 
 # Add tests dir so we can import helpers
 sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
@@ -22,12 +20,18 @@ from conftest import extract_csv_data, assert_finding_schema
 
 # Load bedrock app module directly to avoid name collisions with other app.py files
 _bedrock_dir = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "aiml-security-assessment/functions/security/bedrock_assessments")
+    os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "aiml-security-assessment/functions/security/bedrock_assessments",
+    )
 )
 if _bedrock_dir not in sys.path:
     sys.path.insert(0, _bedrock_dir)
 
-_spec = importlib.util.spec_from_file_location("bedrock_app", os.path.join(_bedrock_dir, "app.py"))
+_spec = importlib.util.spec_from_file_location(
+    "bedrock_app", os.path.join(_bedrock_dir, "app.py")
+)
 bedrock_app = importlib.util.module_from_spec(_spec)
 sys.modules["bedrock_app"] = bedrock_app
 _spec.loader.exec_module(bedrock_app)
@@ -39,7 +43,9 @@ _spec.loader.exec_module(bedrock_app)
 class TestBR01FullAccessRoles:
     """BR-01: Check for roles with AmazonBedrockFullAccess policy."""
 
-    def test_br01_no_roles_with_full_access_returns_passed(self, empty_permission_cache):
+    def test_br01_no_roles_with_full_access_returns_passed(
+        self, empty_permission_cache
+    ):
         check = bedrock_app.check_bedrock_full_access_roles
         result = check(empty_permission_cache)
         findings = extract_csv_data(result)
@@ -47,7 +53,9 @@ class TestBR01FullAccessRoles:
         assert findings[0]["Status"] == "Passed"
         assert findings[0]["Check_ID"] == "BR-01"
 
-    def test_br01_role_with_full_access_returns_failed(self, permission_cache_with_full_access):
+    def test_br01_role_with_full_access_returns_failed(
+        self, permission_cache_with_full_access
+    ):
         check = bedrock_app.check_bedrock_full_access_roles
         result = check(permission_cache_with_full_access)
         findings = extract_csv_data(result)
@@ -90,7 +98,10 @@ class TestBR02VPCEndpoints:
         mock_vpc.return_value = {
             "has_endpoints": True,
             "found_endpoints": [
-                {"vpc_id": "vpc-123", "service": "com.amazonaws.us-east-1.bedrock-runtime"}
+                {
+                    "vpc_id": "vpc-123",
+                    "service": "com.amazonaws.us-east-1.bedrock-runtime",
+                }
             ],
             "all_vpcs": ["vpc-123"],
         }
@@ -117,7 +128,9 @@ class TestBR02VPCEndpoints:
         assert findings[0]["Severity"] == "Medium"
 
     @patch("bedrock_app.check_bedrock_vpc_endpoints")
-    def test_br02_exception_returns_error_finding(self, mock_vpc, permission_cache_compliant):
+    def test_br02_exception_returns_error_finding(
+        self, mock_vpc, permission_cache_compliant
+    ):
         check = bedrock_app.check_bedrock_access_and_vpc_endpoints
         mock_vpc.side_effect = Exception("VPC check failed")
         result = check(permission_cache_compliant)
@@ -153,7 +166,9 @@ class TestBR03MarketplaceAccess:
         assert findings[0]["Status"] == "Passed"
         assert findings[0]["Check_ID"] == "BR-03"
 
-    def test_br03_overpermissive_returns_failed(self, permission_cache_marketplace_overpermissive):
+    def test_br03_overpermissive_returns_failed(
+        self, permission_cache_marketplace_overpermissive
+    ):
         check = bedrock_app.check_marketplace_subscription_access
         result = check(permission_cache_marketplace_overpermissive)
         findings = extract_csv_data(result)
@@ -227,7 +242,10 @@ class TestBR04LoggingConfiguration:
         mock_bedrock = MagicMock()
         mock_client.return_value = mock_bedrock
         mock_bedrock.get_model_invocation_logging_configuration.return_value = {
-            "loggingConfig": {"s3Config": {"s3BucketName": "bucket"}, "cloudWatchConfig": {}}
+            "loggingConfig": {
+                "s3Config": {"s3BucketName": "bucket"},
+                "cloudWatchConfig": {},
+            }
         }
         result = check()
         for f in extract_csv_data(result):
@@ -298,11 +316,14 @@ class TestBR06CloudTrailLogging:
         mock_ct = MagicMock()
         mock_client.return_value = mock_ct
         mock_ct.list_trails.return_value = {
-            "Trails": [{"TrailARN": "arn:aws:cloudtrail:us-east-1:123:trail/main", "Name": "main"}]
+            "Trails": [
+                {
+                    "TrailARN": "arn:aws:cloudtrail:us-east-1:123:trail/main",
+                    "Name": "main",
+                }
+            ]
         }
-        mock_ct.get_trail.return_value = {
-            "Trail": {"IsMultiRegionTrail": True}
-        }
+        mock_ct.get_trail.return_value = {"Trail": {"IsMultiRegionTrail": True}}
         mock_ct.get_trail_status.return_value = {"IsLogging": True}
         mock_ct.get_event_selectors.return_value = {
             "EventSelectors": [
@@ -440,7 +461,9 @@ class TestBR08AgentRoles:
         assert findings[0]["Check_ID"] == "BR-08"
 
     @patch("boto3.client")
-    def test_br08_agent_with_compliant_role_returns_passed(self, mock_client, permission_cache_compliant):
+    def test_br08_agent_with_compliant_role_returns_passed(
+        self, mock_client, permission_cache_compliant
+    ):
         check = bedrock_app.check_bedrock_agent_roles
         mock_agent = MagicMock()
         mock_client.return_value = mock_agent
@@ -456,7 +479,9 @@ class TestBR08AgentRoles:
         # With permission boundary and specific resources, should pass or have minimal issues
 
     @patch("boto3.client")
-    def test_br08_exception_returns_error_finding(self, mock_client, empty_permission_cache):
+    def test_br08_exception_returns_error_finding(
+        self, mock_client, empty_permission_cache
+    ):
         check = bedrock_app.check_bedrock_agent_roles
         mock_client.side_effect = Exception("Agent service error")
         result = check(empty_permission_cache)
@@ -506,9 +531,7 @@ class TestBR09KBEncryption:
             {"knowledgeBaseSummaries": [{"knowledgeBaseId": "kb1", "name": "TestKB"}]}
         ]
         mock_agent.get_knowledge_base.return_value = {
-            "knowledgeBase": {
-                "storageConfiguration": {"type": "OPENSEARCH_SERVERLESS"}
-            }
+            "knowledgeBase": {"storageConfiguration": {"type": "OPENSEARCH_SERVERLESS"}}
         }
         result = check()
         findings = extract_csv_data(result)
@@ -544,7 +567,9 @@ class TestBR10GuardrailIAMEnforcement:
     """BR-10: Check guardrail IAM condition enforcement."""
 
     @patch("boto3.client")
-    def test_br10_no_guardrails_returns_na(self, mock_client, permission_cache_compliant):
+    def test_br10_no_guardrails_returns_na(
+        self, mock_client, permission_cache_compliant
+    ):
         check = bedrock_app.check_bedrock_guardrail_iam_enforcement
         mock_bedrock = MagicMock()
         mock_client.return_value = mock_bedrock
@@ -569,7 +594,9 @@ class TestBR10GuardrailIAMEnforcement:
         assert len(findings) >= 1
 
     @patch("boto3.client")
-    def test_br10_exception_returns_error_finding(self, mock_client, empty_permission_cache):
+    def test_br10_exception_returns_error_finding(
+        self, mock_client, empty_permission_cache
+    ):
         check = bedrock_app.check_bedrock_guardrail_iam_enforcement
         mock_client.side_effect = Exception("IAM error")
         result = check(empty_permission_cache)
@@ -622,9 +649,7 @@ class TestBR11CustomModelEncryption:
             "jobArn": "arn:job:1",
             "baseModelArn": "arn:base:1",
         }
-        mock_bedrock.get_model_customization_job.return_value = {
-            "outputDataConfig": {}
-        }
+        mock_bedrock.get_model_customization_job.return_value = {"outputDataConfig": {}}
         result = check()
         findings = extract_csv_data(result)
         assert len(findings) >= 1
@@ -752,11 +777,7 @@ class TestBR12InvocationLogEncryption:
         mock_s3.get_bucket_encryption.return_value = {
             "ServerSideEncryptionConfiguration": {
                 "Rules": [
-                    {
-                        "ApplyServerSideEncryptionByDefault": {
-                            "SSEAlgorithm": "AES256"
-                        }
-                    }
+                    {"ApplyServerSideEncryptionByDefault": {"SSEAlgorithm": "AES256"}}
                 ]
             }
         }
