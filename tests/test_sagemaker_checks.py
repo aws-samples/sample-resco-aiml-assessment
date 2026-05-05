@@ -12,21 +12,25 @@ Each check is tested for:
 import sys
 import os
 import importlib.util
-import pytest
 from unittest.mock import patch, MagicMock
-from botocore.exceptions import ClientError
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__)))
 from conftest import extract_csv_data, assert_finding_schema
 
 # Load sagemaker app module directly to avoid name collisions
 _sm_dir = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "aiml-security-assessment/functions/security/sagemaker_assessments")
+    os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "aiml-security-assessment/functions/security/sagemaker_assessments",
+    )
 )
 if _sm_dir not in sys.path:
     sys.path.insert(0, _sm_dir)
 
-_spec = importlib.util.spec_from_file_location("sagemaker_app", os.path.join(_sm_dir, "app.py"))
+_spec = importlib.util.spec_from_file_location(
+    "sagemaker_app", os.path.join(_sm_dir, "app.py")
+)
 sagemaker_app = importlib.util.module_from_spec(_spec)
 sys.modules["sagemaker_app"] = sagemaker_app
 _spec.loader.exec_module(sagemaker_app)
@@ -142,7 +146,9 @@ class TestSM02IAMPermissions:
         assert len(findings) >= 1
         assert findings[0]["Check_ID"] == "SM-02"
 
-    def test_sm02_full_access_returns_failed(self, permission_cache_sagemaker_full_access):
+    def test_sm02_full_access_returns_failed(
+        self, permission_cache_sagemaker_full_access
+    ):
         check = sagemaker_app.check_sagemaker_iam_permissions
         result = check(permission_cache_sagemaker_full_access)
         findings = extract_csv_data(result)
@@ -259,7 +265,9 @@ class TestSM05MLOps:
     """SM-05: Check SageMaker MLOps features utilization."""
 
     @patch("sagemaker_app.boto3.client")
-    def test_sm05_empty_cache_returns_findings(self, mock_client, empty_permission_cache):
+    def test_sm05_empty_cache_returns_findings(
+        self, mock_client, empty_permission_cache
+    ):
         check = sagemaker_app.check_sagemaker_mlops_utilization
         mock_sm = MagicMock()
         mock_client.return_value = mock_sm
@@ -272,7 +280,9 @@ class TestSM05MLOps:
         assert findings[0]["Check_ID"] == "SM-05"
 
     @patch("sagemaker_app.boto3.client")
-    def test_sm05_exception_returns_error_result(self, mock_client, empty_permission_cache):
+    def test_sm05_exception_returns_error_result(
+        self, mock_client, empty_permission_cache
+    ):
         check = sagemaker_app.check_sagemaker_mlops_utilization
         mock_client.side_effect = Exception("MLOps error")
         result = check(empty_permission_cache)
@@ -299,7 +309,9 @@ class TestSM06Clarify:
     """SM-06: Check SageMaker Clarify usage."""
 
     @patch("sagemaker_app.boto3.client")
-    def test_sm06_empty_cache_returns_findings(self, mock_client, empty_permission_cache):
+    def test_sm06_empty_cache_returns_findings(
+        self, mock_client, empty_permission_cache
+    ):
         check = sagemaker_app.check_sagemaker_clarify_usage
         mock_sm = MagicMock()
         mock_client.return_value = mock_sm
@@ -310,7 +322,9 @@ class TestSM06Clarify:
         assert findings[0]["Check_ID"] == "SM-06"
 
     @patch("sagemaker_app.boto3.client")
-    def test_sm06_exception_returns_error_result(self, mock_client, empty_permission_cache):
+    def test_sm06_exception_returns_error_result(
+        self, mock_client, empty_permission_cache
+    ):
         check = sagemaker_app.check_sagemaker_clarify_usage
         mock_client.side_effect = Exception("Clarify error")
         result = check(empty_permission_cache)
@@ -334,18 +348,24 @@ class TestSM07ModelMonitor:
     """SM-07: Check SageMaker Model Monitor usage."""
 
     @patch("sagemaker_app.boto3.client")
-    def test_sm07_empty_cache_returns_findings(self, mock_client, empty_permission_cache):
+    def test_sm07_empty_cache_returns_findings(
+        self, mock_client, empty_permission_cache
+    ):
         check = sagemaker_app.check_sagemaker_model_monitor_usage
         mock_sm = MagicMock()
         mock_client.return_value = mock_sm
-        mock_sm.list_monitoring_schedules.return_value = {"MonitoringScheduleSummaries": []}
+        mock_sm.list_monitoring_schedules.return_value = {
+            "MonitoringScheduleSummaries": []
+        }
         result = check(empty_permission_cache)
         findings = extract_csv_data(result)
         assert len(findings) >= 1
         assert findings[0]["Check_ID"] == "SM-07"
 
     @patch("sagemaker_app.boto3.client")
-    def test_sm07_exception_returns_error_result(self, mock_client, empty_permission_cache):
+    def test_sm07_exception_returns_error_result(
+        self, mock_client, empty_permission_cache
+    ):
         check = sagemaker_app.check_sagemaker_model_monitor_usage
         mock_client.side_effect = Exception("Monitor error")
         result = check(empty_permission_cache)
@@ -356,7 +376,9 @@ class TestSM07ModelMonitor:
         check = sagemaker_app.check_sagemaker_model_monitor_usage
         mock_sm = MagicMock()
         mock_client.return_value = mock_sm
-        mock_sm.list_monitoring_schedules.return_value = {"MonitoringScheduleSummaries": []}
+        mock_sm.list_monitoring_schedules.return_value = {
+            "MonitoringScheduleSummaries": []
+        }
         result = check(empty_permission_cache)
         for f in extract_csv_data(result):
             assert_finding_schema(f)
@@ -369,18 +391,24 @@ class TestSM08ModelRegistry:
     """SM-08: Check Model Registry usage."""
 
     @patch("sagemaker_app.boto3.client")
-    def test_sm08_empty_cache_returns_findings(self, mock_client, empty_permission_cache):
+    def test_sm08_empty_cache_returns_findings(
+        self, mock_client, empty_permission_cache
+    ):
         check = sagemaker_app.check_model_registry_usage
         mock_sm = MagicMock()
         mock_client.return_value = mock_sm
-        mock_sm.list_model_package_groups.return_value = {"ModelPackageGroupSummaryList": []}
+        mock_sm.list_model_package_groups.return_value = {
+            "ModelPackageGroupSummaryList": []
+        }
         result = check(empty_permission_cache)
         findings = extract_csv_data(result)
         assert len(findings) >= 1
         assert findings[0]["Check_ID"] == "SM-08"
 
     @patch("sagemaker_app.boto3.client")
-    def test_sm08_exception_returns_error_result(self, mock_client, empty_permission_cache):
+    def test_sm08_exception_returns_error_result(
+        self, mock_client, empty_permission_cache
+    ):
         check = sagemaker_app.check_model_registry_usage
         mock_client.side_effect = Exception("Registry error")
         result = check(empty_permission_cache)
@@ -391,7 +419,9 @@ class TestSM08ModelRegistry:
         check = sagemaker_app.check_model_registry_usage
         mock_sm = MagicMock()
         mock_client.return_value = mock_sm
-        mock_sm.list_model_package_groups.return_value = {"ModelPackageGroupSummaryList": []}
+        mock_sm.list_model_package_groups.return_value = {
+            "ModelPackageGroupSummaryList": []
+        }
         result = check(empty_permission_cache)
         for f in extract_csv_data(result):
             assert_finding_schema(f)
@@ -580,9 +610,7 @@ class TestSM11ModelNetworkIsolation:
         mock_client.return_value = mock_sm
         paginator = MagicMock()
         mock_sm.get_paginator.return_value = paginator
-        paginator.paginate.return_value = [
-            {"Models": [{"ModelName": "model-1"}]}
-        ]
+        paginator.paginate.return_value = [{"Models": [{"ModelName": "model-1"}]}]
         mock_sm.describe_model.return_value = {
             "ModelName": "model-1",
             "EnableNetworkIsolation": False,
@@ -599,9 +627,7 @@ class TestSM11ModelNetworkIsolation:
         mock_client.return_value = mock_sm
         paginator = MagicMock()
         mock_sm.get_paginator.return_value = paginator
-        paginator.paginate.return_value = [
-            {"Models": [{"ModelName": "model-1"}]}
-        ]
+        paginator.paginate.return_value = [{"Models": [{"ModelName": "model-1"}]}]
         mock_sm.describe_model.return_value = {
             "ModelName": "model-1",
             "EnableNetworkIsolation": True,
@@ -651,9 +677,7 @@ class TestSM12EndpointInstanceCount:
             {"Endpoints": [{"EndpointName": "ep-1", "EndpointStatus": "InService"}]}
         ]
         mock_sm.describe_endpoint.return_value = {
-            "ProductionVariants": [
-                {"CurrentInstanceCount": 1, "VariantName": "v1"}
-            ]
+            "ProductionVariants": [{"CurrentInstanceCount": 1, "VariantName": "v1"}]
         }
         result = check()
         findings = extract_csv_data(result)
@@ -671,9 +695,7 @@ class TestSM12EndpointInstanceCount:
             {"Endpoints": [{"EndpointName": "ep-1", "EndpointStatus": "InService"}]}
         ]
         mock_sm.describe_endpoint.return_value = {
-            "ProductionVariants": [
-                {"CurrentInstanceCount": 3, "VariantName": "v1"}
-            ]
+            "ProductionVariants": [{"CurrentInstanceCount": 3, "VariantName": "v1"}]
         }
         result = check()
         findings = extract_csv_data(result)
@@ -1107,7 +1129,9 @@ class TestSM22ModelApproval:
         check = sagemaker_app.check_model_approval_workflow
         mock_sm = MagicMock()
         mock_client.return_value = mock_sm
-        mock_sm.list_model_package_groups.return_value = {"ModelPackageGroupSummaryList": []}
+        mock_sm.list_model_package_groups.return_value = {
+            "ModelPackageGroupSummaryList": []
+        }
         result = check()
         findings = extract_csv_data(result)
         assert len(findings) >= 1
@@ -1127,7 +1151,9 @@ class TestSM22ModelApproval:
         check = sagemaker_app.check_model_approval_workflow
         mock_sm = MagicMock()
         mock_client.return_value = mock_sm
-        mock_sm.list_model_package_groups.return_value = {"ModelPackageGroupSummaryList": []}
+        mock_sm.list_model_package_groups.return_value = {
+            "ModelPackageGroupSummaryList": []
+        }
         result = check()
         for f in extract_csv_data(result):
             assert_finding_schema(f)
@@ -1144,7 +1170,9 @@ class TestSM23DriftDetection:
         check = sagemaker_app.check_model_drift_detection
         mock_sm = MagicMock()
         mock_client.return_value = mock_sm
-        mock_sm.list_monitoring_schedules.return_value = {"MonitoringScheduleSummaries": []}
+        mock_sm.list_monitoring_schedules.return_value = {
+            "MonitoringScheduleSummaries": []
+        }
         result = check()
         findings = extract_csv_data(result)
         assert len(findings) >= 1
@@ -1164,7 +1192,9 @@ class TestSM23DriftDetection:
         check = sagemaker_app.check_model_drift_detection
         mock_sm = MagicMock()
         mock_client.return_value = mock_sm
-        mock_sm.list_monitoring_schedules.return_value = {"MonitoringScheduleSummaries": []}
+        mock_sm.list_monitoring_schedules.return_value = {
+            "MonitoringScheduleSummaries": []
+        }
         result = check()
         for f in extract_csv_data(result):
             assert_finding_schema(f)

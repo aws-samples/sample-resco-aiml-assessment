@@ -17,8 +17,7 @@ Each check is tested for:
 import sys
 import os
 import importlib.util
-import pytest
-from unittest.mock import patch, MagicMock, PropertyMock
+from unittest.mock import patch
 from botocore.exceptions import ClientError
 
 sys.path.insert(0, "aiml-security-assessment/functions/security/agentcore_assessments")
@@ -28,12 +27,18 @@ from conftest import extract_csv_data, assert_finding_schema
 
 # Load agentcore app module directly to avoid name collisions with other app.py files
 _ac_dir = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "aiml-security-assessment/functions/security/agentcore_assessments")
+    os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "aiml-security-assessment/functions/security/agentcore_assessments",
+    )
 )
 if _ac_dir not in sys.path:
     sys.path.insert(0, _ac_dir)
 
-_spec = importlib.util.spec_from_file_location("agentcore_app", os.path.join(_ac_dir, "app.py"))
+_spec = importlib.util.spec_from_file_location(
+    "agentcore_app", os.path.join(_ac_dir, "app.py")
+)
 agentcore_app = importlib.util.module_from_spec(_spec)
 sys.modules["agentcore_app"] = agentcore_app
 _spec.loader.exec_module(agentcore_app)
@@ -43,9 +48,7 @@ _spec.loader.exec_module(agentcore_app)
 # Helper: patch AgentCore module-level clients
 # ---------------------------------------------------------------------------
 def _make_client_error(code="ResourceNotFoundException", message="Not found"):
-    return ClientError(
-        {"Error": {"Code": code, "Message": message}}, "operation"
-    )
+    return ClientError({"Error": {"Code": code, "Message": message}}, "operation")
 
 
 # ===================================================================
@@ -138,15 +141,23 @@ class TestAC02FullAccessRoles:
         assert findings[0]["Check_ID"] == "AC-02"
 
     @patch("agentcore_app.agentcore_client")
-    def test_ac02_no_full_access_returns_passed(self, mock_ac, permission_cache_compliant):
-        result = agentcore_app.check_agentcore_full_access_roles(permission_cache_compliant)
+    def test_ac02_no_full_access_returns_passed(
+        self, mock_ac, permission_cache_compliant
+    ):
+        result = agentcore_app.check_agentcore_full_access_roles(
+            permission_cache_compliant
+        )
         findings = extract_csv_data(result)
         assert len(findings) >= 1
         # Compliant cache has no AgentCore full access
 
     @patch("agentcore_app.agentcore_client")
-    def test_ac02_full_access_returns_failed(self, mock_ac, permission_cache_agentcore_full_access):
-        result = agentcore_app.check_agentcore_full_access_roles(permission_cache_agentcore_full_access)
+    def test_ac02_full_access_returns_failed(
+        self, mock_ac, permission_cache_agentcore_full_access
+    ):
+        result = agentcore_app.check_agentcore_full_access_roles(
+            permission_cache_agentcore_full_access
+        )
         findings = extract_csv_data(result)
         assert len(findings) >= 1
         has_failed = any(f["Status"] == "Failed" for f in findings)
@@ -180,7 +191,9 @@ class TestAC03StaleAccess:
 
     @patch("agentcore_app.iam_client")
     @patch("agentcore_app.agentcore_client")
-    def test_ac03_empty_cache_returns_findings(self, mock_ac, mock_iam, empty_permission_cache):
+    def test_ac03_empty_cache_returns_findings(
+        self, mock_ac, mock_iam, empty_permission_cache
+    ):
         result = agentcore_app.check_stale_agentcore_access(empty_permission_cache)
         findings = extract_csv_data(result)
         assert len(findings) >= 1
@@ -423,7 +436,9 @@ class TestAC09ServiceLinkedRole:
     @patch("agentcore_app.iam_client")
     @patch("agentcore_app.agentcore_client")
     def test_ac09_slr_missing_returns_failed(self, mock_ac, mock_iam):
-        mock_iam.get_role.side_effect = _make_client_error("NoSuchEntity", "Role not found")
+        mock_iam.get_role.side_effect = _make_client_error(
+            "NoSuchEntity", "Role not found"
+        )
         result = agentcore_app.check_agentcore_service_linked_role()
         findings = extract_csv_data(result)
         assert len(findings) >= 1
